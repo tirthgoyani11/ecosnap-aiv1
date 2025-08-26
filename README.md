@@ -90,6 +90,34 @@ Environment
 - Works on any static host or serverless platform.
 - Set environment variables via your hosting dashboard.
 
+### Deploy to Vercel
+
+Web flow (recommended)
+
+1. Go to <https://vercel.com/new> and import your GitHub repo (main branch).
+2. Framework: Vite. Build: `npm run build`. Output: `dist`.
+3. In “Environment Variables”, add the keys you use in your `.env` (only those starting with `VITE_`).
+4. Deploy. Vercel will auto-build on every push to `main`.
+
+Windows PowerShell (CLI, optional)
+
+```powershell
+npm i -g vercel
+vercel login
+vercel link
+# add each required variable (repeat for your VITE_* keys)
+vercel env add VITE_APP_NAME production
+vercel env add VITE_APP_VERSION production
+vercel --prod
+```
+
+Post-deploy checklist
+
+- Open the deployment URL and test Scanner, Bulk Scan, Dashboard, and AR Preview.
+- Verify dark/light themes, animations, and mobile camera permissions.
+- Confirm environment-driven features work (anything controlled by `VITE_*`).
+- Set a custom domain in Vercel (optional) and enable HTTPS.
+
 ## Contributing
 
 - Keep commits small and purposeful.
