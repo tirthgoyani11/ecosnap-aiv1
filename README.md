@@ -1,174 +1,99 @@
-# EcoSnap AI - Sustainable Shopping Assistant
+# EcoSnap AI — Hackathon Build, Startup Ready
 
-A premium, glassmorphism-styled React application for scanning products and discovering their environmental impact with AI-powered sustainability insights.
+A fast, polished web app that scans products and turns them into actionable sustainability insights. Built to demo in minutes, designed to scale for real users.
 
-## 🌟 Features
+## Why it matters (hackathon pitch)
 
-- **AI-Powered Scanner**: Instantly scan products to get eco scores and sustainability data
-- **AR Preview**: Experience augmented reality shopping with floating eco scores
-- **Bulk Scanning**: Analyze multiple products at once for comprehensive shopping insights
-- **Dashboard**: Track your environmental impact with beautiful data visualizations
-- **Leaderboard**: Compete with eco-warriors worldwide and earn achievements
-- **Glassmorphism Design**: Premium UI with beautiful glass effects and smooth animations
-- **Dark/Light Mode**: Automatic theme switching with smooth transitions
-- **Responsive**: Perfect experience on mobile and desktop
+- Shop smarter: see an instant eco score and simple, trustworthy reasons.
+- Compare at a glance: alternatives, trade‑offs, and tips that actually help.
+- Delightful demo: camera scanning, smooth animations, and AR overlays.
 
-## 🚀 Tech Stack
+## What’s inside (feature overview)
 
-- **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Tailwind CSS** for styling with custom design system
-- **shadcn/ui** components with custom variants
-- **Framer Motion** for smooth animations and page transitions
-- **React Router** for navigation
-- **Lucide React** for beautiful icons
-- **Supabase** for backend and edge functions
+- Product Scanner (camera or upload) with instant eco score and summary
+- AR Overlay preview that floats the score and key facts in your view
+- Bulk Scan (CSV or gallery) for batch analysis and quick triage
+- Dashboard with trends, badges, and personal progress
+- Leaderboard and achievements to drive engagement
+- Beautiful UI: glassmorphism, dark/light, micro‑interactions
+- Offline‑friendly fallbacks and resilient UX states
+- Privacy‑first: no secrets committed; environment-driven config
 
-## 🎨 Design System
+## Tech you can trust
 
-### Colors
-- **Primary**: Emerald 500/600 (#10B981 / #059669)
-- **Secondary**: Teal 400/500 (#2DD4BF / #14B8A6)
-- **Accent**: Teal 400 (#2DD4BF)
+- React + TypeScript • Vite
+- Tailwind CSS + shadcn/ui
+- Animation system with orchestrated transitions
+- Modular hooks and a clean state store
 
-### Glass Effects
-```css
-.glass-card {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-}
-```
+## Project structure
 
-### Animations
-- Page transitions: 220ms fade + translateY
-- Staggered reveals: 60ms delay between items
-- Hover effects: Scale and glow transformations
-- Loading states: Shimmer and pulse animations
-
-## 📁 Project Structure
-
-```
+```text
 src/
-├── components/          # Reusable UI components
-│   ├── ui/             # shadcn/ui base components
-│   ├── NavBar.tsx      # Navigation with mobile menu
-│   ├── ThemeToggle.tsx # Dark/light mode switcher
-│   ├── ScoreRing.tsx   # Animated circular progress
-│   ├── EcoBadge.tsx    # Sustainability badges
-│   ├── ProductCard.tsx # Product display cards
-│   └── ...
-├── pages/              # Page components
-│   ├── Index.tsx       # Homepage with hero and features
-│   ├── Scanner.tsx     # AI product scanner
-│   ├── BulkScan.tsx    # Bulk product analysis
-│   ├── Dashboard.tsx   # User stats and charts
-│   ├── Leaderboard.tsx # Global rankings
-│   └── ARPreview.tsx   # AR experience demo
-├── hooks/              # Custom React hooks
-│   ├── useScannerMock.ts
-│   ├── useStatsMock.ts
-│   └── ...
-├── lib/                # Utilities and mock data
-│   └── mock/           # Mock data for development
-└── index.css           # Design system and custom styles
+  components/      # UI + feature widgets (AR, charts, cards, etc.)
+  pages/           # Scanner, Bulk, Dashboard, Leaderboard, ARPreview
+  hooks/           # useEcoScore, useVision, useCamera, useToast, etc.
+  lib/             # domain utilities, data adapters, client helpers
+  index.css        # design tokens and theme
+public/            # manifest, icons
+supabase/          # optional edge functions and SQL (self-hostable)
 ```
 
-## 🛠️ Getting Started
+## Getting started
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+1. Install
 
-2. **Start development server**:
-   ```bash
-   npm run dev
-   ```
-
-3. **Build for production**:
-   ```bash
-   npm run build
-   ```
-
-## 🔧 Customization
-
-### Changing Colors
-Update the CSS variables in `src/index.css`:
-```css
-:root {
-  --primary: 160 84% 39%;        /* Emerald */
-  --secondary: 173 80% 40%;      /* Teal */
-  --accent: 172 77% 56%;         /* Teal 400 */
-}
+```bash
+npm install
 ```
 
-### Adding New Components
-1. Create component in `src/components/`
-2. Follow the glassmorphism design patterns
-3. Use semantic tokens from the design system
-4. Add Framer Motion animations for interactivity
+1. Run
 
-### Mock Data
-All mock data is located in `src/lib/mock/`. To connect real APIs:
-1. Replace mock hooks with real API calls
-2. Update data interfaces if needed
-3. Handle loading and error states
-
-## 🎯 Key Components
-
-### ScoreRing
-Animated circular progress indicator for eco scores:
-```tsx
-<ScoreRing score={85} size="lg" animated />
+```bash
+npm run dev
 ```
 
-### EcoBadge
-Sustainability certification badges:
-```tsx
-<EcoBadge type="organic" size="md" />
+1. Build
+
+```bash
+npm run build
 ```
 
-### Glass Cards
-Premium glassmorphism containers:
-```tsx
-<Card className="glass-card">
-  <CardContent>Content here</CardContent>
-</Card>
-```
+Environment
 
-## 🌐 Pages Overview
+- Copy `.env.example` to `.env` and fill values that apply to your setup.
+- Keep `.env` private; it’s ignored by git.
 
-- **/** - Hero landing page with features and testimonials
-- **/scanner** - AI-powered product scanning interface
-- **/bulk** - Bulk product analysis with drag & drop
-- **/dashboard** - Personal eco stats and progress tracking
-- **/leaderboard** - Global rankings and achievements
-- **/ar-preview** - AR shopping experience demo
+## Demo script (2–3 minutes)
 
-## 📱 Responsive Design
+1. Open Scanner → live camera or image upload → get score + highlights.
+2. Tap AR Preview → see floating score and facts overlay.
+3. Bulk Scan → drop multiple items → instant grid with ranks.
+4. Dashboard → badges, weekly trend, tips; then Leaderboard for social pull.
 
-- Mobile-first approach with breakpoints at 768px and 1024px
-- Touch-friendly buttons and navigation
-- Optimized layouts for all screen sizes
-- Progressive enhancement for larger screens
+## Product thinking (startup‑oriented)
 
-## ♿ Accessibility
+- Wedge: instant scoring + delightful UI → drive repeat scans.
+- Expansion: teams, shared lists, verified brands, and incentives.
+- Monetization: pro insights, enterprise dashboards, verified product badges.
+- Moats: UX polish, data quality pipeline, habit loops (badges + tips).
 
-- High contrast color ratios
-- Keyboard navigation support
-- Screen reader friendly markup
-- Respects `prefers-reduced-motion`
-- ARIA labels for interactive elements
+## Accessibility & performance
 
-## 🚀 Production Deployment
+- Keyboard and screen‑reader friendly components
+- Motion reduced when user prefers reduced motion
+- Optimized Vite build, code‑splitting, and lazy routes
 
-The app is optimized for deployment on any static hosting service:
-- Vite provides optimized builds
-- Assets are properly minified
-- Modern browser features with fallbacks
+## Deployment
 
----
+- Ships as a static build (`dist/`).
+- Works on any static host or serverless platform.
+- Set environment variables via your hosting dashboard.
 
-Built with 💚 for a sustainable future
+## Contributing
+
+- Keep commits small and purposeful.
+- Add or update tests/types when changing public behavior.
+- Never commit secrets; use `.env` and provider dashboards.
+
+— Built for hackathons, ready for real users.
