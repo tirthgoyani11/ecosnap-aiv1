@@ -213,9 +213,12 @@ export class EnhancedScoutBot {
    */
   private static async searchByBarcode(barcode: string): Promise<ScoutResult> {
     try {
+      console.log(`🔍 Enhanced Scout Bot searching barcode: ${barcode}`);
+      
       const product = await RealProductAPI.getProductByBarcode(barcode);
       
-      if (product) {
+      if (product && product.product_name) {
+        console.log(`✅ OpenFoodFacts found: ${product.product_name}`);
         return {
           success: true,
           product: this.normalizeProduct(product),
@@ -223,29 +226,37 @@ export class EnhancedScoutBot {
           confidence: 0.95,
           reasoning: 'Found exact match in OpenFoodFacts database'
         };
+      } else {
+        console.log('❌ No valid product from OpenFoodFacts');
       }
 
       // Try Supabase cache
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('barcode', barcode)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('barcode', barcode)
+          .single();
 
-      if (data) {
-        return {
-          success: true,
-          product: this.normalizeProduct(data),
-          source: 'supabase',
-          confidence: 0.85,
-          reasoning: 'Found cached product in database'
-        };
+        if (data && !error && data.name) {
+          console.log(`✅ Supabase cache found: ${data.name}`);
+          return {
+            success: true,
+            product: this.normalizeProduct(data),
+            source: 'supabase',
+            confidence: 0.85,
+            reasoning: 'Found cached product in database'
+          };
+        }
+      } catch (supabaseError) {
+        console.warn('⚠️ Supabase lookup failed:', supabaseError);
       }
 
     } catch (error) {
       console.warn('❌ Barcode search failed:', error);
     }
 
+    console.log('❌ No product found via barcode, will try fallback methods');
     return { success: false, source: 'openfoodfacts', confidence: 0 };
   }
 
@@ -322,7 +333,7 @@ export class EnhancedScoutBot {
         }
       `;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${geminiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -505,7 +516,7 @@ export class EnhancedScoutBot {
         }
       `;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

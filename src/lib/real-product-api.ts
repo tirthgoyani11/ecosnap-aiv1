@@ -59,7 +59,16 @@ export class RealProductAPI {
       }
 
       const product = data.product;
-      console.log('✅ Product found:', product.product_name);
+      
+      // Validate that we have essential product information
+      const productAny = product as any; // Cast to any to access alternative name fields
+      if (!product.product_name && !productAny.generic_name && !productAny.product_name_en) {
+        console.log('❌ Product found but missing name information');
+        return null;
+      }
+
+      const productName = product.product_name || productAny.generic_name || productAny.product_name_en || 'Unknown Product';
+      console.log('✅ Product found:', productName);
 
       // Get additional product image from Unsplash if OpenFoodFacts image is poor
       let productImage = product.image_front_url || product.image_url;
@@ -75,7 +84,7 @@ export class RealProductAPI {
 
       return {
         code: product.code,
-        product_name: product.product_name || 'Unknown Product',
+        product_name: productName,
         brands: product.brands || 'Unknown Brand',
         image_url: productImage,
         categories: product.categories || 'General',
@@ -169,7 +178,7 @@ export class RealProductAPI {
         Respond with JSON: {"score": number, "grade": "A-F", "reasoning": "brief explanation"}
       `;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -13,7 +13,7 @@ EcoSnap AI integrates with multiple APIs to provide comprehensive product sustai
 
 ### 2. AI Eco Score Analysis  
 **Source**: Google Gemini API (Paid/Free tier)
-- **URL**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+- **URL**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`
 - **Purpose**: Analyze product sustainability and generate eco scores (0-100)
 - **Implementation**: `src/lib/real-product-api.ts` → `calculateEcoScoreWithAI()`
 - **Fallback**: Rule-based scoring when API unavailable

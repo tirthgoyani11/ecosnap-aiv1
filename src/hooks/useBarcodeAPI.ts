@@ -18,25 +18,25 @@ export const useBarcodeAPI = () => {
       // Use the Enhanced Scout Bot for comprehensive product search
       const scoutResult = await EnhancedScoutBot.findProduct({ barcode });
       
-      if (scoutResult.success && scoutResult.product) {
+      if (scoutResult.success && scoutResult.product && scoutResult.product.product_name) {
         const product = scoutResult.product;
         
-        console.log(`✅ Scout Bot found product from ${scoutResult.source} (${Math.round(scoutResult.confidence * 100)}% confidence)`);
+        console.log(`✅ Scout Bot found product from ${scoutResult.source} (${Math.round(scoutResult.confidence * 100)}% confidence): ${product.product_name}`);
         
         // Save to Supabase if from external source
         if (scoutResult.source === 'openfoodfacts' || scoutResult.source === 'ai_analysis') {
           try {
             const { error } = await supabase.from('products').upsert({
-              barcode: product.code,
+              barcode: product.code || barcode,
               name: product.product_name,
-              brand: product.brands,
+              brand: product.brands || 'Unknown',
               image_url: product.image_url,
-              eco_score: product.eco_score,
-              carbon_footprint: product.carbon_footprint,
-              recyclable: product.recyclable,
-              sustainable: product.sustainable,
-              badges: product.badges,
-              metadata: product.metadata
+              eco_score: product.eco_score || 50,
+              carbon_footprint: product.carbon_footprint || 0,
+              recyclable: product.recyclable || false,
+              sustainable: product.sustainable || false,
+              badges: product.badges || [],
+              metadata: product.metadata || {}
             });
             
             if (!error) {
@@ -64,15 +64,15 @@ export const useBarcodeAPI = () => {
         });
 
         return {
-          code: product.code,
-          product_name: product.product_name,
-          brands: product.brands,
-          categories: product.categories,
-          ingredients_text: product.ingredients,
-          packaging: product.packaging,
-          ecoscore_grade: product.eco_grade?.toLowerCase(),
-          nutriscore_grade: product.metadata?.nutriscore,
-          image_url: product.image_url
+          code: product.code || barcode,
+          product_name: product.product_name || 'Unknown Product',
+          brands: product.brands || 'Unknown Brand',
+          categories: product.categories || 'General',
+          ingredients_text: product.ingredients || '',
+          packaging: product.packaging || '',
+          ecoscore_grade: product.eco_grade?.toLowerCase() || 'unknown',
+          nutriscore_grade: product.metadata?.nutriscore || 'unknown',
+          image_url: product.image_url || '/placeholder.svg'
         };
       }
 
