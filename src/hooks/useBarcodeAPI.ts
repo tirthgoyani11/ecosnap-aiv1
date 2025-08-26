@@ -5,6 +5,22 @@ import { useToast } from '@/hooks/use-toast';
 import RealProductAPI from '@/lib/real-product-api';
 import EnhancedScoutBot from '@/lib/enhanced-scout-bot';
 
+// Google Product Search fallback function
+const searchProductByGoogle = async (barcode: string): Promise<any | null> => {
+  try {
+    // Simple Google search approach using a public API or web scraping alternative
+    // For now, we'll use a basic fallback that generates a reasonable product
+    console.log('🔍 Attempting Google product search for:', barcode);
+    
+    // This could be replaced with actual Google Custom Search API
+    // For now, return null to fall through to other fallbacks
+    return null;
+  } catch (error) {
+    console.warn('⚠️ Google search failed:', error);
+    return null;
+  }
+};
+
 export const useBarcodeAPI = () => {
   const [isLooking, setIsLooking] = useState(false);
   const { toast } = useToast();
@@ -23,27 +39,36 @@ export const useBarcodeAPI = () => {
         
         console.log(`✅ Scout Bot found product from ${scoutResult.source} (${Math.round(scoutResult.confidence * 100)}% confidence): ${product.product_name}`);
         
-        // Save to Supabase if from external source
-        if (scoutResult.source === 'openfoodfacts' || scoutResult.source === 'ai_analysis') {
+        // Only save to Supabase if properly configured and from external source
+        if ((scoutResult.source === 'openfoodfacts' || scoutResult.source === 'ai_analysis')) {
           try {
-            const { error } = await supabase.from('products').upsert({
-              barcode: product.code || barcode,
-              name: product.product_name,
-              brand: product.brands || 'Unknown',
-              image_url: product.image_url,
-              eco_score: product.eco_score || 50,
-              carbon_footprint: product.carbon_footprint || 0,
-              recyclable: product.recyclable || false,
-              sustainable: product.sustainable || false,
-              badges: product.badges || [],
-              metadata: product.metadata || {}
-            });
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
             
-            if (!error) {
-              console.log('💾 Product cached in database');
+            if (supabaseUrl && supabaseKey) {
+              const { error } = await supabase.from('products').upsert({
+                barcode: product.code || barcode,
+                name: product.product_name,
+                brand: product.brands || 'Unknown',
+                image_url: product.image_url,
+                eco_score: product.eco_score || 50,
+                carbon_footprint: product.carbon_footprint || 0,
+                recyclable: product.recyclable || false,
+                sustainable: product.sustainable || false,
+                badges: product.badges || [],
+                metadata: product.metadata || {}
+              });
+              
+              if (!error) {
+                console.log('💾 Product cached in database');
+              } else {
+                console.warn('⚠️ Failed to cache product:', error.message);
+              }
+            } else {
+              console.log('⚠️ Supabase not configured, skipping cache');
             }
           } catch (dbError) {
-            console.warn('⚠️ Failed to cache product:', dbError);
+            console.warn('⚠️ Database cache error:', dbError);
           }
         }
 
@@ -76,8 +101,35 @@ export const useBarcodeAPI = () => {
         };
       }
 
-      // If scout bot fails completely, fallback to original logic
-      console.log('⚠️ Scout Bot failed, trying fallback methods');
+      // If scout bot fails completely, try Google Product Search as fallback
+      console.log('⚠️ Scout Bot failed, trying Google Product Search fallback');
+      
+      try {
+        const googleProduct = await searchProductByGoogle(barcode);
+        if (googleProduct) {
+          console.log('✅ Google Search found product:', googleProduct.product_name);
+          
+          setIsLooking(false);
+          toast({
+            title: "Product Found via Google! 🔍",
+            description: `${googleProduct.product_name} - External search`,
+          });
+
+          return {
+            code: googleProduct.code || barcode,
+            product_name: googleProduct.product_name,
+            brands: googleProduct.brands || 'Unknown Brand',
+            categories: googleProduct.categories || 'General',
+            ingredients_text: googleProduct.ingredients || '',
+            packaging: googleProduct.packaging || '',
+            ecoscore_grade: 'unknown',
+            nutriscore_grade: 'unknown',
+            image_url: googleProduct.image_url || '/placeholder.svg'
+          };
+        }
+      } catch (googleError) {
+        console.warn('⚠️ Google Search fallback also failed:', googleError);
+      }
       
       // Try original RealProductAPI as last resort
       const realProduct = await RealProductAPI.getProductByBarcode(barcode);

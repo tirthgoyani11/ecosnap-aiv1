@@ -7,6 +7,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import RealProductAPI from './real-product-api';
+import EnvironmentValidator from './environment-validator';
 
 interface ScoutResult {
   success: boolean;
@@ -25,6 +26,24 @@ interface ProductSearchQuery {
 }
 
 export class EnhancedScoutBot {
+  private static isInitialized = false;
+
+  /**
+   * Initialize the Enhanced Scout Bot with environment validation
+   */
+  static initialize(): void {
+    if (this.isInitialized) return;
+    
+    console.log('🤖 Initializing Enhanced Scout Bot...');
+    EnvironmentValidator.logEnvironmentStatus();
+    
+    const strategies = EnvironmentValidator.getFallbackStrategy();
+    if (strategies.length > 0) {
+      console.log('📋 Fallback strategies active:', strategies);
+    }
+    
+    this.isInitialized = true;
+  }
   
   // Enhanced demo product database with realistic variety
   private static readonly DEMO_PRODUCTS = [
@@ -176,6 +195,9 @@ export class EnhancedScoutBot {
    * Main scout function - tries multiple strategies to find product data
    */
   static async findProduct(query: ProductSearchQuery): Promise<ScoutResult> {
+    // Initialize on first use
+    this.initialize();
+    
     console.log('🔍 Enhanced Scout Bot starting search with:', query);
 
     // Strategy 1: Barcode lookup via OpenFoodFacts
@@ -230,23 +252,33 @@ export class EnhancedScoutBot {
         console.log('❌ No valid product from OpenFoodFacts');
       }
 
-      // Try Supabase cache
+      // Try Supabase cache with proper error handling
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('barcode', barcode)
-          .single();
+        // Only attempt Supabase lookup if properly configured
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        
+        if (supabaseUrl && supabaseKey) {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('barcode', barcode)
+            .single();
 
-        if (data && !error && data.name) {
-          console.log(`✅ Supabase cache found: ${data.name}`);
-          return {
-            success: true,
-            product: this.normalizeProduct(data),
-            source: 'supabase',
-            confidence: 0.85,
-            reasoning: 'Found cached product in database'
-          };
+          if (data && !error && data.name) {
+            console.log(`✅ Supabase cache found: ${data.name}`);
+            return {
+              success: true,
+              product: this.normalizeProduct(data),
+              source: 'supabase',
+              confidence: 0.85,
+              reasoning: 'Found cached product in database'
+            };
+          } else if (error) {
+            console.warn('⚠️ Supabase query error:', error.message);
+          }
+        } else {
+          console.warn('⚠️ Supabase not configured, skipping cache lookup');
         }
       } catch (supabaseError) {
         console.warn('⚠️ Supabase lookup failed:', supabaseError);
@@ -265,30 +297,49 @@ export class EnhancedScoutBot {
    */
   private static async searchByProductName(productName: string, brand?: string): Promise<ScoutResult> {
     try {
-      // First try Supabase with text search
-      let query = supabase
-        .from('products')
-        .select('*')
-        .textSearch('name', productName);
+      // Only try Supabase if properly configured
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (supabaseUrl && supabaseKey) {
+        // First try Supabase with text search
+        let query = supabase
+          .from('products')
+          .select('*')
+          .ilike('name', `%${productName}%`);
 
-      if (brand) {
-        query = query.textSearch('brand', brand);
+        if (brand) {
+          query = query.ilike('brand', `%${brand}%`);
+        }
+
+        const { data, error } = await query.limit(1);
+
+        if (data && data.length > 0 && !error) {
+          console.log(`✅ Supabase name search found: ${data[0].name}`);
+          return {
+            success: true,
+            product: this.normalizeProduct(data[0]),
+            source: 'supabase',
+            confidence: 0.8,
+            reasoning: 'Found product through name search in database'
+          };
+        } else if (error) {
+          console.warn('⚠️ Supabase name search error:', error.message);
+        }
       }
 
-      const { data } = await query.limit(1);
-
-      if (data && data.length > 0) {
+      // Try fuzzy matching against demo products as fallback
+      const fuzzyMatch = this.fuzzyMatchDemoProducts(productName, brand);
+      if (fuzzyMatch.confidence > 0.6) {
+        console.log(`✅ Fuzzy match found: ${fuzzyMatch.product?.product_name}`);
         return {
           success: true,
-          product: this.normalizeProduct(data[0]),
-          source: 'supabase',
-          confidence: 0.8,
-          reasoning: 'Found product through name search in database'
+          product: fuzzyMatch.product,
+          source: 'demo',
+          confidence: fuzzyMatch.confidence,
+          reasoning: 'Found similar product through fuzzy text matching'
         };
       }
-
-      // Try fuzzy matching against demo products
-      const fuzzyMatch = this.fuzzyMatchDemoProducts(productName, brand);
       if (fuzzyMatch.confidence > 0.6) {
         return {
           success: true,
