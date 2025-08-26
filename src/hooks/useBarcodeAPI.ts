@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BarcodeProduct } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import RealProductAPI from '@/lib/real-product-api';
+import EnhancedScoutBot from '@/lib/enhanced-scout-bot';
 
 export const useBarcodeAPI = () => {
   const [isLooking, setIsLooking] = useState(false);
@@ -12,39 +13,81 @@ export const useBarcodeAPI = () => {
     setIsLooking(true);
     
     try {
-      console.log('🔍 Real barcode lookup for:', barcode);
+      console.log('🤖 Enhanced Scout Bot starting barcode search:', barcode);
       
-      // First try real OpenFoodFacts API
-      const realProduct = await RealProductAPI.getProductByBarcode(barcode);
+      // Use the Enhanced Scout Bot for comprehensive product search
+      const scoutResult = await EnhancedScoutBot.findProduct({ barcode });
       
-      if (realProduct) {
-        console.log('✅ Real product found from OpenFoodFacts');
+      if (scoutResult.success && scoutResult.product) {
+        const product = scoutResult.product;
         
-        // Store in Supabase for future reference
-        try {
-          const { error } = await supabase.from('products').upsert({
-            barcode: realProduct.code,
-            name: realProduct.product_name,
-            brand: realProduct.brands,
-            image_url: realProduct.image_url,
-            eco_score: realProduct.eco_score,
-            carbon_footprint: realProduct.carbon_footprint,
-            recyclable: realProduct.recyclable,
-            sustainable: realProduct.sustainable,
-            badges: realProduct.badges,
-            metadata: realProduct.metadata
-          });
-          
-          if (!error) {
-            console.log('💾 Product saved to database');
+        console.log(`✅ Scout Bot found product from ${scoutResult.source} (${Math.round(scoutResult.confidence * 100)}% confidence)`);
+        
+        // Save to Supabase if from external source
+        if (scoutResult.source === 'openfoodfacts' || scoutResult.source === 'ai_analysis') {
+          try {
+            const { error } = await supabase.from('products').upsert({
+              barcode: product.code,
+              name: product.product_name,
+              brand: product.brands,
+              image_url: product.image_url,
+              eco_score: product.eco_score,
+              carbon_footprint: product.carbon_footprint,
+              recyclable: product.recyclable,
+              sustainable: product.sustainable,
+              badges: product.badges,
+              metadata: product.metadata
+            });
+            
+            if (!error) {
+              console.log('💾 Product cached in database');
+            }
+          } catch (dbError) {
+            console.warn('⚠️ Failed to cache product:', dbError);
           }
-        } catch (dbError) {
-          console.warn('⚠️ Failed to save to database:', dbError);
         }
 
         setIsLooking(false);
+        
+        // Show appropriate toast based on source and confidence
+        const sourceMessages = {
+          openfoodfacts: "Real Product Found! 🎉",
+          supabase: "Product Found! 📱", 
+          ai_analysis: "AI Analysis Complete! 🤖",
+          demo: "Demo Product 🧪",
+          search_fallback: "Similar Product Found 🔍"
+        };
+
         toast({
-          title: "Real Product Found! 🎉",
+          title: sourceMessages[scoutResult.source] || "Product Found!",
+          description: `${product.product_name} - ${scoutResult.reasoning}`,
+        });
+
+        return {
+          code: product.code,
+          product_name: product.product_name,
+          brands: product.brands,
+          categories: product.categories,
+          ingredients_text: product.ingredients,
+          packaging: product.packaging,
+          ecoscore_grade: product.eco_grade?.toLowerCase(),
+          nutriscore_grade: product.metadata?.nutriscore,
+          image_url: product.image_url
+        };
+      }
+
+      // If scout bot fails completely, fallback to original logic
+      console.log('⚠️ Scout Bot failed, trying fallback methods');
+      
+      // Try original RealProductAPI as last resort
+      const realProduct = await RealProductAPI.getProductByBarcode(barcode);
+      
+      if (realProduct) {
+        console.log('✅ Fallback: Real product found from OpenFoodFacts');
+        
+        setIsLooking(false);
+        toast({
+          title: "Product Found! 🎉",
           description: `${realProduct.product_name} by ${realProduct.brands}`,
         });
 
@@ -61,34 +104,7 @@ export const useBarcodeAPI = () => {
         };
       }
 
-      // Try Supabase function as fallback
-      const { data, error } = await supabase.functions.invoke('barcode-lookup', {
-        body: { barcode }
-      });
-
-      if (!error && data?.success) {
-        const apiProduct = (data as any)?.data || {};
-        const normalized: BarcodeProduct = {
-          code: apiProduct.code || barcode,
-          product_name: apiProduct.product_name || 'Unknown Product',
-          brands: apiProduct.brands || 'Unknown Brand',
-          categories: apiProduct.categories || 'General',
-          ingredients_text: apiProduct.ingredients_text,
-          packaging: apiProduct.packaging,
-          ecoscore_grade: apiProduct.ecoscore_grade,
-          nutriscore_grade: apiProduct.nutriscore_grade,
-          image_url: apiProduct.image_url || '/placeholder.svg'
-        };
-
-        setIsLooking(false);
-        toast({
-          title: "Product Found!",
-          description: `Found: ${normalized.product_name}`,
-        });
-        return normalized;
-      }
-
-      // Generate enhanced demo products for better experience
+      // Final fallback - Generate demo product
       const demoProduct = generateRealisticDemoProduct(barcode);
       
       setIsLooking(false);
@@ -100,10 +116,10 @@ export const useBarcodeAPI = () => {
       return demoProduct;
 
     } catch (error) {
-      console.error('❌ Barcode API error:', error);
+      console.error('❌ Complete lookup failure:', error);
       setIsLooking(false);
       
-      // Enhanced fallback with realistic products
+      // Ultimate fallback with realistic products
       const fallbackProduct = generateRealisticDemoProduct(barcode);
       
       toast({
