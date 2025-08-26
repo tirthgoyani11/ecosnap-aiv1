@@ -41,7 +41,7 @@ export function AlternativeCard({
                 alt={alternative.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = "/api/placeholder/80/80";
+                  e.currentTarget.src = "/placeholder.svg";
                 }}
               />
             </motion.div>

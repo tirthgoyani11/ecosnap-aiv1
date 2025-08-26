@@ -55,20 +55,26 @@ const testimonials = [
   {
     name: "Sarah Chen",
     title: "Sustainability Advocate", 
+    role: "Sustainability Advocate",
+    rating: 5,
     content: "EcoSnap AI has completely changed how I shop. I can instantly know if a product aligns with my values!",
-    avatar: "/api/placeholder/64/64"
+    avatar: "/placeholder.svg"
   },
   {
     name: "Marcus Rodriguez",
     title: "Environmental Scientist",
-    content: "The accuracy of environmental data is impressive. It's like having a sustainability expert in your pocket.",
-    avatar: "/api/placeholder/64/64"
+    role: "Environmental Scientist",
+    rating: 5,
+    content: "The accuracy of environmental data is impressive. It's like having a sustainability expert in my pocket.",
+    avatar: "/placeholder.svg"
   },
   {
     name: "Emily Watson",
     title: "Conscious Consumer",
+    role: "Conscious Consumer",
+    rating: 5,
     content: "Love how easy it is to find better alternatives. My carbon footprint has decreased significantly!",
-    avatar: "/api/placeholder/64/64"
+    avatar: "/placeholder.svg"
   }
 ];
 

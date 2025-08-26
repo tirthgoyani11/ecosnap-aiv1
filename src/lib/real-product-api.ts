@@ -70,8 +70,8 @@ export class RealProductAPI {
       // Calculate eco score using Gemini AI
       const ecoScore = await this.calculateEcoScoreWithAI(product);
       
-      // Get carbon footprint estimate
-      const carbonFootprint = await this.estimateCarbonFootprint(product);
+      // Get carbon footprint using Carbon Interface API (with fallback)
+      const carbonFootprint = await this.calculateCarbonFootprint(product);
 
       return {
         code: product.code,
@@ -232,52 +232,7 @@ export class RealProductAPI {
     };
   }
 
-  /**
-   * Estimate carbon footprint
-   */
-  static async estimateCarbonFootprint(product: any): Promise<number> {
-    try {
-      // Simple estimation based on product category and origin
-      const baseFootprint = this.getCategoryFootprint(product.categories);
-      const transportMultiplier = this.getTransportMultiplier(product.countries);
-      const packagingFootprint = this.getPackagingFootprint(product.packaging);
-      
-      return Number((baseFootprint * transportMultiplier + packagingFootprint).toFixed(2));
-    } catch (error) {
-      console.warn('⚠️ Carbon footprint estimation error:', error);
-      return 2.5; // Default footprint
-    }
-  }
 
-  private static getCategoryFootprint(categories: string): number {
-    const category = categories?.toLowerCase() || '';
-    if (category.includes('meat')) return 15.0;
-    if (category.includes('dairy')) return 8.0;
-    if (category.includes('beverages')) return 3.0;
-    if (category.includes('fruits') || category.includes('vegetables')) return 1.5;
-    if (category.includes('clothing')) return 12.0;
-    if (category.includes('electronics')) return 25.0;
-    return 5.0; // Default
-  }
-
-  private static getTransportMultiplier(countries: string): number {
-    if (!countries) return 1.2;
-    const country = countries.toLowerCase();
-    if (country.includes('local') || country.includes('usa')) return 1.0;
-    if (country.includes('europe')) return 1.1;
-    if (country.includes('asia') || country.includes('china')) return 1.5;
-    return 1.2;
-  }
-
-  private static getPackagingFootprint(packaging: string): number {
-    if (!packaging) return 0.5;
-    const pack = packaging.toLowerCase();
-    if (pack.includes('plastic')) return 1.2;
-    if (pack.includes('cardboard') || pack.includes('paper')) return 0.3;
-    if (pack.includes('glass')) return 0.8;
-    if (pack.includes('metal')) return 1.0;
-    return 0.5;
-  }
 
   /**
    * Check if product is recyclable
@@ -315,10 +270,11 @@ export class RealProductAPI {
   static async calculateCarbonFootprint(product: any): Promise<number> {
     try {
       if (!this.CARBON_API_KEY) {
-        console.warn('⚠️ Carbon Interface API key not configured');
+        console.warn('⚠️ Carbon Interface API key not configured, using fallback estimation');
         return this.estimateCarbonFootprint(product);
       }
 
+      console.log('🌍 Calculating CO2 footprint via Carbon Interface API...');
       const response = await fetch(`${this.CARBON_BASE}/estimates`, {
         method: 'POST',
         headers: {
@@ -338,14 +294,16 @@ export class RealProductAPI {
       if (response.ok) {
         const data = await response.json();
         const carbonKg = data.data?.attributes?.carbon_kg || 0;
-        console.log('🌍 Carbon Interface API result:', carbonKg, 'kg CO₂');
+        console.log('✅ Carbon Interface API result:', carbonKg, 'kg CO₂');
         return carbonKg;
+      } else {
+        console.warn('⚠️ Carbon Interface API request failed, using fallback');
+        return this.estimateCarbonFootprint(product);
       }
     } catch (error) {
-      console.warn('⚠️ Carbon Interface API error:', error);
+      console.warn('⚠️ Carbon Interface API error, using fallback:', error);
+      return this.estimateCarbonFootprint(product);
     }
-
-    return this.estimateCarbonFootprint(product);
   }
 
   /**

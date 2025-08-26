@@ -30,7 +30,7 @@ const generateMockAlternatives = (productData: any): Alternative[] => {
       id: `alt-${Date.now()}-${i}`,
       name: alternativeNames[i],
       brand: brands[i % brands.length],
-      image_url: '/api/placeholder/150/150',
+  image_url: '/placeholder.svg',
       eco_score: Math.floor(Math.random() * 20) + 75, // 75-95 range
       price: Math.floor(Math.random() * 50) + 10,
       savings_percentage: Math.floor(Math.random() * 30) + 10,

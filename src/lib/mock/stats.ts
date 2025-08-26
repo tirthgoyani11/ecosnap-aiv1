@@ -64,7 +64,7 @@ export const mockLeaderboard: LeaderboardUser[] = [
   {
     id: "1",
     name: "EcoMaster2024",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/placeholder.svg",
     points: 8950,
     rank: 1,
     level: 12
@@ -72,7 +72,7 @@ export const mockLeaderboard: LeaderboardUser[] = [
   {
     id: "2", 
     name: "GreenGuardian",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/placeholder.svg",
     points: 7230,
     rank: 2,
     level: 10
@@ -80,7 +80,7 @@ export const mockLeaderboard: LeaderboardUser[] = [
   {
     id: "3",
     name: "SustainableSarah",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/placeholder.svg",
     points: 6540,
     rank: 3,
     level: 9
@@ -88,7 +88,7 @@ export const mockLeaderboard: LeaderboardUser[] = [
   {
     id: "4",
     name: "EcoExplorer",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/placeholder.svg",
     points: 5890,
     rank: 4,
     level: 8
@@ -96,7 +96,7 @@ export const mockLeaderboard: LeaderboardUser[] = [
   {
     id: "5",
     name: "PlanetProtector",
-    avatar: "/api/placeholder/40/40", 
+    avatar: "/placeholder.svg", 
     points: 4320,
     rank: 5,
     level: 7

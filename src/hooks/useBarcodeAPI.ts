@@ -67,12 +67,25 @@ export const useBarcodeAPI = () => {
       });
 
       if (!error && data?.success) {
+        const apiProduct = (data as any)?.data || {};
+        const normalized: BarcodeProduct = {
+          code: apiProduct.code || barcode,
+          product_name: apiProduct.product_name || 'Unknown Product',
+          brands: apiProduct.brands || 'Unknown Brand',
+          categories: apiProduct.categories || 'General',
+          ingredients_text: apiProduct.ingredients_text,
+          packaging: apiProduct.packaging,
+          ecoscore_grade: apiProduct.ecoscore_grade,
+          nutriscore_grade: apiProduct.nutriscore_grade,
+          image_url: apiProduct.image_url || '/placeholder.svg'
+        };
+
         setIsLooking(false);
         toast({
           title: "Product Found!",
-          description: `Found: ${data.data.product_name}`,
+          description: `Found: ${normalized.product_name}`,
         });
-        return data.data;
+        return normalized;
       }
 
       // Generate enhanced demo products for better experience

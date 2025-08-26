@@ -25,7 +25,7 @@ export const useVisionAPI = () => {
         return null;
       }
 
-      if (!data?.success) {
+      if (!data?.success || !data?.data) {
         toast({
           title: "Analysis Failed",
           description: data?.error || "Unknown error occurred",
@@ -36,7 +36,7 @@ export const useVisionAPI = () => {
 
       toast({
         title: "Product Detected!",
-        description: `Found: ${data.data.product_name}`,
+        description: `Found: ${data.data?.product_name || 'Product'}`,
       });
 
       return data.data;

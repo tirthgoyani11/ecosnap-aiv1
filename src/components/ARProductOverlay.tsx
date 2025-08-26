@@ -54,7 +54,7 @@ export function ARProductOverlay({
                     className="w-12 h-12 rounded-lg bg-muted overflow-hidden flex-shrink-0"
                   >
                     <img
-                      src="/api/placeholder/48/48"
+                      src="/placeholder.svg"
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />

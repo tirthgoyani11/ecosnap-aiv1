@@ -34,7 +34,7 @@ export function ProductCard({ product, onViewDetails, className = "" }: ProductC
                 alt={product.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = "/api/placeholder/200/200";
+                  e.currentTarget.src = "/placeholder.svg";
                 }}
               />
               

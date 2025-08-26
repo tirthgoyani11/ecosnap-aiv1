@@ -295,7 +295,7 @@ export default function BulkScan() {
                             alt={item.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.currentTarget.src = "/api/placeholder/64/64";
+                              e.currentTarget.src = "/placeholder.svg";
                             }}
                           />
                         </div>
