@@ -31,14 +31,6 @@ export default function Dashboard() {
   useEffect(() => {
     document.title = "🌿 EcoSnap AI - Dashboard";
     
-    // Simulate loading user stats
-    if (!loading && stats) {
-      setUserStats({
-        totalScans: stats.totalScans || 127,
-        totalCO2Saved: Math.round((stats.totalScans || 127) * 0.8),
-        ecoScoreAverage: 78,
-  useEffect(() => {
-    setLoading(true);
     // Simulate loading for smooth animation
     const timer = setTimeout(() => {
       setLoading(false);
@@ -94,289 +86,323 @@ export default function Dashboard() {
       action: stats.achievements.length > 0 ? stats.achievements[stats.achievements.length - 1] : "No achievements yet",
       time: stats.achievements.length > 0 ? "Recent" : "None"
     }
-    }
   ];
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          <div className="text-center">
-            <LoadingSpinner />
-            <p className="text-muted-foreground mt-4">Loading your eco-journey...</p>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+        <LoadingSpinner />
       </div>
     );
   }
 
+  // Calculate weekly scans (for display)
+  const weeklyScans = Math.min(stats.totalScans, 12);
+  const monthlyGoal = 50;
+  const weeklyGoal = Math.round(monthlyGoal / 4);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/50">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
         {/* Header */}
-        <AnimatedElement animation="fadeInUp" className="mb-8">
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              Your Eco Dashboard
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Track your environmental impact and sustainable choices
+        <AnimatedElement animation="fadeIn">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+              <BarChart3 size={32} className="text-green-600" />
+              <h1 className="text-3xl md:text-4xl font-bold">
+                Your Impact Dashboard
+              </h1>
+            </div>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Track your sustainable journey and see how your choices are making a difference for the planet
             </p>
+            <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+              Rating: {stats.sustainabilityRating}
+            </Badge>
           </div>
         </AnimatedElement>
 
-        {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <AnimatedElement animation="scaleIn" delay={100}>
-            <Card className="glass-card text-center">
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <Scan className="h-8 w-8 text-primary mx-auto" />
-                  <CountUpStat 
-                    value={userStats.totalScans}
-                    duration={2}
-                    className="text-2xl font-bold"
-                  />
-                  <p className="text-sm text-muted-foreground">Total Scans</p>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Key Metrics */}
+        <StaggeredGrid>
+          <AnimatedElement animation="fadeInUp" delay={0.1}>
+            <KPIStat
+              icon={Scan}
+              title="Total Scans"
+              value={stats.totalScans}
+              changeLabel="+12%"
+              color="primary"
+            />
           </AnimatedElement>
 
-          <AnimatedElement animation="scaleIn" delay={200}>
-            <Card className="glass-card text-center">
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <TreePine className="h-8 w-8 text-green-500 mx-auto" />
-                  <CountUpStat 
-                    value={userStats.totalCO2Saved}
-                    duration={2}
-                    suffix=" kg"
-                    className="text-2xl font-bold text-green-600"
-                  />
-                  <p className="text-sm text-muted-foreground">CO₂ Saved</p>
-                </div>
-              </CardContent>
-            </Card>
+          <AnimatedElement animation="fadeInUp" delay={0.2}>
+            <KPIStat
+              icon={TreePine}
+              title="CO₂ Saved"
+              value={stats.co2Saved}
+              unit="kg"
+              changeLabel="+8%"
+              color="success"
+            />
           </AnimatedElement>
 
-          <AnimatedElement animation="scaleIn" delay={300}>
-            <Card className="glass-card text-center">
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <Award className="h-8 w-8 text-yellow-500 mx-auto" />
-                  <CountUpStat 
-                    value={userStats.points}
-                    duration={2}
-                    className="text-2xl font-bold text-yellow-600"
-                  />
-                  <p className="text-sm text-muted-foreground">Eco Points</p>
-                </div>
-              </CardContent>
-            </Card>
+          <AnimatedElement animation="fadeInUp" delay={0.3}>
+            <KPIStat
+              icon={Zap}
+              title="Eco Points"
+              value={stats.ecoPoints}
+              changeLabel="+15%"
+              color="accent"
+            />
           </AnimatedElement>
 
-          <AnimatedElement animation="scaleIn" delay={400}>
-            <Card className="glass-card text-center">
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <BarChart3 className="h-8 w-8 text-secondary mx-auto" />
-                  <CountUpStat 
-                    value={userStats.ecoScoreAverage}
-                    duration={2}
-                    suffix="/100"
-                    className="text-2xl font-bold text-secondary"
-                  />
-                  <p className="text-sm text-muted-foreground">Avg Eco Score</p>
-                </div>
-              </CardContent>
-            </Card>
+          <AnimatedElement animation="fadeInUp" delay={0.4}>
+            <KPIStat
+              icon={TrendingUp}
+              title="Avg Eco Score"
+              value={Math.round((stats.ecoPoints / Math.max(stats.totalScans, 1)) || 75)}
+              unit="/100"
+              changeLabel="+5%"
+              color="warning"
+            />
           </AnimatedElement>
-        </div>
+        </StaggeredGrid>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Eco Score Overview */}
-          <AnimatedElement animation="fadeInUp" delay={500}>
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
-                  Your Eco Impact
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center mb-6">
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Eco Score Ring */}
+            <AnimatedElement animation="fadeIn">
+              <Card className="p-6">
+                <div className="text-center space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Overall Eco Impact
+                  </h3>
                   <ScoreRing 
-                    score={userStats.ecoScoreAverage} 
+                    score={Math.round((stats.ecoPoints / Math.max(stats.totalScans, 1)) || 75)}
                     size="lg"
                   />
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Carbon Footprint</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={85} className="w-20" />
-                      <span className="text-sm text-green-600">85%</span>
+                  <div className="grid grid-cols-2 gap-4 pt-4">
+                    <div className="text-center">
+                      <CountUpStat 
+                        value={stats.alternativesFound}
+                        suffix=" found"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">Alternatives</p>
                     </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Sustainable Choices</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={78} className="w-20" />
-                      <span className="text-sm text-green-600">78%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Alternative Usage</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={65} className="w-20" />
-                      <span className="text-sm text-green-600">65%</span>
+                    <div className="text-center">
+                      <CountUpStat 
+                        value={stats.productsScanned}
+                        suffix=" analyzed"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">Products</p>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </AnimatedElement>
+              </Card>
+            </AnimatedElement>
 
-          {/* Weekly Goal Progress */}
-          <AnimatedElement animation="fadeInUp" delay={600}>
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-secondary" />
-                  Weekly Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-secondary mb-1">
-                      {userStats.weeklyScans}/{Math.round(userStats.monthlyGoal / 4)}
-                    </div>
-                    <p className="text-muted-foreground">Scans this week</p>
+            {/* Progress Tracking */}
+            <AnimatedElement animation="fadeInUp" delay={0.1}>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    Weekly Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span>Scans this week</span>
+                    <span className="font-medium">
+                      {weeklyScans}/{weeklyGoal}
+                    </span>
                   </div>
-                  
                   <Progress 
-                    value={(userStats.weeklyScans / (userStats.monthlyGoal / 4)) * 100} 
+                    value={(weeklyScans / weeklyGoal) * 100} 
                     className="h-3"
                   />
-                  
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">
-                        {userStats.alternativesFound}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Alternatives Found</p>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {userStats.sustainableChoices}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Sustainable Swaps</p>
-                    </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {weeklyGoal - weeklyScans > 0 
+                        ? `${weeklyGoal - weeklyScans} more scans to reach weekly goal`
+                        : "Weekly goal achieved! 🎉"
+                      }
+                    </span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedElement>
-        </div>
+                </CardContent>
+              </Card>
+            </AnimatedElement>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Activity */}
-          <AnimatedElement animation="fadeInUp" delay={700}>
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
-                      <div className="p-2 rounded-full bg-primary/10">
-                        {activity.type === 'scan' && <Scan className="h-4 w-4 text-primary" />}
-                        {activity.type === 'swap' && <Recycle className="h-4 w-4 text-green-500" />}
-                        {activity.type === 'achievement' && <Award className="h-4 w-4 text-yellow-500" />}
+            {/* Recent Activity */}
+            <AnimatedElement animation="fadeInUp" delay={0.2}>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-green-600" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentActivity.map((activity, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          {activity.type === "scan" ? (
+                            <Scan className="h-4 w-4 text-blue-600" />
+                          ) : activity.type === "achievement" ? (
+                            <Award className="h-4 w-4 text-yellow-600" />
+                          ) : (
+                            <Leaf className="h-4 w-4 text-green-600" />
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{activity.product}</p>
+                            <p className="text-xs text-gray-600">{activity.action}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {activity.score && (
+                            <div className="text-sm font-medium text-green-600">
+                              {activity.score}/100
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500">{activity.time}</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.product}</p>
-                        <p className="text-sm text-muted-foreground">{activity.action}</p>
-                      </div>
-                      <div className="text-right">
-                        {activity.score && (
-                          <Badge variant="outline" className="mb-1">
-                            {activity.score}/100
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedElement>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            
+            {/* Achievements */}
+            <AnimatedElement animation="fadeIn">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-yellow-600" />
+                    Achievements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {achievements.map((achievement, index) => (
+                      <div 
+                        key={index}
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                          achievement.earned 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-full ${
+                          achievement.earned 
+                            ? 'bg-green-100 text-green-600' 
+                            : 'bg-gray-100 text-gray-400'
+                        }`}>
+                          <achievement.icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{achievement.title}</p>
+                          <p className="text-xs text-gray-600">{achievement.description}</p>
+                          {achievement.earned && achievement.date && (
+                            <p className="text-xs text-green-600 mt-1">{achievement.date}</p>
+                          )}
+                        </div>
+                        {achievement.earned && (
+                          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-xs">
+                            ✓
                           </Badge>
                         )}
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedElement>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedElement>
 
-          {/* Achievements */}
-          <AnimatedElement animation="fadeInUp" delay={800}>
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-yellow-500" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-4">
-                  {achievements.map((achievement, index) => (
-                    <div 
-                      key={index} 
-                      className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
-                        achievement.earned 
-                          ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' 
-                          : 'bg-muted/30 border-muted opacity-50'
-                      }`}
-                    >
-                      <div className={`p-2 rounded-full ${
-                        achievement.earned ? 'bg-green-100 text-green-600' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        <achievement.icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{achievement.title}</p>
-                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                      </div>
-                      {achievement.earned && achievement.date && (
-                        <Badge variant="secondary" className="text-xs">
-                          {achievement.date}
-                        </Badge>
-                      )}
+            {/* Quick Actions */}
+            <AnimatedElement animation="fadeInUp" delay={0.1}>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-purple-600" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                    onClick={() => window.location.href = '/scanner'}
+                  >
+                    <Scan className="h-4 w-4 mr-2" />
+                    Start New Scan
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full hover:bg-green-50"
+                    onClick={() => window.location.href = '/leaderboard'}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    View Leaderboard
+                    <ArrowRight className="h-4 w-4 ml-auto" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </AnimatedElement>
+
+            {/* Environmental Impact */}
+            <AnimatedElement animation="scaleIn" delay={0.2}>
+              <Card className="bg-gradient-to-br from-green-50 to-blue-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TreePine className="h-5 w-5 text-green-600" />
+                    Environmental Impact
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-700">
+                      {stats.co2Saved}kg CO₂
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedElement>
+                    <p className="text-sm text-gray-600">Carbon footprint reduced</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-center">
+                    <div className="bg-white/50 p-3 rounded-lg">
+                      <Recycle className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                      <div className="text-sm font-medium">{stats.alternativesFound}</div>
+                      <div className="text-xs text-gray-600">Swaps Made</div>
+                    </div>
+                    <div className="bg-white/50 p-3 rounded-lg">
+                      <Leaf className="h-5 w-5 text-green-600 mx-auto mb-1" />
+                      <div className="text-sm font-medium">{stats.achievements.length}</div>
+                      <div className="text-xs text-gray-600">Achievements</div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600">
+                      Keep scanning to increase your positive impact! 🌱
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedElement>
+          </div>
         </div>
-
-        {/* Call to Action */}
-        <AnimatedElement animation="fadeInUp" delay={900} className="mt-8 text-center">
-          <Card className="glass-card">
-            <CardContent className="p-8">
-              <h3 className="text-2xl font-bold mb-4">Ready for More Impact?</h3>
-              <p className="text-muted-foreground mb-6">
-                Continue your eco-journey by scanning more products and discovering sustainable alternatives.
-              </p>
-              <Button size="lg" className="group smooth-hover">
-                <Scan className="h-5 w-5 mr-2" />
-                Start Scanning
-                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </CardContent>
-          </Card>
-        </AnimatedElement>
       </div>
     </div>
   );
