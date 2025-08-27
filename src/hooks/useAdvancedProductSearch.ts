@@ -1,14 +1,16 @@
 /**
- * Advanced Product Search Hook
+ * Advanced Product Search Hook - Refactored for Gemini-only Bot
  * 
- * Uses the Enhanced Scout Bot for comprehensive product discovery
- * Supports multiple search strategies: barcode, name, image, voice, etc.
+ * This hook now uses the simplified, Gemini-powered Enhanced Scout Bot and
+ * adds functionality to store scan history in Supabase.
  */
 
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import EnhancedScoutBot from '@/lib/enhanced-scout-bot';
+import { supabase } from '@/integrations/supabase'; // Import supabase client
 
+// SearchOptions remains the same for UI compatibility
 interface SearchOptions {
   searchType: 'barcode' | 'name' | 'image' | 'voice' | 'category';
   query?: string;
@@ -40,6 +42,7 @@ export const useAdvancedProductSearch = () => {
 
   const { toast } = useToast();
 
+  // The core search logic is now much simpler
   const searchProducts = useCallback(async (options: SearchOptions): Promise<any[]> => {
     const startTime = Date.now();
     
@@ -51,59 +54,14 @@ export const useAdvancedProductSearch = () => {
     }));
 
     try {
-      console.log('🔍 Advanced search started with:', options);
+      console.log('🔍 Gemini search started with:', options);
 
-      let scoutResult;
-
-      switch (options.searchType) {
-        case 'barcode':
-          if (!options.barcode) throw new Error('Barcode is required for barcode search');
-          scoutResult = await EnhancedScoutBot.findProduct({ barcode: options.barcode });
-          break;
-
-        case 'name':
-          if (!options.query) throw new Error('Product name is required for name search');
-          scoutResult = await EnhancedScoutBot.findProduct({
-            productName: options.query,
-            brand: options.brand,
-            category: options.category
-          });
-          break;
-
-        case 'image':
-          if (!options.imageData) throw new Error('Image data is required for image search');
-          scoutResult = await EnhancedScoutBot.findProduct({ imageData: options.imageData });
-          break;
-
-        case 'category':
-          // For category search, use quick search
-          const quickResults = await EnhancedScoutBot.quickSearch(options.category || options.query || '');
-          const products = quickResults.map(result => result.product);
-          
-          const searchTime = Date.now() - startTime;
-          
-          setSearchState({
-            products,
-            loading: false,
-            error: null,
-            searchMetadata: {
-              source: 'category_search',
-              confidence: quickResults[0]?.confidence || 0,
-              reasoning: `Found ${products.length} products in category`,
-              searchTime
-            }
-          });
-
-          toast({
-            title: "Category Search Complete! 📦",
-            description: `Found ${products.length} products matching your criteria`,
-          });
-
-          return products;
-
-        default:
-          throw new Error(`Unsupported search type: ${options.searchType}`);
-      }
+      // The new bot handles all logic internally, so we just pass the query
+      const scoutResult = await EnhancedScoutBot.findProduct({
+        barcode: options.barcode,
+        productName: options.query,
+        imageData: options.imageData
+      });
 
       const searchTime = Date.now() - startTime;
 
@@ -122,22 +80,31 @@ export const useAdvancedProductSearch = () => {
           }
         });
 
-        // Show success toast based on search type
-        const searchTypeMessages = {
-          barcode: "Barcode Scan Complete! 📱",
-          name: "Product Search Complete! 🔍", 
-          image: "AI Image Analysis Complete! 🤖",
-          voice: "Voice Search Complete! 🎤"
-        };
+        // --- NEW: Save to Scan History ---
+        try {
+          // We won't wait for this to complete to keep the UI fast
+          supabase.from('scan_history').insert({
+            // user_id: supabase.auth.user()?.id, // Uncomment when auth is implemented
+            product_data: scoutResult.product,
+            source: scoutResult.source,
+            confidence: scoutResult.confidence
+          }).then(({ error }) => {
+            if (error) console.error("Failed to save scan history:", error);
+          });
+        } catch (e) {
+          console.error("Supabase history insert failed:", e);
+        }
+        // ------------------------------------
 
         toast({
-          title: searchTypeMessages[options.searchType] || "Search Complete!",
+          title: "AI Analysis Complete! 🤖",
           description: `${scoutResult.product.product_name} - ${scoutResult.reasoning}`,
         });
 
         return products;
       } else {
-        throw new Error('No products found matching your search criteria');
+        // Use the reasoning from the bot as the error message
+        throw new Error(scoutResult.reasoning || 'No products found matching your search criteria');
       }
 
     } catch (error) {
@@ -166,6 +133,7 @@ export const useAdvancedProductSearch = () => {
     }
   }, [toast]);
 
+  // The individual search functions are kept for compatibility with the SmartScanner component
   const searchByBarcode = useCallback(async (barcode: string) => {
     return await searchProducts({ searchType: 'barcode', barcode });
   }, [searchProducts]);
@@ -183,43 +151,10 @@ export const useAdvancedProductSearch = () => {
     return await searchProducts({ searchType: 'image', imageData });
   }, [searchProducts]);
 
-  const searchByCategory = useCallback(async (category: string) => {
-    return await searchProducts({ searchType: 'category', category });
-  }, [searchProducts]);
-
+  // Refactor quickProductSearch to use the main search logic
   const quickProductSearch = useCallback(async (query: string): Promise<any[]> => {
-    setSearchState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      const results = await EnhancedScoutBot.quickSearch(query);
-      const products = results.map(result => result.product);
-      
-      setSearchState({
-        products,
-        loading: false,
-        error: null,
-        searchMetadata: {
-          source: 'quick_search',
-          confidence: results[0]?.confidence || 0,
-          reasoning: `Quick search found ${products.length} matches`,
-          searchTime: 0
-        }
-      });
-
-      return products;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Quick search failed';
-      
-      setSearchState(prev => ({
-        ...prev,
-        loading: false,
-        error: errorMessage,
-        searchMetadata: null
-      }));
-
-      return [];
-    }
-  }, []);
+    return await searchProducts({ searchType: 'name', query });
+  }, [searchProducts]);
 
   const clearSearch = useCallback(() => {
     setSearchState({
@@ -229,10 +164,6 @@ export const useAdvancedProductSearch = () => {
       searchMetadata: null
     });
   }, []);
-
-  const retryLastSearch = useCallback(async (lastOptions: SearchOptions) => {
-    return await searchProducts(lastOptions);
-  }, [searchProducts]);
 
   return {
     // State
@@ -246,10 +177,8 @@ export const useAdvancedProductSearch = () => {
     searchByBarcode,
     searchByName,
     searchByImage,
-    searchByCategory,
-    quickProductSearch,
+    quickProductSearch, // Keep for compatibility, now aliases searchByName
     clearSearch,
-    retryLastSearch,
     
     // Utilities
     hasResults: searchState.products.length > 0,
