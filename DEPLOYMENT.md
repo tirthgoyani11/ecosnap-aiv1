@@ -1,26 +1,42 @@
-# EcoSnap AI - Deployment Guide
+# EcoSnap AI - Enhanced AR Deployment Guide
 
-## 🚀 Deploy to Vercel
+## 🚀 Deploy to Vercel with AR Scanner
 
 ### Prerequisites
 - GitHub account
 - Vercel account (free)
-- All API keys ready
+- All API keys ready (Gemini API key is critical for AR functionality)
 
-### Step 1: Push to GitHub
+### Step 1: Build and Test Locally
+```bash
+# Install dependencies
+npm install
+
+# Test AR scanner locally
+npm run dev
+# Visit http://localhost:5173/ar-test to test camera functionality
+
+# Build for production
+npm run build
+
+# Test production build
+npm run preview
+```
+
+### Step 2: Push to GitHub
 ```bash
 git add .
-git commit -m "Production ready - All APIs integrated"
+git commit -m "Production ready - AR Scanner with Gemini AI integrated"
 git push origin main
 ```
 
-### Step 2: Connect to Vercel
+### Step 3: Connect to Vercel
 1. Go to [vercel.com](https://vercel.com)
 2. Sign in with GitHub
 3. Click "New Project"
 4. Import your `eco-snap-sparkle` repository
 
-### Step 3: Configure Environment Variables
+### Step 4: Configure Environment Variables
 In Vercel dashboard, add these environment variables:
 
 #### Required APIs (Already have keys):
@@ -28,6 +44,13 @@ In Vercel dashboard, add these environment variables:
 VITE_GEMINI_API_KEY = AIzaSyCdBFIzpAfPfk7tW9IUOSihKU20XmuyrGA
 VITE_UNSPLASH_ACCESS_KEY = HUDILVwDmLsGa2sKvhXONnSuVf4wlbAd3RvcewAe10s  
 VITE_CARBON_INTERFACE_KEY = EnacLdKh2zHUdjJ2qzvXDw
+```
+
+#### Optional Feature Flags:
+```
+VITE_ENABLE_AR_SCANNER = true
+VITE_ENABLE_CAMERA_UPLOAD = true
+VITE_ENABLE_BARCODE_SCANNER = true
 ```
 
 #### Optional (for user accounts):

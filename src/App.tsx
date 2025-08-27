@@ -11,6 +11,8 @@ import BulkScan from "./pages/BulkScan";
 import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
 import ARPreview from "./pages/ARPreview";
+import ARTest from '@/pages/ARTest';
+import BasicCameraTestPage from '@/pages/BasicCameraTest';
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import CameraTestPage from "./pages/CameraTestPage";
@@ -119,6 +121,8 @@ const App = () => (
                 } 
               />
               <Route path="/camera-test" element={<CameraTestPage />} />
+              <Route path="/ar-test" element={<ARTest />} />
+              <Route path="/basic-camera-test" element={<BasicCameraTestPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>

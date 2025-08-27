@@ -56,23 +56,49 @@ export class Gemini {
     }
   }
   
-  static async analyzeImage(base64ImageData: string): Promise<GeminiAnalysis | null> {
-    const prompt = `
-      Analyze the product in this image. Provide a detailed analysis in JSON format.
+  static async analyzeImage(base64ImageData: string, isARMode: boolean = false): Promise<GeminiAnalysis | null> {
+    const arPrompt = `
+      Analyze this live AR camera feed for products and provide INSTANT eco-analysis. Focus on clearly visible products only.
+      
+      RETURN JSON FORMAT:
+      {
+        "product_name": "specific product name if clearly visible",
+        "brand": "brand name if visible",
+        "category": "product category",
+        "eco_score": number (1-100, realistic sustainability score),
+        "confidence": number (0.1-1.0, how clearly you can see the product),
+        "reasoning": "brief eco-score explanation for AR display",
+        "alternatives": [
+          { "product_name": "better alternative", "reasoning": "why it's better" }
+        ]
+      }
+      
+      CRITICAL INSTRUCTIONS:
+      - Only analyze CLEARLY VISIBLE products in the image
+      - Provide realistic eco-scores based on actual sustainability factors  
+      - Keep reasoning brief for AR overlay display
+      - If no clear products visible, set confidence to 0.1
+      - Focus on packaging, materials, brand reputation for scoring
+      - Provide specific alternative recommendations
+    `;
+
+    const standardPrompt = `
+      Analyze this product image for detailed sustainability assessment.
       The JSON object must follow this exact structure:
       {
         "product_name": "string",
-        "brand": "string",
+        "brand": "string", 
         "category": "string",
         "eco_score": "number (0-100, where 100 is most eco-friendly)",
         "confidence": "number (0.0-1.0, how confident you are in the identification)",
-        "reasoning": "string (a brief explanation of the eco_score and identification)",
+        "reasoning": "string (detailed explanation of the eco_score and identification)",
         "alternatives": [
           { "product_name": "string (a more eco-friendly alternative)", "reasoning": "string (why it's a better choice)" }
         ]
       }
-      Identify the main product. If no product is visible, provide a best guess.
     `;
+
+    const prompt = isARMode ? arPrompt : standardPrompt;
 
     const requestBody = {
       contents: [{
@@ -80,7 +106,11 @@ export class Gemini {
           { text: prompt },
           { inline_data: { mime_type: "image/jpeg", data: base64ImageData.split(',')[1] } }
         ]
-      }]
+      }],
+      generationConfig: {
+        temperature: isARMode ? 0.3 : 0.7, // Lower temperature for AR consistency
+        maxOutputTokens: isARMode ? 500 : 1024, // Smaller response for AR speed
+      }
     };
 
     const response = await this.makeApiCall(requestBody);
