@@ -17,15 +17,15 @@ interface GeminiAnalysis {
 
 export class Gemini {
   private static API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-  private static VISION_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent";
-  private static TEXT_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+  // Use a single, modern endpoint for both Vision and Text
+  private static API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
 
-  private static async makeApiCall(url: string, body: any): Promise<any> {
+  private static async makeApiCall(body: any): Promise<any> {
     if (!this.API_KEY) {
       throw new Error("VITE_GEMINI_API_KEY is not set in the .env file.");
     }
 
-    const response = await fetch(`${url}?key=${this.API_KEY}`, {
+    const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,12 +44,10 @@ export class Gemini {
 
   private static parseGeminiResponse(responseText: string): GeminiAnalysis | null {
     try {
-      // The response is often wrapped in markdown json
       const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
       if (jsonMatch && jsonMatch[1]) {
         return JSON.parse(jsonMatch[1]) as GeminiAnalysis;
       }
-      // Fallback for raw JSON
       return JSON.parse(responseText) as GeminiAnalysis;
     } catch (error) {
       console.error("Failed to parse Gemini JSON response:", error);
@@ -85,7 +83,7 @@ export class Gemini {
       }]
     };
 
-    const response = await this.makeApiCall(this.VISION_API_URL, requestBody);
+    const response = await this.makeApiCall(requestBody);
     const responseText = response.candidates[0]?.content.parts[0]?.text;
 
     if (!responseText) {
@@ -121,7 +119,7 @@ export class Gemini {
       }]
     };
 
-    const response = await this.makeApiCall(this.TEXT_API_URL, requestBody);
+    const response = await this.makeApiCall(requestBody);
     const responseText = response.candidates[0]?.content.parts[0]?.text;
 
     if (!responseText) {
