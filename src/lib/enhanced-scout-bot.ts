@@ -1,26 +1,18 @@
-
-/**
- * Enhanced Scout Bot - Gemini Powered
- * 
- * This bot uses the Gemini API as its sole engine for product discovery,
- * providing a powerful, unified analysis for images, text, and barcodes.
- */
-
-import { Gemini } from '@/integrations/gemini';
+import { supabase } from '@/integrations/supabase/client';
 
 // --- INTERFACES ---
 
+// This query now expects a File object for the new backend function
 interface ProductSearchQuery {
-  barcode?: string;
-  productName?: string;
-  imageData?: string; // Base64 encoded image
+  imageFile: File;
 }
 
+// The ScoutResult will now contain the detailed analysis from the new function
 interface ScoutResult {
   success: boolean;
-  product?: any;
-  source: 'gemini_vision' | 'gemini_text' | 'none';
-  confidence: number;
+  product?: any; // This will be the detailed analysis object
+  source: 'gemini_backend_scan' | 'none';
+  confidence: number; // The new backend doesn't provide this, so we'll use a default
   reasoning?: string;
 }
 
@@ -29,79 +21,69 @@ interface ScoutResult {
 export default class EnhancedScoutBot {
 
   /**
-   * Main entry point for finding a product using the Gemini API.
-   * It intelligently decides whether to use vision or text analysis.
+   * Finds a product by sending an image file to our backend Supabase function.
    */
-  static async findProduct(query: ProductSearchQuery): Promise<ScoutResult> {
-    console.log('🤖 Gemini Scout Bot activated with query:', query);
+  static async findProductByImage(query: ProductSearchQuery): Promise<ScoutResult> {
+    console.log('🤖 Activating backend scout bot with file:', query.imageFile.name);
+
+    if (!query.imageFile) {
+      throw new Error("An image file must be provided.");
+    }
+
+    const formData = new FormData();
+    formData.append('files', query.imageFile);
 
     try {
-      let analysisResult = null;
-      let source: 'gemini_vision' | 'gemini_text' = 'gemini_text';
+      const { data, error } = await supabase.functions.invoke('gemini-bulk-scan', {
+        body: formData,
+      });
 
-      // 1. Image Analysis (Highest Priority)
-      if (query.imageData) {
-        source = 'gemini_vision';
-        analysisResult = await Gemini.analyzeImage(query.imageData);
-      } 
-      // 2. Text/Barcode Analysis
-      else if (query.productName || query.barcode) {
-        source = 'gemini_text';
-        const textQuery = query.productName || query.barcode!;
-        analysisResult = await Gemini.analyzeText(textQuery);
-      } 
-      // No valid query
-      else {
-        throw new Error("No valid query provided. Please supply an image, product name, or barcode.");
+      if (error) {
+        throw error;
       }
 
-      if (analysisResult) {
+      // The backend returns results and errors arrays
+      if (data.errors && data.errors.length > 0) {
+        throw new Error(data.errors[0].error || 'Backend failed to process image.');
+      }
+
+      if (data.results && data.results.length > 0) {
+        const firstResult = data.results[0];
         return {
           success: true,
-          product: {
-            // Ensure the product object has all the fields the UI expects
-            ...analysisResult,
-            product_name: analysisResult.product_name || 'Unknown Product',
-            eco_score: analysisResult.eco_score || 50,
-          },
-          source: source,
-          confidence: analysisResult.confidence || 0.5,
-          reasoning: analysisResult.reasoning || 'Analysis complete.'
+          product: firstResult.analysis, // The detailed analysis is the new product object
+          source: 'gemini_backend_scan',
+          confidence: firstResult.analysis.ecoScore / 100 || 0.8, // Use ecoScore as a proxy
+          reasoning: `Successfully analyzed ${firstResult.filename}`,
         };
       } else {
-        throw new Error("Gemini analysis returned no result.");
+        throw new Error("Backend analysis returned no results.");
       }
 
     } catch (error) {
-      console.error('❌ Gemini Scout Bot failed:', error);
+      console.error('❌ Backend Scout Bot failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
       return {
         success: false,
         source: 'none',
         confidence: 0,
-        reasoning: errorMessage
+        reasoning: errorMessage,
       };
     }
   }
 
   /**
-   * Performs a quick search for multiple products based on a query.
-   * This can be used for category browsing or finding alternatives.
+   * @deprecated Text and barcode search are no longer supported on the client-side.
+   * All analysis is now done via image through the backend.
    */
-  static async quickSearch(query: string): Promise<ScoutResult[]> {
-    console.log(`🤖 Gemini Quick Search for: ${query}`);
-    
-    // This is a simplified implementation. For a real multi-product search,
-    // the Gemini prompt would need to be adjusted to return an array of products.
-    // For now, we will just do a single text search and return it as an array.
-    
-    const result = await this.findProduct({ productName: query });
+  static async findProduct() {
+    throw new Error("This method is deprecated. Use findProductByImage instead.");
+  }
 
-    if (result.success && result.product) {
-      // The UI expects an array, so we wrap the single result
-      return [result];
-    }
-
-    return [];
+  /**
+   * @deprecated Quick search is no longer supported.
+   */
+  static async quickSearch() {
+    throw new Error("This method is deprecated.");
   }
 }
