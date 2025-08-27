@@ -86,38 +86,83 @@ export const SimpleARScanner: React.FC = () => {
   // Start camera
   const startCamera = useCallback(async () => {
     try {
+      setIsActive(false); // Reset state first
+      
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera not supported on this device');
       }
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      // Request camera permission with better constraints
+      const constraints = {
         video: { 
           facingMode,
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 }
-        }
-      });
+          width: { ideal: 1280, min: 640, max: 1920 },
+          height: { ideal: 720, min: 480, max: 1080 },
+          frameRate: { ideal: 30, min: 15 }
+        },
+        audio: false
+      };
 
+      console.log('Requesting camera access with constraints:', constraints);
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(console.error);
+        
+        // Better video initialization
+        videoRef.current.onloadeddata = () => {
+          console.log('Video loaded, dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+        };
+        
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current?.play();
+            console.log('Video playing successfully');
+            setIsActive(true);
+            
+            toast({
+              title: "AR Scanner Active! 🔍",
+              description: "Point at products to see live eco information",
+            });
+          } catch (playError) {
+            console.error('Video play failed:', playError);
+            toast({
+              title: "Video Play Failed",
+              description: "Unable to start video stream",
+              variant: "destructive",
+            });
+          }
+        };
+
+        videoRef.current.onerror = (e) => {
+          console.error('Video error:', e);
+          toast({
+            title: "Video Error",
+            description: "There was an error with the video stream",
+            variant: "destructive",
+          });
         };
       }
 
       setStream(mediaStream);
-      setIsActive(true);
-
-      toast({
-        title: "AR Scanner Active! 🔍",
-        description: "Point at products to see live eco information",
-      });
 
     } catch (err) {
       console.error('Camera access failed:', err);
+      let errorMessage = "Please allow camera access to use AR scanning";
+      
+      if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError') {
+          errorMessage = "Camera access denied. Please allow camera permissions in your browser settings.";
+        } else if (err.name === 'NotFoundError') {
+          errorMessage = "No camera found. Please connect a camera and try again.";
+        } else if (err.name === 'NotReadableError') {
+          errorMessage = "Camera is already in use by another application.";
+        }
+      }
+      
       toast({
         title: "Camera Access Failed",
-        description: "Please allow camera access to use AR scanning",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -134,9 +179,19 @@ export const SimpleARScanner: React.FC = () => {
   }, [stream]);
 
   // Toggle camera facing mode
-  const toggleCamera = useCallback(() => {
-    setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
-  }, []);
+  const toggleCamera = useCallback(async () => {
+    const newFacingMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(newFacingMode);
+    
+    // Restart camera with new facing mode
+    if (isActive) {
+      stopCamera();
+      // Give a small delay for cleanup
+      setTimeout(() => {
+        startCamera();
+      }, 500);
+    }
+  }, [facingMode, isActive, stopCamera, startCamera]);
 
   // Auto-scan functionality - actually analyze images like normal scanner
   useEffect(() => {
@@ -247,6 +302,62 @@ export const SimpleARScanner: React.FC = () => {
                 <Button onClick={toggleCamera} variant="outline" size="icon">
                   <RotateCcw size={18} />
                 </Button>
+                <Button
+                  onClick={() => {
+                    // Manual capture for testing
+                    if (videoRef.current && canvasRef.current) {
+                      const video = videoRef.current;
+                      const canvas = canvasRef.current;
+                      canvas.width = video.videoWidth;
+                      canvas.height = video.videoHeight;
+                      
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        ctx.drawImage(video, 0, 0);
+                        toast({
+                          title: "Frame Captured! 📸",
+                          description: "Analyzing product...",
+                        });
+                        
+                        canvas.toBlob(async (blob) => {
+                          if (blob) {
+                            try {
+                              const file = new File([blob], "manual-ar-scan.jpg", { type: "image/jpeg" });
+                              const results = await searchByImageFile(file);
+                              
+                              if (results.length > 0) {
+                                const product = results[0];
+                                const arProduct = {
+                                  ...product,
+                                  position: { x: 50, y: 50 },
+                                  id: Date.now(),
+                                };
+                                setDetectedProducts([arProduct]);
+                                
+                                // Update stats
+                                const alternativesCount = product.alternatives?.length || 0;
+                                StatsService.updateAfterScan(product, alternativesCount);
+                              }
+                            } catch (error) {
+                              console.error('Manual AR scan failed:', error);
+                              toast({
+                                title: "Scan Failed",
+                                description: "Unable to analyze the image",
+                                variant: "destructive",
+                              });
+                            }
+                          }
+                        }, 'image/jpeg', 0.8);
+                      }
+                    }
+                  }}
+                  variant="default"
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  <Scan size={16} />
+                  Scan Now
+                </Button>
               </>
             )}
           </div>
@@ -261,8 +372,23 @@ export const SimpleARScanner: React.FC = () => {
                   autoPlay
                   playsInline
                   muted
+                  controls={false}
+                  style={{ 
+                    backgroundColor: '#000',
+                    minHeight: '300px'
+                  }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
+
+                {/* Loading overlay when video is starting */}
+                {!videoRef.current?.videoWidth && (
+                  <div className="absolute inset-0 bg-black flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                      <p>Initializing camera...</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* AR Overlay for detected products */}
                 <AnimatePresence>
@@ -308,6 +434,35 @@ export const SimpleARScanner: React.FC = () => {
               <p className="text-center text-sm text-gray-600 mt-2">
                 Point your camera at products to see live eco information
               </p>
+            </div>
+          )}
+
+          {/* Camera not active - show activation button */}
+          {!isActive && (
+            <div className="text-center py-12">
+              <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-8 mb-6">
+                <Eye className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  AR Scanner Ready
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Experience real-time product analysis with augmented reality
+                </p>
+                <Button
+                  onClick={startCamera}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                >
+                  <Camera className="w-5 h-5 mr-2" />
+                  Activate AR Scanner
+                </Button>
+              </div>
+              
+              <div className="text-sm text-gray-500">
+                <p>• Point camera at products for instant eco analysis</p>
+                <p>• See sustainability scores in real-time</p>
+                <p>• Discover better alternatives instantly</p>
+              </div>
             </div>
           )}
         </div>
