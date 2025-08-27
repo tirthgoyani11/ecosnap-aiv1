@@ -8,7 +8,7 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import EnhancedScoutBot from '@/lib/enhanced-scout-bot';
-import { supabase } from '@/integrations/supabase'; // Import supabase client
+import { supabase } from '@/integrations/supabase/client'; // Import supabase client
 
 // SearchOptions remains the same for UI compatibility
 interface SearchOptions {
