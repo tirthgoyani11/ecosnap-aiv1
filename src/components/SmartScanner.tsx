@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse } from 'lucide-react';
+import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { useAdvancedProductSearch } from '@/hooks/useAdvancedProductSearch';
+import { useBarcodeAPI } from '@/hooks/useBarcodeAPI';
 import { useToast } from '@/hooks/use-toast';
 
 // --- NEW DETAILED PRODUCT CARD ---
@@ -101,16 +103,18 @@ const ProductResultCard = ({ product }) => {
 // --- MAIN SCANNER COMPONENT ---
 
 export const SmartScanner: React.FC = () => {
-  const [scanMode, setScanMode] = useState<'camera' | 'upload'>('camera');
+  const [scanMode, setScanMode] = useState<'camera' | 'upload' | 'barcode'>('camera');
   const [isScanning, setIsScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [barcodeInput, setBarcodeInput] = useState('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { products, loading, error, searchByImageFile, clearSearch, hasResults } = useAdvancedProductSearch();
+  const { lookupBarcode, lookupProductName, isLoading: barcodeLoading } = useBarcodeAPI();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -219,6 +223,40 @@ export const SmartScanner: React.FC = () => {
     }, 'image/jpeg', 0.8);
   }, [analyzeFile]);
 
+  const handleBarcodeSearch = useCallback(async () => {
+    if (!barcodeInput.trim()) {
+      toast({
+        title: "Enter Barcode",
+        description: "Please enter a barcode number to search",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await lookupBarcode(barcodeInput.trim());
+      if (result.success && result.product) {
+        // Convert barcode result to match our product structure
+        const convertedProduct = {
+          ...result.product,
+          // Add any missing fields that our UI expects
+        };
+        
+        // Clear previous results and show the new product
+        clearSearch();
+        
+        // Note: We'd need to update the search hook to handle barcode results
+        // For now, show a toast with the result
+        toast({
+          title: `Product Found: ${result.product.productName}`,
+          description: `Brand: ${result.product.brand} | Eco Score: ${result.product.ecoScore}`,
+        });
+      }
+    } catch (error) {
+      console.error('Barcode search failed:', error);
+    }
+  }, [barcodeInput, lookupBarcode, clearSearch, toast]);
+
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) await analyzeFile(file);
@@ -226,20 +264,22 @@ export const SmartScanner: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+        <Card>
         <CardHeader><CardTitle className="text-lg font-bold text-center">Scanner Mode</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-2">
-            {[{ mode: 'camera', icon: Camera, label: 'Live Scan' }, { mode: 'upload', icon: Upload, label: 'Upload Photo' }].map(({ mode, icon: Icon, label }) => (
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { mode: 'camera', icon: Camera, label: 'Live Scan' }, 
+              { mode: 'upload', icon: Upload, label: 'Upload Photo' },
+              { mode: 'barcode', icon: Hash, label: 'Barcode' }
+            ].map(({ mode, icon: Icon, label }) => (
               <Button key={mode} variant={scanMode === mode ? "default" : "outline"} className="flex flex-col h-auto p-4 space-y-2" onClick={() => setScanMode(mode as any)}>
                 <Icon size={24} /><span className="font-medium text-sm">{label}</span>
               </Button>
             ))}
           </div>
         </CardContent>
-      </Card>
-
-      {scanMode === 'camera' && (
+      </Card>      {scanMode === 'camera' && (
         <Card>
           <CardContent className="p-6">
             <div className="relative">
@@ -343,6 +383,55 @@ export const SmartScanner: React.FC = () => {
               <p>Click to upload product image</p>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
               <Button className="mt-4" disabled={loading}>{loading ? 'Processing...' : 'Choose Image'}</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {scanMode === 'barcode' && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <Hash size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-lg font-semibold mb-2">Enter Barcode Number</p>
+                <p className="text-sm text-gray-600">Type or scan a product barcode to get detailed analysis</p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="e.g. 123456789012"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleBarcodeSearch()}
+                  className="flex-1 text-center text-lg font-mono"
+                  disabled={barcodeLoading}
+                />
+              </div>
+              
+              <Button 
+                onClick={handleBarcodeSearch} 
+                disabled={barcodeLoading || !barcodeInput.trim()} 
+                className="w-full py-3 text-lg font-semibold"
+                size="lg"
+              >
+                {barcodeLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Scan className="mr-2 h-4 w-4" />
+                    Analyze Product
+                  </>
+                )}
+              </Button>
+              
+              <div className="text-center text-sm text-gray-500 mt-4">
+                <p>💡 Tip: Most barcodes are 8-13 digits long</p>
+              </div>
             </div>
           </CardContent>
         </Card>
