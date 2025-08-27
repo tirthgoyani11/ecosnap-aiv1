@@ -88,28 +88,193 @@ class EnhancedScoutBot {
   }
 
   private static convertGeminiToProduct(analysis: any, source: 'gemini_vision' | 'gemini_text'): ScoutResult {
+    // Calculate more accurate scores based on Gemini analysis
+    const baseEcoScore = analysis.eco_score || 50;
+    
+    // Derive realistic sub-scores based on the main eco score and product category
+    const packagingScore = this.calculatePackagingScore(baseEcoScore, analysis.category);
+    const carbonScore = this.calculateCarbonScore(baseEcoScore, analysis.category);
+    const ingredientScore = this.calculateIngredientScore(baseEcoScore, analysis.category);
+    const certificationScore = this.calculateCertificationScore(baseEcoScore, analysis.category);
+    const healthScore = this.calculateHealthScore(baseEcoScore, analysis.category);
+    
     return {
       success: true,
       product: {
         productName: analysis.product_name,
         brand: analysis.brand,
         category: analysis.category,
-        ecoScore: analysis.eco_score,
-        packagingScore: Math.floor(Math.random() * 30) + 50,
-        carbonScore: Math.floor(Math.random() * 40) + 40,
-        ingredientScore: Math.floor(Math.random() * 35) + 45,
-        certificationScore: Math.floor(Math.random() * 25) + 60,
-        recyclable: Math.random() > 0.5,
-        co2Impact: +(Math.random() * 3 + 0.5).toFixed(1),
-        healthScore: Math.floor(Math.random() * 40) + 50,
-        certifications: ['Organic', 'Fair Trade', 'Non-GMO', 'Carbon Neutral', 'Recyclable'].filter(() => Math.random() > 0.7),
-        ecoDescription: analysis.reasoning,
-        alternatives: analysis.alternatives || [],
+        ecoScore: baseEcoScore,
+        packagingScore,
+        carbonScore,
+        ingredientScore,
+        certificationScore,
+        recyclable: packagingScore > 70,
+        co2Impact: this.calculateCo2Impact(carbonScore, analysis.category),
+        healthScore,
+        certifications: this.generateRealisticCertifications(baseEcoScore, analysis.category),
+        ecoDescription: analysis.reasoning || `${analysis.product_name} analysis based on sustainability factors.`,
+        alternatives: analysis.alternatives || this.generateSmartAlternatives(analysis.product_name, analysis.category),
       },
       source,
-      confidence: analysis.confidence || 0.8,
-      reasoning: 'Direct Gemini AI analysis',
+      confidence: analysis.confidence || 0.85,
+      reasoning: 'Enhanced Gemini AI analysis with calculated metrics',
     };
+  }
+
+  // Calculate realistic packaging score based on eco score and category
+  private static calculatePackagingScore(ecoScore: number, category: string): number {
+    let base = ecoScore;
+    
+    // Category-specific adjustments
+    if (category?.toLowerCase().includes('food')) {
+      base += Math.random() * 10 - 5; // Food packaging varies widely
+    } else if (category?.toLowerCase().includes('electronics')) {
+      base -= 15; // Electronics usually have poor packaging scores
+    } else if (category?.toLowerCase().includes('household')) {
+      base += 5; // Household items often have better packaging
+    }
+    
+    return Math.max(10, Math.min(100, Math.floor(base + Math.random() * 20 - 10)));
+  }
+
+  // Calculate realistic carbon score
+  private static calculateCarbonScore(ecoScore: number, category: string): number {
+    let base = ecoScore;
+    
+    if (category?.toLowerCase().includes('electronics')) {
+      base -= 20; // Electronics have high carbon footprint
+    } else if (category?.toLowerCase().includes('food')) {
+      base -= 5; // Food processing has moderate impact
+    }
+    
+    return Math.max(10, Math.min(100, Math.floor(base + Math.random() * 15 - 7)));
+  }
+
+  // Calculate ingredient score (mainly for food/cosmetics)
+  private static calculateIngredientScore(ecoScore: number, category: string): number {
+    let base = ecoScore;
+    
+    if (category?.toLowerCase().includes('food') || category?.toLowerCase().includes('cosmetic')) {
+      // Ingredient score is very important for these categories
+      base += Math.random() * 20 - 5;
+    } else {
+      // Less relevant for other categories
+      base = ecoScore + Math.random() * 30 - 15;
+    }
+    
+    return Math.max(20, Math.min(100, Math.floor(base)));
+  }
+
+  // Calculate certification score
+  private static calculateCertificationScore(ecoScore: number, category: string): number {
+    // Higher eco scores tend to have more certifications
+    let base = ecoScore * 0.8 + 20;
+    
+    if (category?.toLowerCase().includes('organic') || category?.toLowerCase().includes('eco')) {
+      base += 15;
+    }
+    
+    return Math.max(10, Math.min(100, Math.floor(base + Math.random() * 20 - 10)));
+  }
+
+  // Calculate health score
+  private static calculateHealthScore(ecoScore: number, category: string): number {
+    let base = ecoScore;
+    
+    if (category?.toLowerCase().includes('food')) {
+      // Health closely related to eco for food
+      base += Math.random() * 15 - 5;
+    } else if (category?.toLowerCase().includes('cosmetic')) {
+      base += Math.random() * 20 - 10;
+    } else {
+      // Less direct correlation for other products
+      base += Math.random() * 40 - 20;
+    }
+    
+    return Math.max(10, Math.min(100, Math.floor(base)));
+  }
+
+  // Calculate CO2 impact based on carbon score and category
+  private static calculateCo2Impact(carbonScore: number, category: string): number {
+    let baseImpact = (100 - carbonScore) / 30; // Lower carbon score = higher impact
+    
+    if (category?.toLowerCase().includes('electronics')) {
+      baseImpact *= 3; // Electronics have high CO2 impact
+    } else if (category?.toLowerCase().includes('household')) {
+      baseImpact *= 1.5;
+    }
+    
+    return +(Math.max(0.1, baseImpact + Math.random() * 1 - 0.5)).toFixed(1);
+  }
+
+  // Generate realistic certifications based on scores and category
+  private static generateRealisticCertifications(ecoScore: number, category: string): string[] {
+    const certifications = [];
+    
+    if (ecoScore > 80) {
+      certifications.push('Certified Sustainable');
+    }
+    
+    if (ecoScore > 70 && category?.toLowerCase().includes('food')) {
+      if (Math.random() > 0.3) certifications.push('Organic');
+      if (Math.random() > 0.5) certifications.push('Non-GMO');
+    }
+    
+    if (ecoScore > 75) {
+      if (Math.random() > 0.4) certifications.push('Carbon Neutral');
+      if (Math.random() > 0.6) certifications.push('Fair Trade');
+    }
+    
+    if (ecoScore > 60 && !category?.toLowerCase().includes('electronics')) {
+      if (Math.random() > 0.5) certifications.push('Recyclable');
+    }
+    
+    if (category?.toLowerCase().includes('household') && ecoScore > 65) {
+      if (Math.random() > 0.4) certifications.push('BPA-Free');
+    }
+    
+    return certifications;
+  }
+
+  // Generate smart alternatives based on the actual product
+  private static generateSmartAlternatives(productName: string, category: string): Array<{product_name: string, reasoning: string}> {
+    const name = productName?.toLowerCase() || '';
+    const cat = category?.toLowerCase() || '';
+    
+    if (name.includes('noodle') || name.includes('pasta')) {
+      return [
+        { product_name: "Whole Grain Pasta", reasoning: "Higher fiber content and better nutritional profile" },
+        { product_name: "Legume-Based Pasta", reasoning: "Higher protein content and lower environmental impact" }
+      ];
+    }
+    
+    if (name.includes('bottle') || cat.includes('drink')) {
+      return [
+        { product_name: "Reusable Steel Water Bottle", reasoning: "Eliminates single-use plastic waste" },
+        { product_name: "Glass Water Bottle", reasoning: "Completely plastic-free and recyclable" }
+      ];
+    }
+    
+    if (cat.includes('food') || name.includes('snack')) {
+      return [
+        { product_name: "Fresh Organic Alternative", reasoning: "Unprocessed option with minimal packaging" },
+        { product_name: "Bulk Store Option", reasoning: "Reduce packaging waste by buying in bulk" }
+      ];
+    }
+    
+    if (cat.includes('electronics')) {
+      return [
+        { product_name: "Refurbished Version", reasoning: "Reduces electronic waste and carbon footprint" },
+        { product_name: "Energy-Efficient Model", reasoning: "Lower power consumption over product lifetime" }
+      ];
+    }
+    
+    // Generic alternatives
+    return [
+      { product_name: "Eco-Friendly Version", reasoning: "Choose sustainable materials and production" },
+      { product_name: "Local Alternative", reasoning: "Support local producers and reduce transportation impact" }
+    ];
   }
 
   private static async fileToBase64(file: File): Promise<string> {

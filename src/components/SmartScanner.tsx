@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Hash } from 'lucide-react';
+import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Hash, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useAdvancedProductSearch } from '@/hooks/useAdvancedProductSearch';
 import { useBarcodeAPI } from '@/hooks/useBarcodeAPI';
 import { useToast } from '@/hooks/use-toast';
+import { StatsService } from '@/lib/stats-service';
 
 // --- NEW DETAILED PRODUCT CARD ---
 const ProductResultCard = ({ product }) => {
@@ -202,6 +203,22 @@ export const SmartScanner: React.FC = () => {
   const analyzeFile = async (file: File) => {
     const results = await searchByImageFile(file);
     if (results.length > 0) {
+      const product = results[0];
+      
+      // Update user stats with the scan
+      const alternativesCount = product.alternatives?.length || 0;
+      const updatedStats = StatsService.updateAfterScan(product, alternativesCount);
+      
+      // Show achievement notification if any new achievements
+      if (updatedStats.achievements.length > 0) {
+        const latestAchievement = updatedStats.achievements[updatedStats.achievements.length - 1];
+        toast({
+          title: "🏆 Achievement Unlocked!",
+          description: `${latestAchievement}! Total: ${updatedStats.ecoPoints} eco points`,
+          duration: 5000,
+        });
+      }
+      
       stopCamera();
     }
   };

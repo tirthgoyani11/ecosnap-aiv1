@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAdvancedProductSearch } from '@/hooks/useAdvancedProductSearch';
 import { useToast } from '@/hooks/use-toast';
+import { StatsService } from '@/lib/stats-service';
 
 interface AROverlayProps {
   product: any;
@@ -137,16 +138,16 @@ export const SimpleARScanner: React.FC = () => {
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
   }, []);
 
-  // Simulate AR detection (replace with actual AR detection logic)
+  // Auto-scan functionality - actually analyze images like normal scanner
   useEffect(() => {
     if (!isActive || loading || isDetecting) return;
 
     const detectProducts = async () => {
-      // Simulate random product detection
-      if (Math.random() > 0.7) {
+      // Auto-capture and analyze every 4 seconds
+      if (Math.random() > 0.5) { // 50% chance to trigger analysis
         setIsDetecting(true);
         
-        // Capture current frame for analysis
+        // Capture current frame for real analysis
         if (videoRef.current && canvasRef.current) {
           const video = videoRef.current;
           const canvas = canvasRef.current;
@@ -165,7 +166,13 @@ export const SimpleARScanner: React.FC = () => {
                   
                   if (results.length > 0) {
                     const product = results[0];
-                    const mockProduct = {
+                    
+                    // Update user stats
+                    const alternativesCount = product.alternatives?.length || 0;
+                    const updatedStats = StatsService.updateAfterScan(product, alternativesCount);
+                    
+                    // Create AR overlay with real product data
+                    const arProduct = {
                       ...product,
                       position: {
                         x: Math.random() * 60 + 20, // 20-80%
@@ -174,12 +181,22 @@ export const SimpleARScanner: React.FC = () => {
                       id: Date.now(),
                     };
                     
-                    setDetectedProducts([mockProduct]);
+                    setDetectedProducts([arProduct]);
                     
-                    // Auto-hide after 5 seconds
+                    // Show achievement notification if any
+                    if (updatedStats.achievements.length > 0) {
+                      const latestAchievement = updatedStats.achievements[updatedStats.achievements.length - 1];
+                      toast({
+                        title: "🏆 AR Achievement!",
+                        description: `${latestAchievement}! ${updatedStats.ecoPoints} eco points`,
+                        duration: 4000,
+                      });
+                    }
+                    
+                    // Auto-hide after 6 seconds
                     setTimeout(() => {
                       setDetectedProducts([]);
-                    }, 5000);
+                    }, 6000);
                   }
                 } catch (error) {
                   console.error('AR detection failed:', error);
@@ -192,9 +209,9 @@ export const SimpleARScanner: React.FC = () => {
       }
     };
 
-    const interval = setInterval(detectProducts, 3000);
+    const interval = setInterval(detectProducts, 4000); // Every 4 seconds
     return () => clearInterval(interval);
-  }, [isActive, searchByImageFile, loading, isDetecting]);
+  }, [isActive, searchByImageFile, loading, isDetecting, toast]);
 
   // Cleanup on unmount
   useEffect(() => {

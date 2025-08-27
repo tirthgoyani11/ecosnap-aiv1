@@ -8,7 +8,7 @@ import { ScoreRing } from "@/components/ScoreRing";
 import { CountUpStat } from "@/components/CountUpStat";
 import { AnimatedElement, StaggeredGrid } from "@/components/AnimatedComponents";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useStatsMock } from "@/hooks/useStatsMock";
+import { useUserStats } from "@/hooks/useUserStats";
 import { 
   Scan, 
   Leaf, 
@@ -24,29 +24,9 @@ import {
   Recycle
 } from "lucide-react";
 
-interface DashboardStats {
-  totalScans: number;
-  totalCO2Saved: number;
-  ecoScoreAverage: number;
-  points: number;
-  weeklyScans: number;
-  monthlyGoal: number;
-  alternativesFound: number;
-  sustainableChoices: number;
-}
-
 export default function Dashboard() {
-  const { stats, loading } = useStatsMock();
-  const [userStats, setUserStats] = useState<DashboardStats>({
-    totalScans: 0,
-    totalCO2Saved: 0,
-    ecoScoreAverage: 0,
-    points: 0,
-    weeklyScans: 0,
-    monthlyGoal: 50,
-    alternativesFound: 0,
-    sustainableChoices: 0
-  });
+  const { stats, refreshStats } = useUserStats();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "🌿 EcoSnap AI - Dashboard";
@@ -57,67 +37,63 @@ export default function Dashboard() {
         totalScans: stats.totalScans || 127,
         totalCO2Saved: Math.round((stats.totalScans || 127) * 0.8),
         ecoScoreAverage: 78,
-        points: (stats.totalScans || 127) * 10,
-        weeklyScans: 12,
-        monthlyGoal: 50,
-        alternativesFound: Math.round((stats.totalScans || 127) * 0.6),
-        sustainableChoices: Math.round((stats.totalScans || 127) * 0.4)
-      });
-    }
-  }, [stats, loading]);
+  useEffect(() => {
+    setLoading(true);
+    // Simulate loading for smooth animation
+    const timer = setTimeout(() => {
+      setLoading(false);
+      refreshStats();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [refreshStats]);
 
   const achievements = [
     { 
       icon: Scan, 
       title: "First Scan", 
       description: "Completed your first product scan",
-      earned: true,
-      date: "2 weeks ago"
+      earned: stats.totalScans > 0,
+      date: stats.totalScans > 0 ? "Completed" : null
     },
     { 
       icon: Leaf, 
       title: "Eco Warrior", 
       description: "Made 10 sustainable swaps",
-      earned: true,
-      date: "1 week ago"
+      earned: stats.alternativesFound >= 10,
+      date: stats.alternativesFound >= 10 ? "Completed" : null
     },
     { 
       icon: TreePine, 
       title: "Carbon Saver", 
       description: "Saved 50kg of CO2",
-      earned: userStats.totalCO2Saved >= 50,
-      date: userStats.totalCO2Saved >= 50 ? "Today" : null
+      earned: stats.co2Saved >= 50,
+      date: stats.co2Saved >= 50 ? "Completed" : null
     },
     { 
       icon: Target, 
       title: "Goal Crusher", 
       description: "Hit monthly scanning goal",
-      earned: userStats.weeklyScans * 4 >= userStats.monthlyGoal,
-      date: null
+      earned: stats.totalScans >= 30,
+      date: stats.totalScans >= 30 ? "Completed" : null
     }
   ];
 
   const recentActivity = [
     {
       type: "scan",
-      product: "Organic Apple Juice",
+      product: "Recent Product Scan",
       score: 85,
-      action: "Found better alternative",
-      time: "2 hours ago"
-    },
-    {
-      type: "swap",
-      product: "Eco-Friendly Detergent",
-      score: 92,
-      action: "Made sustainable choice",
-      time: "5 hours ago"
+      action: stats.totalScans > 0 ? "Scan completed" : "No scans yet",
+      time: stats.lastScanDate || "Never"
     },
     {
       type: "achievement",
-      product: "Carbon Saver Badge",
+      product: "Latest Achievement",
       score: null,
-      action: "Achievement unlocked",
-      time: "1 day ago"
+      action: stats.achievements.length > 0 ? stats.achievements[stats.achievements.length - 1] : "No achievements yet",
+      time: stats.achievements.length > 0 ? "Recent" : "None"
+    }
     }
   ];
 

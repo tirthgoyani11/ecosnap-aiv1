@@ -17,6 +17,7 @@ interface ProductAnalysis {
   healthScore: number;
   certifications: string[];
   ecoDescription: string;
+  alternatives?: { product_name: string; reasoning: string; }[];
 }
 
 interface SearchResult {

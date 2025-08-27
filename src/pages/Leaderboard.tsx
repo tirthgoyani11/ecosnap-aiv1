@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { KPIStat } from "@/components/KPIStat";
 import { LoadingSkeleton } from "@/components/LoadingSpinner";
-import { useLeaderboardMock, useStatsMock } from "@/hooks/useStatsMock";
+import { useUserStats } from "@/hooks/useUserStats";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Trophy, 
@@ -21,23 +21,9 @@ import {
 } from "lucide-react";
 
 export default function Leaderboard() {
-  const { leaderboard, loading } = useLeaderboardMock();
-  const { stats, unlockAchievement } = useStatsMock();
+  const { stats, leaderboard, getUserRank } = useUserStats();
   const { toast } = useToast();
-
-  const handleUnlockAchievement = () => {
-    const lockedAchievement = stats.achievements.find(a => !a.unlocked);
-    if (lockedAchievement) {
-      unlockAchievement(lockedAchievement.id);
-      toast({
-        title: "🎉 Achievement Unlocked!",
-        description: `You earned: ${lockedAchievement.name}`,
-      });
-
-      // Trigger confetti effect (would be implemented with a confetti library)
-      console.log("🎊 Confetti burst!");
-    }
-  };
+  const userRank = getUserRank();
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -64,20 +50,6 @@ export default function Leaderboard() {
         return "from-muted/20 to-muted/10 border-muted/20";
     }
   };
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          <LoadingSkeleton className="h-12 w-64" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <LoadingSkeleton className="h-32" count={3} />
-          </div>
-          <LoadingSkeleton className="h-96" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -118,37 +90,35 @@ export default function Leaderboard() {
             <CardContent className="space-y-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary mb-2">
-                  {stats.pointsEarned.toLocaleString()}
+                  {stats.ecoPoints.toLocaleString()}
                 </div>
                 <p className="text-muted-foreground">Total Points</p>
               </div>
 
               <div className="space-y-4">
-                <KPIStat
-                  title="Current Level"
-                  value={stats.level}
-                  icon={Zap}
-                  color="primary"
-                />
-                
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Progress to Level {stats.level + 1}</span>
-                    <span>{stats.levelProgress}%</span>
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-secondary">
+                    Rank #{userRank || '—'}
                   </div>
-                  <Progress value={stats.levelProgress} className="h-3" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {100 - stats.levelProgress}% to next level
+                  <p className="text-sm text-muted-foreground">
+                    {userRank ? `Top ${Math.round((userRank / leaderboard.length) * 100)}%` : 'Not ranked yet'}
                   </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-md font-medium text-green-600">
+                    {stats.sustainabilityRating}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Rating</p>
                 </div>
               </div>
 
               <Button
-                onClick={handleUnlockAchievement}
                 className="w-full bg-gradient-to-r from-primary to-secondary"
+                onClick={() => window.location.href = '/scanner'}
               >
-                <Sparkles className="h-4 w-4 mr-2" />
-                Unlock Achievement
+                <Zap className="h-4 w-4 mr-2" />
+                Scan & Climb Higher!
               </Button>
             </CardContent>
           </Card>
@@ -204,7 +174,7 @@ export default function Leaderboard() {
                     
                     return (
                       <motion.div
-                        key={user.id}
+                        key={`${user.username}-${user.rank}`}
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 + displayOrder * 0.1 }}
@@ -217,9 +187,8 @@ export default function Leaderboard() {
                       >
                         <div className="relative mb-3">
                           <Avatar className={`mx-auto ${actualRank === 1 ? 'w-16 h-16' : 'w-12 h-12'}`}>
-                            <AvatarImage src={user.avatar} alt={user.name} />
                             <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
-                              {user.name.substring(0, 2).toUpperCase()}
+                              {user.username.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="absolute -top-2 -right-2">
@@ -227,13 +196,13 @@ export default function Leaderboard() {
                           </div>
                         </div>
                         <h4 className={`font-semibold truncate ${actualRank === 1 ? 'text-lg' : 'text-sm'}`}>
-                          {user.name}
+                          {user.username}
                         </h4>
                         <p className="text-xs text-muted-foreground mb-2">
-                          Level {user.level}
+                          {user.totalScans} scans
                         </p>
                         <div className={`font-bold text-primary ${actualRank === 1 ? 'text-xl' : 'text-lg'}`}>
-                          {user.points.toLocaleString()}
+                          {user.ecoPoints.toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground">points</p>
                       </motion.div>
@@ -251,7 +220,7 @@ export default function Leaderboard() {
                   <AnimatePresence>
                     {leaderboard.map((user, index) => (
                       <motion.div
-                        key={user.id}
+                        key={`${user.username}-${user.rank}-full`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
@@ -270,19 +239,18 @@ export default function Leaderboard() {
 
                         {/* Avatar */}
                         <Avatar className="w-12 h-12">
-                          <AvatarImage src={user.avatar} alt={user.name} />
                           <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
-                            {user.name.substring(0, 2).toUpperCase()}
+                            {user.username.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
 
                         {/* User Info */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate">{user.name}</h4>
+                          <h4 className="font-semibold truncate">{user.username}</h4>
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span>Level {user.level}</span>
+                            <span>{user.totalScans} scans</span>
                             <Badge variant="outline" className="text-xs">
-                              {user.points.toLocaleString()} pts
+                              {user.co2Saved.toFixed(1)}kg CO₂ saved
                             </Badge>
                           </div>
                         </div>
@@ -290,7 +258,7 @@ export default function Leaderboard() {
                         {/* Points */}
                         <div className="text-right">
                           <div className="font-bold text-lg">
-                            {user.points.toLocaleString()}
+                            {user.ecoPoints.toLocaleString()}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             points
