@@ -11,7 +11,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorState } from "@/components/ErrorState";
 import { AnimatedElement } from "@/components/AnimatedComponents";
 import { SmartScanner } from "@/components/SmartScanner";
-import { useBarcodeAPI } from "@/hooks/useBarcodeAPI";
+import { SimpleARScanner } from "@/components/SimpleARScanner";
 import { useEcoScore } from "@/hooks/useEcoScore";
 import { useAlternatives } from "@/hooks/useAlternatives";
 import { useCamera } from "@/hooks/useCamera";
@@ -30,7 +30,9 @@ import {
   Play,
   Square,
   FileImage,
-  Trophy
+  Trophy,
+  Eye,
+  Smartphone
 } from "lucide-react";
 
 interface ProductResult {
@@ -51,6 +53,7 @@ export default function Scanner() {
   const [currentProduct, setCurrentProduct] = useState<ProductResult | null>(null);
   const [productAlternatives, setProductAlternatives] = useState<any[]>([]);
   const [ecoPoints, setEcoPoints] = useState(0);
+  const [scannerMode, setScannerMode] = useState<'regular' | 'ar'>('regular');
   
   const { toast } = useToast();
   const { triggerHaptic } = useHapticFeedback();
@@ -212,14 +215,41 @@ export default function Scanner() {
               </p>
             </AnimatedElement>
 
+            {/* Scanner Mode Selector */}
+            <AnimatedElement animation="fadeInUp" className="text-center">
+              <Card className="max-w-lg mx-auto mb-6">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold mb-3">Scanner Mode</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={scannerMode === 'regular' ? 'default' : 'outline'}
+                      onClick={() => setScannerMode('regular')}
+                      className="flex-1 flex items-center gap-2"
+                    >
+                      <Camera size={18} />
+                      Regular Scan
+                    </Button>
+                    <Button
+                      variant={scannerMode === 'ar' ? 'default' : 'outline'}
+                      onClick={() => setScannerMode('ar')}
+                      className="flex-1 flex items-center gap-2"
+                    >
+                      <Eye size={18} />
+                      AR Scanner
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedElement>
+
             {/* Smart Scanner */}
             <AnimatedElement animation="scaleIn" delay={200}>
               <div className="max-w-4xl mx-auto">
-                <SmartScanner 
-                  onProductFound={handleProductFound}
-                  onEcoPointsEarned={handleEcoPointsEarned}
-                  mode="auto"
-                />
+                {scannerMode === 'regular' ? (
+                  <SmartScanner />
+                ) : (
+                  <SimpleARScanner />
+                )}
               </div>
             </AnimatedElement>
 

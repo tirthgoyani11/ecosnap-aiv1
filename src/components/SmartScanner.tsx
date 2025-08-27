@@ -20,49 +20,80 @@ const ProductResultCard = ({ product }) => {
   );
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">{product.productName}</CardTitle>
-        <p className="text-md text-gray-500">by {product.brand} in <Badge variant="secondary">{product.category}</Badge></p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-center p-4 bg-green-50 rounded-xl">
-          <p className="text-sm text-green-700">Overall Eco Score</p>
-          <p className="text-6xl font-bold text-green-600">{product.ecoScore}</p>
-          <Progress value={product.ecoScore} className="mt-2" />
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <ScoreItem icon={<Package size={24} className="text-blue-500" />} label="Packaging" value={product.packagingScore} />
-          <ScoreItem icon={<Cloud size={24} className="text-slate-500" />} label="Carbon" value={product.carbonScore} />
-          <ScoreItem icon={<FlaskConical size={24} className="text-purple-500" />} label="Ingredients" value={product.ingredientScore} />
-          <ScoreItem icon={<HeartPulse size={24} className="text-red-500" />} label="Health" value={product.healthScore} />
-        </div>
-
-        <div>
-          <h4 className="font-semibold mb-2">Details</h4>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <Badge variant={product.recyclable ? 'default' : 'destructive'}>{product.recyclable ? 'Recyclable' : 'Not Recyclable'}</Badge>
-            <Badge variant="outline">CO2 Impact: {product.co2Impact} kg</Badge>
-            <Badge variant="outline">Cert Score: {product.certificationScore}/100</Badge>
+    <div className="space-y-4">
+      <Card className="w-full max-w-lg mx-auto">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">{product.productName}</CardTitle>
+          <p className="text-md text-gray-500">by {product.brand} in <Badge variant="secondary">{product.category}</Badge></p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center p-4 bg-green-50 rounded-xl">
+            <p className="text-sm text-green-700">Overall Eco Score</p>
+            <p className="text-6xl font-bold text-green-600">{product.ecoScore}</p>
+            <Progress value={product.ecoScore} className="mt-2" />
           </div>
-        </div>
 
-        {product.certifications && product.certifications.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <ScoreItem icon={<Package size={24} className="text-blue-500" />} label="Packaging" value={product.packagingScore} />
+            <ScoreItem icon={<Cloud size={24} className="text-slate-500" />} label="Carbon" value={product.carbonScore} />
+            <ScoreItem icon={<FlaskConical size={24} className="text-purple-500" />} label="Ingredients" value={product.ingredientScore} />
+            <ScoreItem icon={<HeartPulse size={24} className="text-red-500" />} label="Health" value={product.healthScore} />
+          </div>
+
           <div>
-            <h4 className="font-semibold mb-2">Certifications</h4>
-            <div className="flex flex-wrap gap-2">
-              {product.certifications.map(cert => <Badge key={cert} variant="secondary">{cert}</Badge>)}
+            <h4 className="font-semibold mb-2">Details</h4>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <Badge variant={product.recyclable ? 'default' : 'destructive'}>{product.recyclable ? 'Recyclable' : 'Not Recyclable'}</Badge>
+              <Badge variant="outline">CO2 Impact: {product.co2Impact} kg</Badge>
+              <Badge variant="outline">Cert Score: {product.certificationScore}/100</Badge>
             </div>
           </div>
-        )}
 
-        <div>
-          <h4 className="font-semibold mb-2">Eco Analysis</h4>
-          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">{product.ecoDescription}</p>
-        </div>
-      </CardContent>
-    </Card>
+          {product.certifications && product.certifications.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-2">Certifications</h4>
+              <div className="flex flex-wrap gap-2">
+                {product.certifications.map(cert => <Badge key={cert} variant="secondary">{cert}</Badge>)}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h4 className="font-semibold mb-2">Eco Analysis</h4>
+            <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">{product.ecoDescription}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Alternatives Section */}
+      {product.alternatives && product.alternatives.length > 0 && (
+        <Card className="w-full max-w-lg mx-auto">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Leaf className="text-green-500" size={20} />
+              Eco-Friendly Alternatives
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {product.alternatives.map((alt, index) => (
+                <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-100">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-green-800">{alt.product_name}</h4>
+                      <p className="text-sm text-green-600 mt-1">{alt.reasoning}</p>
+                    </div>
+                    <Badge variant="outline" className="text-green-600 border-green-200">
+                      Better Choice
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
@@ -85,17 +116,72 @@ export const SmartScanner: React.FC = () => {
   useEffect(() => {
     if (scanMode !== 'camera') return;
     let mediaStream: MediaStream | null = null;
+    
     const startCamera = async () => {
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } });
-        if (videoRef.current) videoRef.current.srcObject = mediaStream;
+        // Check if getUserMedia is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera not supported on this device');
+        }
+
+        // Request camera permission with better constraints
+        const constraints = {
+          video: { 
+            facingMode, 
+            width: { ideal: 1280, max: 1920 }, 
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          // Ensure video starts playing
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current?.play().catch(console.error);
+          };
+        }
+        
         setStream(mediaStream);
         setIsScanning(true);
-      } catch (err) { console.error('Camera access failed:', err); toast({ title: "Camera Access Failed", variant: "destructive" }); }
+        
+        toast({
+          title: "Camera Ready! 📸",
+          description: "Point your camera at a product and tap 'Scan Product'",
+        });
+
+      } catch (err) { 
+        console.error('Camera access failed:', err);
+        let errorMessage = 'Camera access failed';
+        
+        if (err instanceof Error) {
+          if (err.name === 'NotAllowedError') {
+            errorMessage = 'Camera permission denied. Please allow camera access and try again.';
+          } else if (err.name === 'NotFoundError') {
+            errorMessage = 'No camera found on this device.';
+          } else if (err.name === 'NotSupportedError') {
+            errorMessage = 'Camera not supported on this device.';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+        
+        toast({ 
+          title: "Camera Access Failed ❌", 
+          description: errorMessage,
+          variant: "destructive" 
+        });
+      }
     };
+    
     startCamera();
+    
     return () => {
-      if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
       setStream(null);
       setIsScanning(false);
     };
@@ -158,13 +244,91 @@ export const SmartScanner: React.FC = () => {
           <CardContent className="p-6">
             <div className="relative">
               <div className="relative overflow-hidden rounded-lg bg-black aspect-video">
-                <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline muted />
+                {!isScanning && (
+                  <div className="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center text-white">
+                    <Camera size={48} className="mb-4 text-gray-400" />
+                    <p className="text-lg font-medium mb-2">Starting Camera...</p>
+                    <p className="text-sm text-gray-400">Please allow camera access when prompted</p>
+                  </div>
+                )}
+                
+                <video 
+                  ref={videoRef} 
+                  className={`w-full h-full object-cover ${isScanning ? 'block' : 'hidden'}`}
+                  autoPlay 
+                  playsInline 
+                  muted 
+                />
                 <canvas ref={canvasRef} className="hidden" />
-                {loading && <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center"><Loader2 className="h-12 w-12 text-white animate-spin" /></div>}
+                
+                {loading && (
+                  <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center backdrop-blur-sm">
+                    <div className="text-center text-white">
+                      <Loader2 className="h-12 w-12 mx-auto animate-spin mb-4" />
+                      <p className="text-lg font-semibold">Analyzing Product...</p>
+                      <p className="text-sm opacity-75">AI is processing your image</p>
+                    </div>
+                  </div>
+                )}
+
+                {isScanning && !loading && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* Scanning overlay */}
+                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                      <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
+                        Camera: {facingMode === 'environment' ? 'Back' : 'Front'}
+                      </Badge>
+                      <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
+                        Ready to Scan
+                      </Badge>
+                    </div>
+                    
+                    {/* Scanning frame */}
+                    <div className="absolute inset-8 border-2 border-white/50 rounded-lg">
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-lg"></div>
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
+                    </div>
+                    
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                      <p className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+                        Position product in frame and tap Scan
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
+              
               <div className="flex justify-center items-center space-x-4 mt-4">
-                <Button variant="outline" size="icon" onClick={toggleCamera} disabled={loading}><RotateCcw size={20} /></Button>
-                <Button onClick={captureAndAnalyze} disabled={loading || !isScanning} className="px-8 py-3 text-lg font-semibold"><Scan className="mr-2 h-4 w-4" />Scan Product</Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={toggleCamera} 
+                  disabled={loading || !isScanning}
+                  className="flex-shrink-0"
+                >
+                  <RotateCcw size={20} />
+                </Button>
+                
+                <Button 
+                  onClick={captureAndAnalyze} 
+                  disabled={loading || !isScanning} 
+                  className="px-8 py-3 text-lg font-semibold flex-1 max-w-xs"
+                  size="lg"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Scan className="mr-2 h-4 w-4" />
+                      Scan Product
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>
