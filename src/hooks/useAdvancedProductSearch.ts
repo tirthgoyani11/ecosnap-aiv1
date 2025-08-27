@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import EnhancedScoutBot from '@/lib/enhanced-scout-bot';
-import { supabase } from '@/integrations/supabase/client';
 
 // This is the new, detailed product structure from our backend function
 interface ProductAnalysis {
@@ -72,13 +71,11 @@ export const useAdvancedProductSearch = () => {
           },
         });
 
-        // Save the detailed analysis to scan history
-        supabase.from('scan_history').insert({
-          product_data: scoutResult.product,
+        // Log successful scan locally (no Supabase dependency)
+        console.log('✅ Scan successful:', {
+          product: scoutResult.product,
           source: scoutResult.source,
           confidence: scoutResult.confidence,
-        }).then(({ error }) => {
-          if (error) console.error("Failed to save scan history:", error);
         });
 
         toast({

@@ -1,7 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
 import { Gemini } from '@/integrations/gemini';
-
-// --- INTERFACES ---
 
 interface ProductSearchQuery {
   imageFile?: File;
@@ -27,134 +24,106 @@ interface ScoutResult {
     ecoDescription: string;
     alternatives: { product_name: string; reasoning: string; }[];
   };
-  source: 'gemini_backend_scan' | 'gemini_direct' | 'demo_fallback' | 'none';
+  source: 'gemini_vision' | 'gemini_text' | 'demo_fallback';
   confidence: number;
   reasoning?: string;
 }
 
-// --- CLASS DEFINITION ---
-
-export default class EnhancedScoutBot {
-
-  /**
-   * Main product search method - handles both image files and barcode/text searches
-   */
+class EnhancedScoutBot {
   static async findProduct(query: ProductSearchQuery): Promise<ScoutResult> {
     console.log('🤖 Enhanced Scout Bot activated with query:', query);
 
-    // Try image file first if provided
-    if (query.imageFile) {
-      return await this.findProductByImage({ imageFile: query.imageFile });
-    }
-
-    // Try direct Gemini AI search for barcode or product name
-    if (query.barcode || query.productName) {
-      return await this.findProductWithGemini(query.barcode || query.productName || '');
-    }
-
-    return {
-      success: false,
-      source: 'none',
-      confidence: 0,
-      reasoning: 'No search query provided',
-    };
-  }
-
-  /**
-   * Finds a product by sending an image file to our backend Supabase function.
-   */
-  static async findProductByImage(query: { imageFile: File }): Promise<ScoutResult> {
-    console.log('🤖 Activating backend scout bot with file:', query.imageFile.name);
-
-    if (!query.imageFile) {
-      throw new Error("An image file must be provided.");
-    }
-
-    const formData = new FormData();
-    formData.append('files', query.imageFile);
-
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-bulk-scan', {
-        body: formData,
-      });
-
-      if (error) {
-        console.warn('Backend scan failed, falling back to direct Gemini:', error);
-        return await this.findProductWithGemini('product from image');
+      if (query.imageFile) {
+        return await this.analyzeProductImage(query.imageFile);
       }
 
-      // The backend returns results and errors arrays
-      if (data.errors && data.errors.length > 0) {
-        console.warn('Backend errors, falling back:', data.errors);
-        return await this.findProductWithGemini('product from image');
+      if (query.barcode || query.productName) {
+        return await this.analyzeProductText(query.barcode || query.productName || '');
       }
 
-      if (data.results && data.results.length > 0) {
-        const firstResult = data.results[0];
-        return {
-          success: true,
-          product: firstResult.analysis,
-          source: 'gemini_backend_scan',
-          confidence: firstResult.analysis.ecoScore / 100 || 0.8,
-          reasoning: `Successfully analyzed ${firstResult.filename}`,
-        };
-      } else {
-        console.warn('No backend results, falling back to direct Gemini');
-        return await this.findProductWithGemini('product from image');
-      }
+      throw new Error('No search query provided');
 
     } catch (error) {
-      console.error('❌ Backend Scout Bot failed, trying direct Gemini:', error);
-      return await this.findProductWithGemini('product from image');
+      console.error('❌ Product search failed:', error);
+      return await this.createDemoProduct(query.productName || query.barcode || 'unknown product');
     }
   }
 
-  /**
-   * Direct Gemini AI search for barcode or product name
-   */
-  static async findProductWithGemini(searchQuery: string): Promise<ScoutResult> {
-    console.log('🤖 Using direct Gemini search for:', searchQuery);
+  static async analyzeProductImage(imageFile: File): Promise<ScoutResult> {
+    console.log('🤖 Analyzing product image with Gemini Vision:', imageFile.name);
+
+    try {
+      const base64Image = await this.fileToBase64(imageFile);
+      const analysis = await Gemini.analyzeImage(base64Image);
+      
+      if (analysis) {
+        return this.convertGeminiToProduct(analysis, 'gemini_vision');
+      }
+
+      throw new Error('No analysis from Gemini Vision');
+
+    } catch (error) {
+      console.error('❌ Gemini Vision failed, using demo fallback:', error);
+      return await this.createDemoProduct('product from image');
+    }
+  }
+
+  static async analyzeProductText(searchQuery: string): Promise<ScoutResult> {
+    console.log('🤖 Analyzing product text with Gemini:', searchQuery);
 
     try {
       const analysis = await Gemini.analyzeText(searchQuery);
       
       if (analysis) {
-        return {
-          success: true,
-          product: {
-            productName: analysis.product_name,
-            brand: analysis.brand,
-            category: analysis.category,
-            ecoScore: analysis.eco_score,
-            packagingScore: Math.floor(Math.random() * 30) + 50, // Demo scores
-            carbonScore: Math.floor(Math.random() * 40) + 40,
-            ingredientScore: Math.floor(Math.random() * 35) + 45,
-            certificationScore: Math.floor(Math.random() * 25) + 60,
-            recyclable: Math.random() > 0.5,
-            co2Impact: Math.random() * 3 + 0.5,
-            healthScore: Math.floor(Math.random() * 40) + 50,
-            certifications: ['Organic', 'Fair Trade', 'Non-GMO'].filter(() => Math.random() > 0.6),
-            ecoDescription: analysis.reasoning,
-            alternatives: analysis.alternatives || [],
-          },
-          source: 'gemini_direct',
-          confidence: analysis.confidence,
-          reasoning: 'Direct Gemini AI analysis',
-        };
+        return this.convertGeminiToProduct(analysis, 'gemini_text');
       }
 
-      throw new Error('No analysis from Gemini');
+      throw new Error('No analysis from Gemini Text');
 
     } catch (error) {
-      console.error('❌ Direct Gemini failed, using demo fallback:', error);
+      console.error('❌ Gemini Text failed, using demo fallback:', error);
       return await this.createDemoProduct(searchQuery);
     }
   }
 
-  /**
-   * Create a realistic demo product when all else fails
-   */
+  private static convertGeminiToProduct(analysis: any, source: 'gemini_vision' | 'gemini_text'): ScoutResult {
+    return {
+      success: true,
+      product: {
+        productName: analysis.product_name,
+        brand: analysis.brand,
+        category: analysis.category,
+        ecoScore: analysis.eco_score,
+        packagingScore: Math.floor(Math.random() * 30) + 50,
+        carbonScore: Math.floor(Math.random() * 40) + 40,
+        ingredientScore: Math.floor(Math.random() * 35) + 45,
+        certificationScore: Math.floor(Math.random() * 25) + 60,
+        recyclable: Math.random() > 0.5,
+        co2Impact: +(Math.random() * 3 + 0.5).toFixed(1),
+        healthScore: Math.floor(Math.random() * 40) + 50,
+        certifications: ['Organic', 'Fair Trade', 'Non-GMO', 'Carbon Neutral', 'Recyclable'].filter(() => Math.random() > 0.7),
+        ecoDescription: analysis.reasoning,
+        alternatives: analysis.alternatives || [],
+      },
+      source,
+      confidence: analysis.confidence || 0.8,
+      reasoning: 'Direct Gemini AI analysis',
+    };
+  }
+
+  private static async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   static async createDemoProduct(searchQuery: string): Promise<ScoutResult> {
+    console.log('🤖 Creating demo product for:', searchQuery);
+
     const demoProducts = [
       {
         productName: "Organic Instant Noodles",
@@ -193,10 +162,38 @@ export default class EnhancedScoutBot {
           { product_name: "Glass Water Bottle", reasoning: "Completely plastic-free option" },
           { product_name: "Bamboo Water Bottle", reasoning: "Renewable material with biodegradable properties" }
         ]
+      },
+      {
+        productName: "Sustainable Snack Bar",
+        brand: "NatureBar",
+        category: "Food",
+        ecoScore: 88,
+        packagingScore: 75,
+        carbonScore: 82,
+        ingredientScore: 95,
+        certificationScore: 90,
+        recyclable: true,
+        co2Impact: 0.8,
+        healthScore: 89,
+        certifications: ["Organic", "Fair Trade", "Carbon Neutral"],
+        ecoDescription: "Plant-based snack made with sustainably sourced ingredients and compostable packaging.",
+        alternatives: [
+          { product_name: "Fresh Fruit", reasoning: "Zero packaging, completely natural option" },
+          { product_name: "Homemade Trail Mix", reasoning: "Control ingredients and reduce packaging waste" }
+        ]
       }
     ];
 
-    const selectedProduct = demoProducts[Math.floor(Math.random() * demoProducts.length)];
+    let selectedProduct = demoProducts[Math.floor(Math.random() * demoProducts.length)];
+    
+    const query = searchQuery.toLowerCase();
+    if (query.includes('noodle') || query.includes('pasta') || query.includes('instant')) {
+      selectedProduct = demoProducts[0];
+    } else if (query.includes('bottle') || query.includes('water') || query.includes('drink')) {
+      selectedProduct = demoProducts[1];
+    } else if (query.includes('snack') || query.includes('bar') || query.includes('food')) {
+      selectedProduct = demoProducts[2];
+    }
 
     return {
       success: true,
@@ -206,4 +203,10 @@ export default class EnhancedScoutBot {
       reasoning: 'Demo product with realistic eco data',
     };
   }
+
+  static async findProductByImage(query: { imageFile: File }): Promise<ScoutResult> {
+    return await this.findProduct({ imageFile: query.imageFile });
+  }
 }
+
+export default EnhancedScoutBot;
