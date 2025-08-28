@@ -325,3 +325,31 @@ export const useBulkScan = () => {
     },
   });
 };
+
+// Hook to get user's ranking based on points
+export const useUserRank = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['user-rank', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('points')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) return 0;
+
+      const { data: higherRanked } = await supabase
+        .from('profiles')
+        .select('points')
+        .gt('points', profile.points);
+
+      return (higherRanked?.length || 0) + 1;
+    },
+    enabled: !!user?.id,
+  });
+};

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAdvancedProductSearch } from '@/hooks/useAdvancedProductSearch';
 import { useToast } from '@/hooks/use-toast';
-import { StatsService } from '@/lib/stats-service';
+import { StatsService } from '../lib/stats-service-clean';
 
 interface AROverlayProps {
   product: any;

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useAdvancedProductSearch } from '@/hooks/useAdvancedProductSearch';
 import { useBarcodeAPI } from '@/hooks/useBarcodeAPI';
 import { useToast } from '@/hooks/use-toast';
-import { StatsService } from '@/lib/stats-service';
+import { StatsService } from '../lib/stats-service-clean';
 
 // --- NEW DETAILED PRODUCT CARD ---
 const ProductResultCard = ({ product }) => {

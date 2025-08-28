@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { StatsService } from '@/lib/stats-service';
+import { StatsService } from '../lib/stats-service-clean';
 
 interface UserStats {
   totalScans: number;

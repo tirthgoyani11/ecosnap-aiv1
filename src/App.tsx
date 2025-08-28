@@ -27,7 +27,7 @@ import Scanner from "./pages/Scanner";
 import DashboardNew from './pages/DashboardNew';
 import BulkScan from "./pages/BulkScan";
 import Discover from "./pages/Discover.tsx";
-import Leaderboard from "./pages/Leaderboard";
+import Leaderboard from "./pages/Leaderboard.tsx";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import TestPage from "./pages/TestPage";
