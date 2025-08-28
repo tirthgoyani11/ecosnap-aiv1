@@ -9,7 +9,7 @@ import { ScoreRing } from "@/components/ScoreRing";
 import { CountUpStat } from "@/components/CountUpStat";
 import { AnimatedElement, StaggeredGrid } from "@/components/AnimatedComponents";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useProfile, useScans, useUserRank } from "@/hooks/useDatabase";
+import { useProfile, useScans, useUserRank } from "@/hooks/useDatabaseSimple";
 import { useEcoTips } from "@/hooks/useEcoTips";
 import { 
   Scan, 
@@ -33,7 +33,9 @@ import {
 export default function Dashboard() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: recentScans, isLoading: scansLoading } = useScans(10);
-  const { data: userRank, isLoading: rankLoading } = useUserRank();
+  const { data: userRankData, isLoading: rankLoading } = useUserRank();
+  
+  const userRank = userRankData?.rank;
   const { dailyTip } = useEcoTips();
 
   useEffect(() => {

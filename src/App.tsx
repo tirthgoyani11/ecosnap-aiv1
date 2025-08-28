@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavBar } from "@/components/NavBar";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContextSimple";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Pages
@@ -20,6 +20,7 @@ import BulkScan from "./pages/BulkScan";
 import Leaderboard from "./pages/Leaderboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -191,6 +192,21 @@ const App = () => (
                         <Settings />
                       </motion.div>
                     </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Test Route for Debugging */}
+                <Route 
+                  path="/test" 
+                  element={
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.22 }}
+                    >
+                      <TestPage />
+                    </motion.div>
                   } 
                 />
                 
