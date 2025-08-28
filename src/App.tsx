@@ -26,6 +26,7 @@ import SignUpNew from "./pages/SignUpNew";
 import Scanner from "./pages/Scanner";
 import DashboardNew from './pages/DashboardNew';
 import BulkScan from "./pages/BulkScan";
+import Discover from "./pages/Discover.tsx";
 import Leaderboard from "./pages/Leaderboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -101,6 +102,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DashboardNew />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/discover" 
+              element={
+                <ProtectedRoute>
+                  <Discover />
                 </ProtectedRoute>
               } 
             />

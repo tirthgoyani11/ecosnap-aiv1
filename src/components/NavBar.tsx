@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Scan, Zap, User, LogOut, Settings } from "lucide-react";
+import { Menu, X, Scan, Zap, User, LogOut, Settings, Search, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,7 +24,8 @@ const authenticatedNavItems = [
   { name: "Scanner", href: "/scanner", icon: Scan },
   { name: "Bulk Scan", href: "/bulk", icon: Menu },
   { name: "Dashboard", href: "/dashboard", icon: Zap },
-  { name: "Leaderboard", href: "/leaderboard", icon: Zap },
+  { name: "Discover", href: "/discover", icon: Search },
+  { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
 ];
 
 // Navigation items for public users

@@ -19,8 +19,8 @@ const RoutingTest = () => {
           <Link to="/dashboard" style={{ padding: '8px 16px', background: '#ffc107', color: 'black', textDecoration: 'none', borderRadius: '4px' }}>
             Dashboard
           </Link>
-          <Link to="/leaderboard" style={{ padding: '8px 16px', background: '#dc3545', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>
-            Leaderboard
+          <Link to="/discover" style={{ padding: '8px 16px', background: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>
+            Discover
           </Link>
           <Link to="/scanner" style={{ padding: '8px 16px', background: '#6f42c1', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>
             Scanner

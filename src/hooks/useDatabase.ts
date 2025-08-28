@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { mockLeaderboardData } from '@/lib/mock/leaderboard';
 
 export interface Scan {
   id: string;
@@ -196,7 +195,6 @@ export const useCreateScan = () => {
       // Invalidate and refetch queries
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       
       toast({
         title: "Scan completed!",
@@ -211,55 +209,6 @@ export const useCreateScan = () => {
       });
       console.error('Error creating scan:', error);
     },
-  });
-};
-
-// Hook to get leaderboard data
-export const useLeaderboard = (limit = 50) => {
-  return useQuery({
-    queryKey: ['leaderboard', limit],
-    queryFn: async () => {
-      console.log('🔍 Starting leaderboard query...');
-      
-      // Always return mock data for now to eliminate database issues
-      console.log('📊 Using mock leaderboard data');
-      return mockLeaderboardData.slice(0, limit);
-    },
-    staleTime: 0, // Always fresh
-    gcTime: 0, // No caching (v5 uses gcTime instead of cacheTime)
-    retry: false, // No retries
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-  });
-};
-
-// Hook to get user's current rank
-export const useUserRank = () => {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['userRank', user?.id],
-    queryFn: async () => {
-      if (!user) throw new Error('No user found');
-      
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('points')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!userProfile) throw new Error('Profile not found');
-      
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gt('points', userProfile.points);
-      
-      if (error) throw error;
-      
-      return (count || 0) + 1; // Add 1 because count gives users above current user
-    },
-    enabled: !!user,
   });
 };
 

@@ -4,7 +4,6 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { LeaderboardEntry } from '@/lib/types';
 import type { User, Session } from '@supabase/supabase-js';
 
 export interface UserProfile {
@@ -350,48 +349,6 @@ export class RealUserService {
       return data || [];
     } catch (error) {
       console.error('❌ Get scan history error:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get leaderboard data
-   */
-  static async getGlobalLeaderboard(type: 'points' | 'co2_saved' | 'eco_score' = 'points', limit = 10): Promise<LeaderboardEntry[]> {
-    try {
-      let orderBy = 'total_scans';
-      if (type === 'eco_score') orderBy = 'eco_score_avg';
-      if (type === 'co2_saved') orderBy = 'co2_saved';
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, full_name, avatar_url, total_scans, eco_score_avg, total_co2_saved, points')
-        .order(orderBy, { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('❌ Get leaderboard error:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Search for users
-   */
-  static async searchUsers(query: string, limit = 10): Promise<UserProfile[]> {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, full_name, avatar_url, total_scans, eco_score_avg, points')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .limit(limit);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('❌ Search users error:', error);
       return [];
     }
   }

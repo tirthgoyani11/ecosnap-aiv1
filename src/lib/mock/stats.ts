@@ -17,15 +17,6 @@ export interface Achievement {
   unlockedDate?: string;
 }
 
-export interface LeaderboardUser {
-  id: string;
-  name: string;
-  avatar: string;
-  points: number;
-  rank: number;
-  level: number;
-}
-
 export const mockUserStats: UserStats = {
   totalScans: 247,
   avgEcoScore: 68,
@@ -59,49 +50,6 @@ export const mockUserStats: UserStats = {
     }
   ]
 };
-
-export const mockLeaderboard: LeaderboardUser[] = [
-  {
-    id: "1",
-    name: "EcoMaster2024",
-    avatar: "/placeholder.svg",
-    points: 8950,
-    rank: 1,
-    level: 12
-  },
-  {
-    id: "2", 
-    name: "GreenGuardian",
-    avatar: "/placeholder.svg",
-    points: 7230,
-    rank: 2,
-    level: 10
-  },
-  {
-    id: "3",
-    name: "SustainableSarah",
-    avatar: "/placeholder.svg",
-    points: 6540,
-    rank: 3,
-    level: 9
-  },
-  {
-    id: "4",
-    name: "EcoExplorer",
-    avatar: "/placeholder.svg",
-    points: 5890,
-    rank: 4,
-    level: 8
-  },
-  {
-    id: "5",
-    name: "PlanetProtector",
-    avatar: "/placeholder.svg", 
-    points: 4320,
-    rank: 5,
-    level: 7
-  }
-];
 
 export const mockChartData = [
   { month: "Jan", scans: 12, co2Saved: 3.2 },

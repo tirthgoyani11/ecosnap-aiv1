@@ -1,7 +1,7 @@
 // Enhanced Supabase client with EcoSnap specific functions
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import { Product, Alternative, ScanResult, UserProfile, ChatSession, BulkScanResult, LeaderboardEntry, DashboardStats } from './types';
+import { Product, Alternative, ScanResult, UserProfile, ChatSession, BulkScanResult, DashboardStats } from './types';
 
 type DbProduct = Database['public']['Tables']['products']['Row'];
 type DbScan = Database['public']['Tables']['scans']['Row'];
@@ -120,27 +120,6 @@ export class EcoSnapSupabase {
     
     if (error) throw error;
     return this.transformProfile(data);
-  }
-
-  // Leaderboard
-  static async getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username, avatar_url, points, total_co2_saved, total_scans')
-      .order('points', { ascending: false })
-      .limit(limit);
-    
-    if (error) throw error;
-    
-    return (data || []).map((profile, index) => ({
-      rank: index + 1,
-      username: profile.username || 'Anonymous',
-      avatar_url: profile.avatar_url,
-      points: profile.points,
-      total_co2_saved: profile.total_co2_saved,
-      total_scans: profile.total_scans,
-      badges: [] // TODO: Implement badge system
-    }));
   }
 
   // Dashboard stats

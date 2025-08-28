@@ -125,18 +125,6 @@ export interface BulkScanResult {
   };
 }
 
-export interface LeaderboardEntry {
-  rank: number;
-  username: string;
-  full_name?: string;
-  avatar_url?: string;
-  points: number;
-  total_co2_saved: number;
-  total_scans: number;
-  eco_score_avg?: number;
-  badges?: string[];
-}
-
 export interface DashboardStats {
   total_scans: number;
   points: number;

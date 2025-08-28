@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { mockUserStats, mockLeaderboard, mockChartData, type UserStats, type LeaderboardUser } from '@/lib/mock/stats';
+import { mockUserStats, mockChartData, type UserStats } from '@/lib/mock/stats';
 
 export const useStatsMock = () => {
   const [stats, setStats] = useState<UserStats>(mockUserStats);
@@ -29,26 +29,6 @@ export const useStatsMock = () => {
     stats,
     loading,
     unlockAchievement
-  };
-};
-
-export const useLeaderboardMock = () => {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate API delay
-    const timer = setTimeout(() => {
-      setLeaderboard(mockLeaderboard);
-      setLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return {
-    leaderboard,
-    loading
   };
 };
 
