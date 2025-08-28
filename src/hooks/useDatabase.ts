@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { mockLeaderboardData } from '@/lib/mock/leaderboard';
 
 export interface Scan {
   id: string;
@@ -219,6 +220,7 @@ export const useLeaderboard = (limit = 50) => {
     queryKey: ['leaderboard', limit],
     queryFn: async () => {
       try {
+        console.log('Fetching leaderboard data...');
         const { data, error } = await supabase
           .from('profiles')
           .select('user_id, full_name, username, avatar_url, points, total_scans, total_co2_saved')
@@ -226,34 +228,41 @@ export const useLeaderboard = (limit = 50) => {
           .limit(limit);
         
         if (error) {
-          console.error('Leaderboard query error:', error);
-          throw error;
-        }
-        
-        // Return empty array if no data
-        if (!data || data.length === 0) {
-          // Return mock data for demonstration
-          const { mockLeaderboardData } = await import('@/lib/mock/leaderboard');
+          console.error('Leaderboard database error:', error);
+          // Directly return mock data instead of throwing
+          console.log('Falling back to mock data due to database error');
           return mockLeaderboardData.slice(0, limit);
         }
         
-        // Add rank to each user
-        return data.map((user, index) => ({
-          ...user,
-          rank: index + 1,
-          full_name: user.full_name || 'Anonymous',
-          username: user.username || `User${index + 1}`
-        }));
+        // Check if we have real data
+        if (data && data.length > 0) {
+          console.log('Got real leaderboard data:', data.length, 'entries');
+          // Add rank to each user
+          return data.map((user, index) => ({
+            ...user,
+            rank: index + 1,
+            full_name: user.full_name || 'Anonymous',
+            username: user.username || `User${index + 1}`
+          }));
+        }
+        
+        // No data found, use mock
+        console.log('No real data found, using mock data');
+        return mockLeaderboardData.slice(0, limit);
+        
       } catch (error) {
-        // Fallback to mock data on any error
-        console.warn('Using mock leaderboard data due to error:', error);
-        const { mockLeaderboardData } = await import('@/lib/mock/leaderboard');
+        // Any other error, fallback to mock data
+        console.error('Leaderboard fetch error:', error);
+        console.log('Using mock leaderboard data as fallback');
         return mockLeaderboardData.slice(0, limit);
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1, // Only retry once
     retryDelay: 1000,
+    // Add these options to prevent React Query errors from propagating
+    throwOnError: false,
+    refetchOnWindowFocus: false,
   });
 };
 

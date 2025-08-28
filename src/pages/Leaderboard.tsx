@@ -23,20 +23,20 @@ import {
 } from "lucide-react";
 
 export default function Leaderboard() {
-  const { data: leaderboard, isLoading, error } = useLeaderboard();
+  const { data: leaderboard, isLoading, error, refetch } = useLeaderboard();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Show error toast if there's an error
+  // Show error toast if there's an error (but don't block the UI since we have fallback data)
   useEffect(() => {
-    if (error) {
+    if (error && (!leaderboard || leaderboard.length === 0)) {
       toast({
-        title: "Error loading leaderboard",
-        description: "Please try again later.",
-        variant: "destructive",
+        title: "Connection issue",
+        description: "Using demo data while we reconnect...",
+        variant: "default",
       });
     }
-  }, [error, toast]);
+  }, [error, toast, leaderboard]);
 
   // Find user's rank in the leaderboard
   const userRank = leaderboard?.findIndex(entry => entry.user_id === user?.id) + 1 || 0;
@@ -99,11 +99,11 @@ export default function Leaderboard() {
             ))}
           </div>
         </div>
-      ) : error ? (
+      ) : error && (!leaderboard || leaderboard.length === 0) ? (
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-4">Unable to Load Leaderboard</h2>
           <p className="text-muted-foreground mb-4">There was an error loading the leaderboard data.</p>
-          <Button onClick={() => window.location.reload()} variant="outline">
+          <Button onClick={() => refetch()} variant="outline">
             Try Again
           </Button>
         </div>
