@@ -32,18 +32,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let isMounted = true;
-    
-    console.log('AuthContext: Initializing authentication...');
 
     // Get initial session
     const getSession = async () => {
       try {
-        console.log('AuthContext: Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('AuthContext: Error getting session:', error);
         } else if (isMounted) {
-          console.log('AuthContext: Initial session retrieved:', session ? 'Present' : 'None');
           setSession(session);
           setUser(session?.user ?? null);
         }
@@ -51,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('AuthContext: Error in getSession:', error);
       } finally {
         if (isMounted) {
-          console.log('AuthContext: Setting loading to false after initial session check');
           setLoading(false);
         }
       }
@@ -64,24 +59,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event: AuthChangeEvent, session: Session | null) => {
         if (!isMounted) return;
         
-        console.log('AuthContext: Auth state changed:', event, session ? 'Session present' : 'No session');
-        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('AuthContext: Creating/updating profile for signed in user');
           // Create or update profile when user signs in
           await createOrUpdateProfile(session.user);
         }
         
-        console.log('AuthContext: Setting loading to false after auth state change');
         setLoading(false);
       }
     );
 
     return () => {
-      console.log('AuthContext: Cleanup - unmounting');
       isMounted = false;
       subscription.unsubscribe();
     };
@@ -91,16 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!loading) return;
     
-    console.log('AuthContext: Starting 5-second timeout for loading state');
     const timeoutId = setTimeout(() => {
       console.warn('AuthContext: Loading timeout reached - forcing loading to false');
       setLoading(false);
     }, 5000); // 5 second timeout
 
-    return () => {
-      console.log('AuthContext: Clearing loading timeout');
-      clearTimeout(timeoutId);
-    };
+    return () => clearTimeout(timeoutId);
   }, [loading]);
 
   const createOrUpdateProfile = async (user: User) => {
