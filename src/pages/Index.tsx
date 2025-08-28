@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FeatureTile } from "@/components/FeatureTile";
 import { AnimatedElement, StaggeredGrid, FloatingElement } from "@/components/AnimatedComponents";
 import { ParticleField } from "@/components/ParticleField";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Scan, 
   Play, 
@@ -70,6 +71,8 @@ const steps = [
 ];
 
 export default function Index() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/50">
       {/* Hero Section */}
@@ -119,17 +122,45 @@ export default function Index() {
 
               <AnimatedElement animation="fadeInUp" delay={800}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <Link to="/scanner">
-                    <Button 
-                      variant="premium"
-                      size="xl"
-                      className="group smooth-hover"
-                    >
-                      <Scan className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" />
-                      Try the Scanner
-                      <ArrowRight className="h-5 w-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
+                  {user ? (
+                    // Authenticated user - direct access to scanner
+                    <Link to="/scanner">
+                      <Button 
+                        variant="premium"
+                        size="xl"
+                        className="group smooth-hover"
+                      >
+                        <Scan className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" />
+                        Start Scanning
+                        <ArrowRight className="h-5 w-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    // Unauthenticated user - signup flow
+                    <>
+                      <Link to="/signup">
+                        <Button 
+                          variant="premium"
+                          size="xl"
+                          className="group smooth-hover"
+                        >
+                          <Sparkles className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" />
+                          Get Started Free
+                          <ArrowRight className="h-5 w-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </Link>
+                      <Link to="/login">
+                        <Button 
+                          variant="outline" 
+                          size="xl"
+                          className="smooth-hover"
+                        >
+                          <Play className="h-5 w-5 mr-3" />
+                          Sign In
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </AnimatedElement>
             </AnimatedElement>

@@ -8,6 +8,7 @@ import { KPIStat } from "@/components/KPIStat";
 import { ScoreRing } from "@/components/ScoreRing";
 import { EmptyState } from "@/components/EmptyState";
 import { useToast } from "@/hooks/use-toast";
+import { useBulkScan } from "@/hooks/useDatabase";
 import { mockProducts } from "@/lib/mock/products";
 import { 
   Upload, 
@@ -35,6 +36,7 @@ export default function BulkScan() {
   const [items, setItems] = useState<BulkItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
+  const bulkScanMutation = useBulkScan();
 
   useEffect(() => {
     document.title = "🌿 EcoSnap AI - Bulk Scanner";
@@ -115,6 +117,30 @@ export default function BulkScan() {
       title: "List cleared",
       description: "All items have been removed from your bulk scan list.",
     });
+  };
+
+  const saveBulkScan = async () => {
+    if (items.length === 0) return;
+    
+    try {
+      await bulkScanMutation.mutateAsync(items.map(item => ({
+        detected_name: item.name,
+        scan_type: 'bulk' as const,
+        eco_score: item.ecoScore,
+        co2_footprint: item.carbonFootprint
+      })));
+
+      toast({
+        title: "Bulk scan saved!",
+        description: `Successfully saved ${items.length} items to your profile.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Save failed",
+        description: "Could not save bulk scan to database.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calculate summary stats
@@ -240,15 +266,27 @@ export default function BulkScan() {
                   <Badge variant="secondary">{items.length}</Badge>
                 </div>
                 {items.length > 0 && (
-                  <Button
-                    onClick={clearAll}
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Clear All
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={saveBulkScan}
+                      variant="default"
+                      size="sm"
+                      disabled={bulkScanMutation.isPending}
+                      className="glass-button"
+                    >
+                      <Package className="h-4 w-4 mr-2" />
+                      {bulkScanMutation.isPending ? "Saving..." : "Save Scan"}
+                    </Button>
+                    <Button
+                      onClick={clearAll}
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear All
+                    </Button>
+                  </div>
                 )}
               </CardTitle>
             </CardHeader>

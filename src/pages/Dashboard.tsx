@@ -8,7 +8,8 @@ import { ScoreRing } from "@/components/ScoreRing";
 import { CountUpStat } from "@/components/CountUpStat";
 import { AnimatedElement, StaggeredGrid } from "@/components/AnimatedComponents";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useUserStats } from "@/hooks/useUserStats";
+import { useProfile, useScans, useUserRank } from "@/hooks/useDatabase";
+import { useEcoTips } from "@/hooks/useEcoTips";
 import { 
   Scan, 
   Leaf, 
@@ -21,11 +22,16 @@ import {
   Users,
   Target,
   TreePine,
-  Recycle
+  Recycle,
+  Lightbulb,
+  Star
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { stats, refreshStats } = useUserStats();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: recentScans, isLoading: scansLoading } = useScans(10);
+  const { data: userRank, isLoading: rankLoading } = useUserRank();
+  const { dailyTip, getHighImpactTips } = useEcoTips();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,57 +40,73 @@ export default function Dashboard() {
     // Simulate loading for smooth animation
     const timer = setTimeout(() => {
       setLoading(false);
-      refreshStats();
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [refreshStats]);
+  }, []);
 
+  const isLoading = profileLoading || scansLoading || rankLoading;
+
+  // Calculate achievements based on real data
   const achievements = [
     { 
       icon: Scan, 
       title: "First Scan", 
       description: "Completed your first product scan",
-      earned: stats.totalScans > 0,
-      date: stats.totalScans > 0 ? "Completed" : null
-    },
-    { 
-      icon: Leaf, 
-      title: "Eco Warrior", 
-      description: "Made 10 sustainable swaps",
-      earned: stats.alternativesFound >= 10,
-      date: stats.alternativesFound >= 10 ? "Completed" : null
+      earned: (profile?.total_scans || 0) > 0,
+      date: (profile?.total_scans || 0) > 0 ? "Completed" : null
     },
     { 
       icon: TreePine, 
-      title: "Carbon Saver", 
-      description: "Saved 50kg of CO2",
-      earned: stats.co2Saved >= 50,
-      date: stats.co2Saved >= 50 ? "Completed" : null
+      title: "Eco Warrior", 
+      description: "Scanned 10 sustainable products",
+      earned: (profile?.total_scans || 0) >= 10,
+      date: (profile?.total_scans || 0) >= 10 ? "Completed" : null
     },
     { 
-      icon: Target, 
-      title: "Goal Crusher", 
-      description: "Hit monthly scanning goal",
-      earned: stats.totalScans >= 30,
-      date: stats.totalScans >= 30 ? "Completed" : null
+      icon: Award, 
+      title: "Point Master", 
+      description: "Earned 500 eco points",
+      earned: (profile?.points || 0) >= 500,
+      date: (profile?.points || 0) >= 500 ? "Completed" : null
+    },
+    { 
+      icon: Recycle, 
+      title: "Carbon Saver", 
+      description: "Helped save 25kg of CO₂",
+      earned: (profile?.total_co2_saved || 0) >= 25,
+      date: (profile?.total_co2_saved || 0) >= 25 ? "Completed" : null
+    },
+    { 
+      icon: Users, 
+      title: "Community Member", 
+      description: "Joined the top 100 eco-scanners",
+      earned: (userRank || 999) <= 100,
+      date: (userRank || 999) <= 100 ? "Completed" : null
     }
   ];
 
-  const recentActivity = [
+  // Calculate eco impact equivalents
+  const co2Saved = profile?.total_co2_saved || 0;
+  const ecoImpact = {
+    treesEquivalent: Math.round(co2Saved / 22), // 1 tree absorbs ~22kg CO2/year
+    milesNotDriven: Math.round(co2Saved * 2.4), // 1kg CO2 = ~2.4 miles in average car
+    waterSaved: Math.round(co2Saved * 65), // Rough estimate of water saved in liters
+  };
+
+  const recentActivity = recentScans?.slice(0, 3).map(scan => ({
+    type: "scan",
+    product: scan.detected_name || "Product Scan",
+    score: scan.eco_score || 0,
+    action: "Scan completed",
+    time: new Date(scan.created_at).toLocaleDateString()
+  })) || [
     {
       type: "scan",
-      product: "Recent Product Scan",
-      score: 85,
-      action: stats.totalScans > 0 ? "Scan completed" : "No scans yet",
-      time: stats.lastScanDate || "Never"
-    },
-    {
-      type: "achievement",
-      product: "Latest Achievement",
-      score: null,
-      action: stats.achievements.length > 0 ? stats.achievements[stats.achievements.length - 1] : "No achievements yet",
-      time: stats.achievements.length > 0 ? "Recent" : "None"
+      product: "No recent scans",
+      score: 0,
+      action: "Start scanning to see activity",
+      time: "Never"
     }
   ];
 

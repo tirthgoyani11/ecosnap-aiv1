@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { KPIStat } from "@/components/KPIStat";
 import { LoadingSkeleton } from "@/components/LoadingSpinner";
-import { useUserStats } from "@/hooks/useUserStats";
+import { useLeaderboard } from "@/hooks/useDatabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Trophy, 
@@ -21,9 +22,21 @@ import {
 } from "lucide-react";
 
 export default function Leaderboard() {
-  const { stats, leaderboard, getUserRank } = useUserStats();
+  const { data: leaderboard, isLoading } = useLeaderboard();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const userRank = getUserRank();
+
+  // Find user's rank in the leaderboard
+  const userRank = leaderboard?.findIndex(entry => entry.user_id === user?.id) + 1 || 0;
+  
+  // Get user's current profile from leaderboard
+  const currentUser = leaderboard?.find(entry => entry.user_id === user?.id);
+  
+  // Mock aggregate stats for the UI
+  const stats = {
+    ecoPoints: currentUser?.points || 0,
+    sustainabilityRating: Math.min(Math.round((currentUser?.points || 0) / 10), 100)
+  };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -53,7 +66,24 @@ export default function Leaderboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="space-y-6">
+          <LoadingSkeleton className="h-8 w-48 mx-auto" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <LoadingSkeleton key={i} className="h-32" />
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <LoadingSkeleton key={i} className="h-20" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -199,10 +229,10 @@ export default function Leaderboard() {
                           {user.username}
                         </h4>
                         <p className="text-xs text-muted-foreground mb-2">
-                          {user.totalScans} scans
+                          {user.total_scans} scans
                         </p>
                         <div className={`font-bold text-primary ${actualRank === 1 ? 'text-xl' : 'text-lg'}`}>
-                          {user.ecoPoints.toLocaleString()}
+                          {user.points.toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground">points</p>
                       </motion.div>
@@ -248,9 +278,9 @@ export default function Leaderboard() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold truncate">{user.username}</h4>
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span>{user.totalScans} scans</span>
+                            <span>{user.total_scans} scans</span>
                             <Badge variant="outline" className="text-xs">
-                              {user.co2Saved.toFixed(1)}kg CO₂ saved
+                              {user.total_co2_saved.toFixed(1)}kg CO₂ saved
                             </Badge>
                           </div>
                         </div>
@@ -258,7 +288,7 @@ export default function Leaderboard() {
                         {/* Points */}
                         <div className="text-right">
                           <div className="font-bold text-lg">
-                            {user.ecoPoints.toLocaleString()}
+                            {user.points.toLocaleString()}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             points
@@ -273,6 +303,8 @@ export default function Leaderboard() {
           </Card>
         </motion.div>
       </div>
+        </>
+      )}
     </div>
   );
 }

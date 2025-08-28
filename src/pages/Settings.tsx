@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, 
   Palette, 
@@ -9,12 +10,16 @@ import {
   Keyboard,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  User,
+  Save
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Select,
   SelectContent,
@@ -35,11 +40,41 @@ import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile, useUpdateProfile } from '@/hooks/useDatabase';
 
 export default function Settings() {
   const { isDemoMode, units, toggleDemoMode, setUnits, resetData } = useAppStore();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const updateProfileMutation = useUpdateProfile();
+
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    full_name: '',
+    username: '',
+    preferences: {
+      newsletter: true,
+      notifications: true,
+      eco_tips: true
+    }
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        full_name: profile.full_name || '',
+        username: profile.username || '',
+        preferences: {
+          newsletter: true, // Default values since not in profile
+          notifications: true,
+          eco_tips: true
+        }
+      });
+    }
+  }, [profile]);
 
   const handleResetData = () => {
     resetData();
@@ -47,6 +82,26 @@ export default function Settings() {
       title: "Data Reset",
       description: "All demo data has been reset successfully.",
     });
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfileMutation.mutateAsync({
+        full_name: profileForm.full_name,
+        username: profileForm.username
+      });
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Could not update your profile.",
+        variant: "destructive",
+      });
+    }
   };
 
   const keyboardShortcuts = [
@@ -74,6 +129,106 @@ export default function Settings() {
           </div>
 
           <div className="space-y-6">
+            {/* Profile Settings */}
+            {user && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Profile
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your account information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        value={profileForm.full_name}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, full_name: e.target.value }))}
+                        placeholder="Your full name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        value={profileForm.username}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                        placeholder="Your username"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label>Preferences</Label>
+                    
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="newsletter" className="text-sm font-normal">
+                        Newsletter Subscriptions
+                      </Label>
+                      <Switch
+                        id="newsletter"
+                        checked={profileForm.preferences.newsletter}
+                        onCheckedChange={(checked) => 
+                          setProfileForm(prev => ({ 
+                            ...prev, 
+                            preferences: { ...prev.preferences, newsletter: checked }
+                          }))
+                        }
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="notifications" className="text-sm font-normal">
+                        Push Notifications
+                      </Label>
+                      <Switch
+                        id="notifications"
+                        checked={profileForm.preferences.notifications}
+                        onCheckedChange={(checked) => 
+                          setProfileForm(prev => ({ 
+                            ...prev, 
+                            preferences: { ...prev.preferences, notifications: checked }
+                          }))
+                        }
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="ecoTips" className="text-sm font-normal">
+                        Daily Eco Tips
+                      </Label>
+                      <Switch
+                        id="ecoTips"
+                        checked={profileForm.preferences.eco_tips}
+                        onCheckedChange={(checked) => 
+                          setProfileForm(prev => ({ 
+                            ...prev, 
+                            preferences: { ...prev.preferences, eco_tips: checked }
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Button 
+                      onClick={handleSaveProfile}
+                      disabled={updateProfileMutation.isPending}
+                      className="w-full md:w-auto"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {updateProfileMutation.isPending ? 'Saving...' : 'Save Profile'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Appearance */}
             <Card>
               <CardHeader>
