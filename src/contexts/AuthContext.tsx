@@ -31,16 +31,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    let isMounted = true;
+    
+    console.log('AuthContext: Initializing authentication...');
+
     // Get initial session
     const getSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Error getting session:', error);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
+      try {
+        console.log('AuthContext: Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('AuthContext: Error getting session:', error);
+        } else if (isMounted) {
+          console.log('AuthContext: Initial session retrieved:', session ? 'Present' : 'None');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('AuthContext: Error in getSession:', error);
+      } finally {
+        if (isMounted) {
+          console.log('AuthContext: Setting loading to false after initial session check');
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
 
     getSession();
@@ -48,20 +62,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
+        if (!isMounted) return;
+        
+        console.log('AuthContext: Auth state changed:', event, session ? 'Session present' : 'No session');
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('AuthContext: Creating/updating profile for signed in user');
           // Create or update profile when user signs in
           await createOrUpdateProfile(session.user);
         }
         
+        console.log('AuthContext: Setting loading to false after auth state change');
         setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('AuthContext: Cleanup - unmounting');
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Separate timeout effect to handle stuck loading states
+  useEffect(() => {
+    if (!loading) return;
+    
+    console.log('AuthContext: Starting 5-second timeout for loading state');
+    const timeoutId = setTimeout(() => {
+      console.warn('AuthContext: Loading timeout reached - forcing loading to false');
+      setLoading(false);
+    }, 5000); // 5 second timeout
+
+    return () => {
+      console.log('AuthContext: Clearing loading timeout');
+      clearTimeout(timeoutId);
+    };
+  }, [loading]);
 
   const createOrUpdateProfile = async (user: User) => {
     try {

@@ -12,13 +12,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAuth = true 
 }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, session } = useAuth();
   const location = useLocation();
 
+  // Show loading spinner while authentication is being determined
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-muted-foreground">Checking authentication...</p>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-2 text-xs text-muted-foreground">
+              <p>Session: {session ? 'Present' : 'None'}</p>
+              <p>User: {user ? user.email : 'None'}</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
