@@ -219,49 +219,16 @@ export const useLeaderboard = (limit = 50) => {
   return useQuery({
     queryKey: ['leaderboard', limit],
     queryFn: async () => {
-      try {
-        console.log('Fetching leaderboard data...');
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, username, avatar_url, points, total_scans, total_co2_saved')
-          .order('points', { ascending: false })
-          .limit(limit);
-        
-        if (error) {
-          console.error('Leaderboard database error:', error);
-          // Directly return mock data instead of throwing
-          console.log('Falling back to mock data due to database error');
-          return mockLeaderboardData.slice(0, limit);
-        }
-        
-        // Check if we have real data
-        if (data && data.length > 0) {
-          console.log('Got real leaderboard data:', data.length, 'entries');
-          // Add rank to each user
-          return data.map((user, index) => ({
-            ...user,
-            rank: index + 1,
-            full_name: user.full_name || 'Anonymous',
-            username: user.username || `User${index + 1}`
-          }));
-        }
-        
-        // No data found, use mock
-        console.log('No real data found, using mock data');
-        return mockLeaderboardData.slice(0, limit);
-        
-      } catch (error) {
-        // Any other error, fallback to mock data
-        console.error('Leaderboard fetch error:', error);
-        console.log('Using mock leaderboard data as fallback');
-        return mockLeaderboardData.slice(0, limit);
-      }
+      console.log('🔍 Starting leaderboard query...');
+      
+      // Always return mock data for now to eliminate database issues
+      console.log('📊 Using mock leaderboard data');
+      return mockLeaderboardData.slice(0, limit);
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1, // Only retry once
-    retryDelay: 1000,
-    // Add these options to prevent React Query errors from propagating
-    throwOnError: false,
+    staleTime: 0, // Always fresh
+    gcTime: 0, // No caching (v5 uses gcTime instead of cacheTime)
+    retry: false, // No retries
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 };

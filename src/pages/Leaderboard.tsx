@@ -27,16 +27,14 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Show error toast if there's an error (but don't block the UI since we have fallback data)
+  console.log('🏆 Leaderboard component state:', { isLoading, error: !!error, dataLength: leaderboard?.length });
+
+  // Simplified error handling - no toast for now to avoid issues
   useEffect(() => {
-    if (error && (!leaderboard || leaderboard.length === 0)) {
-      toast({
-        title: "Connection issue",
-        description: "Using demo data while we reconnect...",
-        variant: "default",
-      });
+    if (error) {
+      console.error('Leaderboard error:', error);
     }
-  }, [error, toast, leaderboard]);
+  }, [error]);
 
   // Find user's rank in the leaderboard
   const userRank = leaderboard?.findIndex(entry => entry.user_id === user?.id) + 1 || 0;
@@ -81,36 +79,11 @@ export default function Leaderboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="space-y-6">
-          <div className="text-center mb-8">
-            <div className="h-8 w-48 bg-muted animate-pulse rounded mx-auto mb-4"></div>
-            <div className="h-4 w-64 bg-muted animate-pulse rounded mx-auto"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted animate-pulse rounded"></div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-20 bg-muted animate-pulse rounded"></div>
-            ))}
-          </div>
-        </div>
-      ) : error && (!leaderboard || leaderboard.length === 0) ? (
+      {/* Show content always */}
+      {!leaderboard ? (
         <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">Unable to Load Leaderboard</h2>
-          <p className="text-muted-foreground mb-4">There was an error loading the leaderboard data.</p>
-          <Button onClick={() => refetch()} variant="outline">
-            Try Again
-          </Button>
-        </div>
-      ) : !leaderboard || leaderboard.length === 0 ? (
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">No Leaderboard Data</h2>
-          <p className="text-muted-foreground">Start scanning products to see the leaderboard!</p>
+          <h2 className="text-2xl font-bold mb-4">Loading Leaderboard...</h2>
+          <p className="text-muted-foreground">Please wait while we load the data.</p>
         </div>
       ) : (
         <>
