@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FeatureTile } from "@/components/FeatureTile";
 import { AnimatedElement, StaggeredGrid, FloatingElement } from "@/components/AnimatedComponents";
 import { ParticleField } from "@/components/ParticleField";
-import { useAuth } from "@/contexts/AuthContextSimple";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Scan, 
   Play, 

@@ -54,8 +54,7 @@ interface ProductResult {
 export default function Scanner() {
   const [currentProduct, setCurrentProduct] = useState<ProductResult | null>(null);
   const [productAlternatives, setProductAlternatives] = useState<any[]>([]);
-  const [scannerMode, setScannerMode] = useState<'regular' | 'ar'>('regular');
-  const [activeTab, setActiveTab] = useState<'camera' | 'barcode' | 'upload' | 'text'>('camera');
+  const [isScanning, setIsScanning] = useState(false);
   
   const { toast } = useToast();
   const { triggerHaptic } = useHapticFeedback();
@@ -111,7 +110,7 @@ export default function Scanner() {
       // Save scan to database
       await createScan.mutateAsync({
         detected_name: finalProduct.product_name,
-        scan_type: activeTab,
+        scan_type: 'camera',
         eco_score: finalProduct.eco_score,
         co2_footprint: finalProduct.carbon_footprint,
         image_url: finalProduct.image_url,
@@ -149,7 +148,7 @@ export default function Scanner() {
       try {
         await createScan.mutateAsync({
           detected_name: basicProduct.product_name,
-          scan_type: activeTab,
+          scan_type: 'camera',
           eco_score: basicProduct.eco_score,
           co2_footprint: basicProduct.carbon_footprint,
           image_url: basicProduct.image_url,
@@ -232,41 +231,10 @@ export default function Scanner() {
                   </p>
                 </AnimatedElement>
 
-                {/* Scanner Mode Selector */}
-                <AnimatedElement animation="fadeInUp" className="text-center">
-                  <Card className="max-w-lg mx-auto mb-6">
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-3">Scanner Mode</h3>
-                      <div className="flex gap-2">
-                        <Button
-                          variant={scannerMode === 'regular' ? 'default' : 'outline'}
-                          onClick={() => setScannerMode('regular')}
-                          className="flex-1 flex items-center gap-2"
-                        >
-                          <Camera size={18} />
-                          Regular Scan
-                        </Button>
-                        <Button
-                          variant={scannerMode === 'ar' ? 'default' : 'outline'}
-                          onClick={() => setScannerMode('ar')}
-                          className="flex-1 flex items-center gap-2"
-                        >
-                          <Eye size={18} />
-                          AR Scanner
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </AnimatedElement>
-
                 {/* Smart Scanner */}
                 <AnimatedElement animation="scaleIn" delay={200}>
                   <div className="max-w-4xl mx-auto">
-                    {scannerMode === 'regular' ? (
-                      <SmartScanner />
-                    ) : (
-                      <SimpleARScanner />
-                    )}
+                    <SmartScanner />
                   </div>
                 </AnimatedElement>
 

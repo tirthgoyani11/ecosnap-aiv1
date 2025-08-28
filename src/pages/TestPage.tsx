@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLeaderboard } from '@/hooks/useStaticData';
-import { useAuth } from '@/contexts/AuthContextSimple';
+import { useLeaderboard } from '@/hooks/useDatabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TestPage() {
   const { data: leaderboard, isLoading } = useLeaderboard();

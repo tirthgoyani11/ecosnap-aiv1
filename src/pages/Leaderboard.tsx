@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { KPIStat } from "@/components/KPIStat";
 import { LoadingSkeleton } from "@/components/LoadingSpinner";
-import { useLeaderboard } from "@/hooks/useStaticData";
-import { useAuth } from "@/contexts/AuthContextSimple";
+import { useLeaderboard } from "@/hooks/useDatabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Trophy, 

@@ -14,8 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContextSimple";
-import { useProfile } from "@/hooks/useStaticData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useDatabase";
 import { cn } from "@/lib/utils";
 
 // Navigation items for authenticated users
@@ -59,10 +59,10 @@ export function NavBar() {
         animate={{ y: 0 }}
         className="fixed top-0 left-0 right-0 z-50 glass-card border-b backdrop-blur-xl"
       >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 relative">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
+            <Link to="/" className="flex items-center space-x-2 flex-shrink-0 z-10">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -78,7 +78,7 @@ export function NavBar() {
             </Link>
 
             {/* Desktop Navigation Links - Centered */}
-            <div className="hidden md:flex items-center space-x-6 flex-1 justify-center">
+            <div className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
@@ -86,10 +86,10 @@ export function NavBar() {
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm",
+                      "px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap",
                       isActive
-                        ? "bg-primary/10 text-primary border border-primary/20"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
                   >
                     {item.name}
@@ -99,7 +99,7 @@ export function NavBar() {
             </div>
 
             {/* Desktop Auth Section */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-4 flex-shrink-0 z-10">
               <ThemeToggle />
               
               {loading ? (
@@ -161,14 +161,15 @@ export function NavBar() {
               <ThemeToggle />
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="relative">
                     <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-72">
-                  <div className="flex flex-col h-full">
+                <SheetContent side="right" className="w-80 sm:w-96">
+                  <div className="flex flex-col h-full py-4">
                     {/* Mobile Logo */}
-                    <div className="flex items-center space-x-2 mb-8">
+                    <div className="flex items-center space-x-2 mb-8 px-2">
                       <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                         <Zap className="h-5 w-5 text-white" />
                       </div>
@@ -178,7 +179,7 @@ export function NavBar() {
                     </div>
 
                     {/* Mobile Navigation Links */}
-                    <nav className="flex-1 space-y-2">
+                    <nav className="flex-1 space-y-1 px-2">
                       {navItems.map((item) => {
                         const isActive = location.pathname === item.href;
                         return (
@@ -187,13 +188,13 @@ export function NavBar() {
                             to={item.href}
                             onClick={() => setMobileOpen(false)}
                             className={cn(
-                              "flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors text-sm font-medium",
+                              "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium",
                               isActive
-                                ? "bg-primary/10 text-primary"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                                ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                             )}
                           >
-                            <item.icon className="h-5 w-5" />
+                            <item.icon className="h-5 w-5 flex-shrink-0" />
                             <span>{item.name}</span>
                           </Link>
                         );
@@ -201,7 +202,7 @@ export function NavBar() {
                     </nav>
 
                     {/* Mobile Auth Section */}
-                    <div className="border-t pt-4">
+                    <div className="border-t pt-4 px-2">
                       {loading ? (
                         <div className="flex items-center space-x-3 px-3 py-3">
                           <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
@@ -212,16 +213,16 @@ export function NavBar() {
                         </div>
                       ) : user ? (
                         <div className="space-y-4">
-                          <div className="flex items-center space-x-3 px-3 py-3 rounded-lg bg-accent/50">
-                            <Avatar className="h-8 w-8">
+                          <div className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-accent/30 border">
+                            <Avatar className="h-10 w-10">
                               <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
-                              <AvatarFallback>{getUserInitials(user.user_metadata?.full_name)}</AvatarFallback>
+                              <AvatarFallback className="text-xs">{getUserInitials(user.user_metadata?.full_name)}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
                                 {user.user_metadata?.full_name || 'User'}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs text-muted-foreground truncate">
                                 {user.email}
                               </p>
                             </div>

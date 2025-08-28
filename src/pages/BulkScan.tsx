@@ -8,7 +8,7 @@ import { KPIStat } from "@/components/KPIStat";
 import { ScoreRing } from "@/components/ScoreRing";
 import { EmptyState } from "@/components/EmptyState";
 import { useToast } from "@/hooks/use-toast";
-import { useBulkScan } from "@/hooks/useDatabase";
+import { useCreateScan } from "@/hooks/useDatabase";
 import { mockProducts } from "@/lib/mock/products";
 import { 
   Upload, 
@@ -36,7 +36,7 @@ export default function BulkScan() {
   const [items, setItems] = useState<BulkItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
-  const bulkScanMutation = useBulkScan();
+  const createScanMutation = useCreateScan();
 
   useEffect(() => {
     document.title = "🌿 EcoSnap AI - Bulk Scanner";
@@ -123,12 +123,15 @@ export default function BulkScan() {
     if (items.length === 0) return;
     
     try {
-      await bulkScanMutation.mutateAsync(items.map(item => ({
-        detected_name: item.name,
-        scan_type: 'bulk' as const,
-        eco_score: item.ecoScore,
-        co2_footprint: item.carbonFootprint
-      })));
+      // Save each item individually using async mutation
+      for (const item of items) {
+        await createScanMutation.mutateAsync({
+          detected_name: item.name,
+          scan_type: 'camera',
+          eco_score: item.ecoScore,
+          co2_footprint: item.carbonFootprint
+        });
+      }
 
       toast({
         title: "Bulk scan saved!",
@@ -271,11 +274,11 @@ export default function BulkScan() {
                       onClick={saveBulkScan}
                       variant="default"
                       size="sm"
-                      disabled={bulkScanMutation.isPending}
+                      disabled={createScanMutation.isPending}
                       className="glass-button"
                     >
                       <Package className="h-4 w-4 mr-2" />
-                      {bulkScanMutation.isPending ? "Saving..." : "Save Scan"}
+                      {createScanMutation.isPending ? "Saving..." : "Save Scan"}
                     </Button>
                     <Button
                       onClick={clearAll}
