@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { KPIStat } from "@/components/KPIStat";
 import { LoadingSkeleton } from "@/components/LoadingSpinner";
-import { useLeaderboard } from "@/hooks/useDatabaseSimple";
+import { useLeaderboard } from "@/hooks/useStaticData";
 import { useAuth } from "@/contexts/AuthContextSimple";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -23,18 +23,11 @@ import {
 } from "lucide-react";
 
 export default function Leaderboard() {
-  const { data: leaderboard, isLoading, error, refetch } = useLeaderboard();
+  const { data: leaderboard, isLoading, error } = useLeaderboard();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  console.log('🏆 Leaderboard component state:', { isLoading, error: !!error, dataLength: leaderboard?.length });
-
-  // Simplified error handling - no toast for now to avoid issues
-  useEffect(() => {
-    if (error) {
-      console.error('Leaderboard error:', error);
-    }
-  }, [error]);
+  console.log('🏆 Static Leaderboard component - no loading ever!', { isLoading, error: !!error, dataLength: leaderboard?.length });
 
   // Find user's rank in the leaderboard
   const userRank = leaderboard?.findIndex(entry => entry.user_id === user?.id) + 1 || 0;

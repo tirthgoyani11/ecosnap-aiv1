@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Mail, Lock, User, Chrome, Leaf, Sparkles, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextSimple';
 
 const SignUpNew = () => {
   const [formData, setFormData] = useState({

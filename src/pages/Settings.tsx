@@ -40,7 +40,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextSimple';
 import { useProfile, useUpdateProfile } from '@/hooks/useDatabase';
 
 export default function Settings() {

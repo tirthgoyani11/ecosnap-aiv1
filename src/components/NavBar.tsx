@@ -14,8 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useDatabase";
+import { useAuth } from "@/contexts/AuthContextSimple";
+import { useProfile } from "@/hooks/useStaticData";
 import { cn } from "@/lib/utils";
 
 // Navigation items for authenticated users

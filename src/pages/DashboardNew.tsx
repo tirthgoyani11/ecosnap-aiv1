@@ -9,7 +9,7 @@ import { ScoreRing } from "@/components/ScoreRing";
 import { CountUpStat } from "@/components/CountUpStat";
 import { AnimatedElement, StaggeredGrid } from "@/components/AnimatedComponents";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useProfile, useScans, useUserRank } from "@/hooks/useDatabaseSimple";
+import { useProfile, useScans, useUserRank } from "@/hooks/useStaticData";
 import { useEcoTips } from "@/hooks/useEcoTips";
 import { 
   Scan, 

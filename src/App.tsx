@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavBar } from "@/components/NavBar";
@@ -21,27 +20,18 @@ import Leaderboard from "./pages/Leaderboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import TestPage from "./pages/TestPage";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+import SimpleTest from "./pages/SimpleTest";
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen bg-background">
-            <NavBar />
-            <AnimatePresence mode="wait">
-              <Routes>
+  <AuthProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <div className="min-h-screen bg-background">
+          <NavBar />
+          <AnimatePresence mode="wait">
+            <Routes>
                 <Route 
                   path="/" 
                   element={
@@ -210,6 +200,12 @@ const App = () => (
                   } 
                 />
                 
+                {/* Simple Test Route */}
+                <Route 
+                  path="/simple" 
+                  element={<SimpleTest />} 
+                />
+                
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
@@ -218,7 +214,6 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
-  </QueryClientProvider>
 );
 
 export default App;
