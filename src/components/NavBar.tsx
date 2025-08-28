@@ -60,9 +60,9 @@ export function NavBar() {
         className="fixed top-0 left-0 right-0 z-50 glass-card border-b backdrop-blur-xl"
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center h-16">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2 mr-8">
+            <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -77,8 +77,8 @@ export function NavBar() {
               </motion.div>
             </Link>
 
-            {/* Desktop Navigation Links - Full Width */}
-            <div className="hidden md:flex items-center space-x-1 flex-1">
+            {/* Desktop Navigation Links - Centered */}
+            <div className="hidden md:flex items-center space-x-6 flex-1 justify-center">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
@@ -86,7 +86,7 @@ export function NavBar() {
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "px-4 py-2 rounded-lg transition-all duration-200 font-medium",
+                      "px-3 py-2 rounded-lg transition-all duration-200 font-medium text-sm",
                       isActive
                         ? "bg-primary/10 text-primary border border-primary/20"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"

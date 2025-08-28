@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,15 +23,29 @@ import {
 } from "lucide-react";
 
 export default function Leaderboard() {
-  const { data: leaderboard, isLoading } = useLeaderboard();
+  const { data: leaderboard, isLoading, error } = useLeaderboard();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error loading leaderboard",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   // Find user's rank in the leaderboard
   const userRank = leaderboard?.findIndex(entry => entry.user_id === user?.id) + 1 || 0;
   
   // Get user's current profile from leaderboard
   const currentUser = leaderboard?.find(entry => entry.user_id === user?.id);
+
+  // Check if we're using mock data
+  const isUsingMockData = leaderboard?.length > 0 && leaderboard[0].user_id?.startsWith('mock-');
   
   // Mock aggregate stats for the UI
   const stats = {
@@ -84,6 +99,14 @@ export default function Leaderboard() {
             ))}
           </div>
         </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Unable to Load Leaderboard</h2>
+          <p className="text-muted-foreground mb-4">There was an error loading the leaderboard data.</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Try Again
+          </Button>
+        </div>
       ) : !leaderboard || leaderboard.length === 0 ? (
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-4">No Leaderboard Data</h2>
@@ -107,6 +130,13 @@ export default function Leaderboard() {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Compete with eco-warriors worldwide and climb the sustainability rankings.
         </p>
+        {isUsingMockData && (
+          <div className="mt-4 px-4 py-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg inline-block">
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              📊 Demo data - Connect to database for real leaderboard
+            </p>
+          </div>
+        )}
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
