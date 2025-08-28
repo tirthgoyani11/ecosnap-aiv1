@@ -11,7 +11,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Pages
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import LoginNew from "./pages/LoginNew";
 import SignUp from "./pages/SignUp";
+import SignUpNew from "./pages/SignUpNew";
 import Scanner from "./pages/Scanner";
 import DashboardNew from './pages/DashboardNew';
 import BulkScan from "./pages/BulkScan";
@@ -64,6 +66,21 @@ const App = () => (
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.22 }}
                       >
+                        <LoginNew />
+                      </motion.div>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/login-old" 
+                  element={
+                    <ProtectedRoute requireAuth={false}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.22 }}
+                      >
                         <Login />
                       </motion.div>
                     </ProtectedRoute>
@@ -71,6 +88,21 @@ const App = () => (
                 />
                 <Route 
                   path="/signup" 
+                  element={
+                    <ProtectedRoute requireAuth={false}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.22 }}
+                      >
+                        <SignUpNew />
+                      </motion.div>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/signup-old" 
                   element={
                     <ProtectedRoute requireAuth={false}>
                       <motion.div

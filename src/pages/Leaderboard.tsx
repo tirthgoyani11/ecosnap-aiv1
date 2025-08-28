@@ -69,17 +69,25 @@ export default function Leaderboard() {
       {/* Loading State */}
       {isLoading ? (
         <div className="space-y-6">
-          <LoadingSkeleton className="h-8 w-48 mx-auto" />
+          <div className="text-center mb-8">
+            <div className="h-8 w-48 bg-muted animate-pulse rounded mx-auto mb-4"></div>
+            <div className="h-4 w-64 bg-muted animate-pulse rounded mx-auto"></div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
-              <LoadingSkeleton key={i} className="h-32" />
+              <div key={i} className="h-32 bg-muted animate-pulse rounded"></div>
             ))}
           </div>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <LoadingSkeleton key={i} className="h-20" />
+              <div key={i} className="h-20 bg-muted animate-pulse rounded"></div>
             ))}
           </div>
+        </div>
+      ) : !leaderboard || leaderboard.length === 0 ? (
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">No Leaderboard Data</h2>
+          <p className="text-muted-foreground">Start scanning products to see the leaderboard!</p>
         </div>
       ) : (
         <>
@@ -248,18 +256,20 @@ export default function Leaderboard() {
                   </h4>
                   
                   <AnimatePresence>
-                    {leaderboard.map((user, index) => (
-                      <motion.div
-                        key={`${user.username}-${user.rank}-full`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ delay: index * 0.05 }}
-                        whileHover={{ scale: 1.02 }}
-                        className={`
-                          flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer
-                          bg-gradient-to-r ${getRankColor(user.rank)}
-                          hover:shadow-glow
+                    {leaderboard?.map((user, index) => {
+                      if (!user) return null;
+                      return (
+                        <motion.div
+                          key={`${user.username || user.user_id}-${user.rank || index}-full`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ delay: index * 0.05 }}
+                          whileHover={{ scale: 1.02 }}
+                          className={`
+                            flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer
+                            bg-gradient-to-r ${getRankColor(user.rank || index + 1)}
+                            hover:shadow-glow
                         `}
                       >
                         {/* Rank */}
@@ -295,7 +305,8 @@ export default function Leaderboard() {
                           </div>
                         </div>
                       </motion.div>
-                    ))}
+                    );
+                  })}
                   </AnimatePresence>
                 </div>
               </div>
