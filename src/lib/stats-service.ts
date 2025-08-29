@@ -31,7 +31,22 @@ export class StatsService {
   static getUserStats(): UserStats {
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      try {
+        const parsed = JSON.parse(stored);
+        // Ensure all numeric values are valid numbers, not null/undefined
+        return {
+          totalScans: Number(parsed.totalScans) || 0,
+          ecoPoints: Number(parsed.ecoPoints) || 0,
+          productsScanned: Number(parsed.productsScanned) || 0,
+          alternativesFound: Number(parsed.alternativesFound) || 0,
+          co2Saved: Number(parsed.co2Saved) || 0.0,
+          sustainabilityRating: parsed.sustainabilityRating || 'Eco Rookie',
+          achievements: Array.isArray(parsed.achievements) ? parsed.achievements : [],
+          lastScanDate: parsed.lastScanDate || new Date().toISOString(),
+        };
+      } catch (error) {
+        console.warn('Error parsing stored stats, using defaults:', error);
+      }
     }
 
     // Default stats for new users
@@ -53,17 +68,18 @@ export class StatsService {
   static updateAfterScan(product: any, alternativesCount: number = 0): UserStats {
     const currentStats = this.getUserStats();
     
-    // Calculate points based on product eco score
-    const basePoints = Math.floor(product.ecoScore / 10);
-    const alternativeBonus = alternativesCount * 5;
+    // Calculate points based on product eco score (safely handle null/undefined)
+    const ecoScore = Number(product?.ecoScore) || 50; // Default to 50 if invalid
+    const basePoints = Math.floor(ecoScore / 10);
+    const alternativeBonus = (Number(alternativesCount) || 0) * 5;
     const totalPoints = basePoints + alternativeBonus + 10; // Base 10 points per scan
 
     const updatedStats: UserStats = {
       totalScans: currentStats.totalScans + 1,
       productsScanned: currentStats.productsScanned + 1,
-      alternativesFound: currentStats.alternativesFound + alternativesCount,
+      alternativesFound: currentStats.alternativesFound + (Number(alternativesCount) || 0),
       ecoPoints: currentStats.ecoPoints + totalPoints,
-      co2Saved: currentStats.co2Saved + (product.ecoScore * 0.1), // Rough CO2 calculation
+      co2Saved: currentStats.co2Saved + (ecoScore * 0.1), // Rough CO2 calculation
       sustainabilityRating: this.calculateRating(currentStats.ecoPoints + totalPoints),
       achievements: this.updateAchievements(currentStats, {
         ecoPoints: currentStats.ecoPoints + totalPoints,

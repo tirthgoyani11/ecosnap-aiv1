@@ -47,8 +47,8 @@ export function CountUpStat({
   }, [value, duration]);
 
   const displayValue = decimals > 0 
-    ? count.toFixed(decimals) 
-    : Math.floor(count).toLocaleString();
+    ? (count || 0).toFixed(decimals) 
+    : Math.floor(count || 0).toLocaleString();
 
   return (
     <motion.span 

@@ -69,14 +69,16 @@ export function KPIStat({
   const formatDisplayValue = (val: number): string => {
     if (typeof value === 'string') return value;
     
-    if (val >= 1000000) {
-      return (val / 1000000).toFixed(1) + 'M';
-    } else if (val >= 1000) {
-      return (val / 1000).toFixed(1) + 'K';
-    } else if (val % 1 === 0) {
-      return val.toString();
+    const safeVal = val || 0;
+    
+    if (safeVal >= 1000000) {
+      return (safeVal / 1000000).toFixed(1) + 'M';
+    } else if (safeVal >= 1000) {
+      return (safeVal / 1000).toFixed(1) + 'K';
+    } else if (safeVal % 1 === 0) {
+      return safeVal.toString();
     } else {
-      return val.toFixed(1);
+      return safeVal.toFixed(1);
     }
   };
 

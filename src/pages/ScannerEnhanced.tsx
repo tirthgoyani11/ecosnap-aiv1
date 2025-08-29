@@ -545,7 +545,7 @@ export default function ScannerEnhanced() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">CO₂ Saved</span>
-                        <span className="font-semibold text-green-500">{userStats.co2Saved.toFixed(1)} kg</span>
+                        <span className="font-semibold text-green-500">{(userStats.co2Saved || 0).toFixed(1)} kg</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Level</span>
