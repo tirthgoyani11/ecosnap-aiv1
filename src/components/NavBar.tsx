@@ -24,7 +24,7 @@ const authenticatedNavItems = [
   { name: "Scanner", href: "/scanner", icon: Scan },
   { name: "Bulk Scan", href: "/bulk", icon: Menu },
   { name: "Dashboard", href: "/dashboard", icon: Zap },
-  { name: "Discover", href: "/discover", icon: Search },
+  { name: "Discover", href: "/discover-new", icon: Search },
   { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
 ];
 

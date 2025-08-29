@@ -227,7 +227,7 @@ export default function IndexEnhanced() {
               </AnimatedElement>
 
               {/* Enhanced Action Buttons */}
-              <AnimatedElement animation="fadeInUp" delay={800} className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <AnimatedElement animation="fadeInUp" delay={800} className="flex justify-center mb-8">
                 <Link to={isAuthenticated ? "/dashboard" : "/scanner"}>
                   <Button 
                     size="lg" 
@@ -238,14 +238,6 @@ export default function IndexEnhanced() {
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="glass-button px-8 py-4 text-lg font-semibold group hover:bg-white/10 transition-all duration-300"
-                >
-                  <Play className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Watch Demo
-                </Button>
               </AnimatedElement>
 
               {/* Live Stats with Animations */}
