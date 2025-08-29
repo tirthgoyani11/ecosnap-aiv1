@@ -8,11 +8,8 @@ import { ConfettiBurst } from "@/components/ConfettiBurst";
 import { ScoreRing } from "@/components/ScoreRing";
 import { InteractiveButton, ModernCard, ProgressRing, NotificationToast } from "@/components/ModernComponents";
 import { RealProductAPI } from "@/lib/real-product-api";
-import StatsService from "@/lib/stats-service";
-import { GeminiScanService, GeminiScanResult } from "@/lib/gemini-scan-service";
-import { AnalyticsView } from "@/components/AnalyticsView";
+import { StatsService } from "@/lib/stats-service";
 import { Link } from "react-router-dom";
-import { CameraScanner } from "@/components/CameraScanner";
 import {
   Camera,
   Upload,
@@ -71,7 +68,6 @@ export default function ScannerEnhanced() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [scanAnimation, setScanAnimation] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
   const [notification, setNotification] = useState<{
     title: string;
     message: string;
@@ -79,160 +75,14 @@ export default function ScannerEnhanced() {
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
-  const [showAnalytics, setShowAnalytics] = useState(false);
 
-  const geminiService = new GeminiScanService();
-
-  // Handle camera scan result with Gemini AI
-  const handleCameraScanResult = async (result: any) => {
-    if (result && result.imageData) {
-      setIsScanning(true);
-      setScanAnimation(true);
-      
-      try {
-        // Use Gemini AI for comprehensive analysis
-        const geminiResult = await GeminiScanService.analyzeWithGemini(result.imageData);
-        
-        if (geminiResult) {
-          // Convert Gemini result to our ScanResult format
-          const scanResult: ScanResult = {
-            id: geminiResult.id,
-            productName: geminiResult.productName,
-            brand: geminiResult.brand,
-            ecoScore: geminiResult.ecoScore,
-            category: geminiResult.category,
-            sustainability: geminiResult.aiAnalysis.sustainability,
-            certifications: geminiResult.aiAnalysis.certifications,
-            alternatives: geminiResult.alternatives,
-            tips: geminiResult.aiAnalysis.recommendations,
-            carbonFootprint: geminiResult.carbonFootprint,
-            recyclability: geminiResult.recyclability,
-            thumbnail: geminiResult.thumbnail
-          };
-          
-          setScanResult(scanResult);
-          setScanHistory(prev => [scanResult, ...prev.slice(0, 9)]);
-          setShowConfetti(true);
-          
-          // Update stats with Gemini data
-          StatsService.updateAfterScan({
-            ecoScore: geminiResult.ecoScore,
-            product_name: geminiResult.productName
-          }, geminiResult.alternatives.length);
-          
-          setNotification({
-            title: "🤖 AI Analysis Complete!",
-            message: `Found ${geminiResult.productName} with ${geminiResult.geminiInsights.length} AI insights`,
-            type: "success"
-          });
-        } else {
-          throw new Error("Gemini analysis failed");
-        }
-      } catch (error) {
-        console.error("Gemini scan error:", error);
-        setNotification({
-          title: "AI Analysis Failed",
-          message: "Could not analyze the product. Please try again.",
-          type: "error"
-        });
-      } finally {
-        setIsScanning(false);
-        setScanAnimation(false);
-        setShowCamera(false);
-      }
-    }
-  };
-
-  // Process scan result from camera or upload
-  const processScanResult = async (cameraResult: any) => {
-    try {
-      const visionData = cameraResult.vision;
-      const productData = {
-        product_name: visionData.product_name || "Unknown Product",
-        brands: visionData.brand || "Unknown Brand",
-        eco_score: cameraResult.ecoScore?.overallScore || Math.floor(Math.random() * 40) + 60,
-        categories: visionData.category || "General",
-        packaging_score: cameraResult.ecoScore?.packaging || Math.floor(Math.random() * 40) + 60,
-        materials_score: cameraResult.ecoScore?.materials || Math.floor(Math.random() * 40) + 60,
-        manufacturing_score: cameraResult.ecoScore?.manufacturing || Math.floor(Math.random() * 40) + 50,
-        transport_score: cameraResult.ecoScore?.transport || Math.floor(Math.random() * 30) + 70,
-        labels: visionData.certifications?.join(',') || "Organic,Fair Trade",
-        carbon_footprint: cameraResult.ecoScore?.carbonFootprint || (Math.random() * 5 + 1).toFixed(1),
-        recyclable: Math.random() > 0.3,
-        image_url: cameraResult.imageData
-      };
-
-      // Create alternatives
-      const alternatives = [
-        { name: `Eco ${productData.product_name}`, score: Math.min(100, productData.eco_score + 15), price: `$${(Math.random() * 20 + 5).toFixed(2)}`, availability: "In Stock" },
-        { name: `Green ${productData.product_name}`, score: Math.min(100, productData.eco_score + 10), price: `$${(Math.random() * 20 + 5).toFixed(2)}`, availability: "Limited" },
-        { name: `Sustainable ${productData.product_name}`, score: Math.min(100, productData.eco_score + 8), price: `$${(Math.random() * 20 + 5).toFixed(2)}`, availability: "In Stock" }
-      ];
-
-      const result: ScanResult = {
-        id: Date.now().toString(),
-        productName: productData.product_name,
-        brand: productData.brands,
-        ecoScore: productData.eco_score,
-        category: productData.categories?.split(',')[0] || 'General',
-        sustainability: {
-          packaging: productData.packaging_score,
-          materials: productData.materials_score,
-          manufacturing: productData.manufacturing_score,
-          transport: productData.transport_score,
-        },
-        certifications: productData.labels ? productData.labels.split(',').slice(0, 3) : ["Organic", "Fair Trade"],
-        alternatives: alternatives,
-        tips: [
-          `Look for ${productData.categories?.split(',')[0]} products with minimal packaging`,
-          `Check for recycling symbols on ${productData.product_name} containers`,
-          "Consider buying in bulk to reduce packaging waste"
-        ],
-        carbonFootprint: `${productData.carbon_footprint} kg CO2e`,
-        recyclability: productData.recyclable ? 85 : 45,
-        thumbnail: productData.image_url
-      };
-
-      setScanResult(result);
-      setScanHistory(prev => [result, ...prev.slice(0, 9)]);
-      setShowConfetti(true);
-      
-      // Update stats
-      StatsService.updateAfterScan(productData, alternatives.length);
-      
-      setNotification({
-        title: "Scan Complete!",
-        message: `Found ${result.productName} with eco score ${result.ecoScore}`,
-        type: "success"
-      });
-
-    } catch (error) {
-      console.error("Error processing scan result:", error);
-      setNotification({
-        title: "Scan Failed",
-        message: "Could not process the scanned product. Please try again.",
-        type: "error"
-      });
-    } finally {
-      setIsScanning(false);
-      setScanAnimation(false);
-    }
-  };
-
-  // Real scan function with camera integration and fallback
+  // Real scan function with live data integration
   const performScan = async (type: "camera" | "upload") => {
-    if (type === "camera") {
-      // Start camera scanning
-      setShowCamera(true);
-      return;
-    }
-    
-    // Fallback scan for upload or demo mode
     setIsScanning(true);
     setScanAnimation(true);
     
     try {
-      // Demo mode with real API data
+      // Simulate barcode detection (in real app, this would come from camera/image processing)
       const testBarcodes = [
         "3017620422003", // Nutella
         "8000500037034", // Ferrero Rocher
@@ -382,40 +232,6 @@ export default function ScannerEnhanced() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-muted/30 p-4">
       {showConfetti && <ConfettiBurst isVisible={showConfetti} />}
       
-      {/* Camera Overlay */}
-      <AnimatePresence>
-        {showCamera && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="relative w-full max-w-2xl"
-            >
-              <div className="absolute top-4 right-4 z-60">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCamera(false)}
-                  className="bg-black/50 border-white/20 text-white hover:bg-white/20"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <CameraScanner
-                onScanResult={handleCameraScanResult}
-                className="w-full"
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
       {/* Notification Toast */}
       <AnimatePresence>
         {notification && (
@@ -488,7 +304,7 @@ export default function ScannerEnhanced() {
                     )}
                   </AnimatePresence>
 
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     {/* Camera Button */}
                     <motion.div
                       whileHover={{ scale: 1.02 }}
@@ -498,15 +314,15 @@ export default function ScannerEnhanced() {
                       <Button
                         onClick={() => performScan("camera")}
                         disabled={isScanning}
-                        className="w-full h-32 text-lg font-semibold premium-button group relative overflow-hidden mb-4"
+                        className="w-full h-32 text-lg font-semibold premium-button group relative overflow-hidden"
                       >
                         <motion.div
                           whileHover={{ rotate: 12 }}
                           transition={{ type: "spring", stiffness: 400 }}
                         >
-                          <Camera className="mr-4 h-8 w-8" />
+                          <Camera className="mr-3 h-8 w-8" />
                         </motion.div>
-                        {isScanning ? "🤖 AI Analyzing Product..." : "📱 Scan with AI Camera"}
+                        {isScanning ? "Scanning Real Product..." : "Scan with Camera"}
                         
                         {/* Scanning pulse effect */}
                         {isScanning && (
@@ -520,7 +336,7 @@ export default function ScannerEnhanced() {
                     </motion.div>
 
                     {/* Divider */}
-                    <div className="relative my-6">
+                    <div className="relative">
                       <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-muted/30"></div>
                       </div>
@@ -533,7 +349,6 @@ export default function ScannerEnhanced() {
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="mt-6"
                     >
                       <input
                         type="file"
@@ -546,20 +361,20 @@ export default function ScannerEnhanced() {
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isScanning}
                         variant="outline"
-                        className="w-full h-20 text-lg font-semibold glass-button group mb-4"
+                        className="w-full h-20 text-lg font-semibold glass-button group"
                       >
                         <motion.div
                           whileHover={{ y: -2 }}
                           transition={{ type: "spring", stiffness: 400 }}
                         >
-                          <Upload className="mr-4 h-6 w-6" />
+                          <Upload className="mr-3 h-6 w-6" />
                         </motion.div>
-                        📤 Upload Product Image
+                        Upload Product Image
                       </Button>
                     </motion.div>
 
                     {/* Real Data Info */}
-                    <div className="bg-muted/20 rounded-lg p-6 space-y-3 mt-6">
+                    <div className="bg-muted/20 rounded-lg p-4 space-y-2">
                       <h4 className="font-medium flex items-center gap-2 text-sm">
                         <Info className="h-4 w-4 text-primary" />
                         Real Data Sources
@@ -603,7 +418,7 @@ export default function ScannerEnhanced() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">CO₂ Saved</span>
-                        <span className="font-semibold text-green-500">{(userStats.co2Saved || 0).toFixed(1)} kg</span>
+                        <span className="font-semibold text-green-500">{userStats.co2Saved.toFixed(1)} kg</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Level</span>
@@ -652,51 +467,6 @@ export default function ScannerEnhanced() {
                   </Card>
                 </motion.div>
               )}
-
-              {/* Analytics & History Actions */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <BarChart3 className="h-5 w-5 text-primary" />
-                      Analytics & History
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <InteractiveButton
-                        onClick={() => setShowAnalytics(true)}
-                        className="w-full bg-gradient-to-r from-primary/20 to-primary/10 border-primary/20 hover:border-primary/40"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            <span>View Analytics</span>
-                          </div>
-                          <ArrowRight className="h-4 w-4" />
-                        </div>
-                      </InteractiveButton>
-                      
-                      <InteractiveButton
-                        onClick={() => setShowAnalytics(true)}
-                        className="w-full bg-gradient-to-r from-green-500/20 to-green-500/10 border-green-500/20 hover:border-green-500/40"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4" />
-                            <span>Scan History ({scanHistory.length})</span>
-                          </div>
-                          <ArrowRight className="h-4 w-4" />
-                        </div>
-                      </InteractiveButton>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
             </div>
           </div>
         ) : (
@@ -907,39 +677,6 @@ export default function ScannerEnhanced() {
           </motion.div>
         )}
       </div>
-
-      {/* Analytics Modal */}
-      <AnimatePresence>
-        {showAnalytics && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-            onClick={() => setShowAnalytics(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="w-full max-w-6xl max-h-[90vh] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowAnalytics(false)}
-                  className="absolute top-4 right-4 z-10 bg-black/20 hover:bg-black/40 text-white"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-                <AnalyticsView onClose={() => setShowAnalytics(false)} />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
