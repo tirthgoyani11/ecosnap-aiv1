@@ -33,7 +33,7 @@ import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-// Prize Modal Component
+// Prize Modal Component with modern styling
 function PrizeModal({ 
   isOpen, 
   onClose, 
@@ -50,76 +50,157 @@ function PrizeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+        initial={{ scale: 0.8, opacity: 0, y: 50 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.8, opacity: 0, y: 50 }}
+        className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl max-w-6xl w-full max-h-[85vh] overflow-hidden shadow-2xl border border-white/20 dark:border-slate-700/20"
       >
-        <div className="p-6 border-b dark:border-gray-700">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 p-8">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Gift className="text-yellow-500" />
-              🎁 Available Prizes
-            </h2>
-            <Button variant="ghost" onClick={onClose}>✕</Button>
+            <motion.h2 
+              className="text-3xl font-black text-white flex items-center gap-4"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              >
+                🎁
+              </motion.div>
+              Prize Vault
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-yellow-300"
+              >
+                ✨
+              </motion.div>
+            </motion.h2>
+            <motion.button
+              onClick={onClose}
+              className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-2xl flex items-center justify-center text-white font-bold text-xl transition-all duration-200 backdrop-blur-sm"
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              ✕
+            </motion.button>
           </div>
+          <motion.p 
+            className="text-white/90 mt-3 text-lg font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            Claim your rewards and show off your eco-warrior achievements!
+          </motion.p>
         </div>
         
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {prizes.map((prize) => (
-              <Card 
-                key={prize.id} 
-                className={cn(
-                  "relative overflow-hidden transition-all duration-300 hover:shadow-lg",
-                  prize.rarity === 'legendary' && 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300',
-                  prize.rarity === 'epic' && 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300',
-                  prize.rarity === 'rare' && 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300',
-                  prize.rarity === 'common' && 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300'
-                )}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className="text-4xl mb-2">{prize.image_url}</div>
-                  <h3 className="font-semibold text-lg mb-2">{prize.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prize.description}</p>
-                  
-                  <div className="flex items-center justify-between mb-3">
-                    <Badge 
-                      variant="outline"
-                      className={cn(
-                        prize.rarity === 'legendary' && 'border-yellow-500 text-yellow-700',
-                        prize.rarity === 'epic' && 'border-purple-500 text-purple-700',
-                        prize.rarity === 'rare' && 'border-blue-500 text-blue-700',
-                        prize.rarity === 'common' && 'border-gray-500 text-gray-700'
-                      )}
-                    >
-                      {prize.rarity}
-                    </Badge>
-                    <div className="text-sm font-medium">
-                      {prize.points_required} pts
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    className="w-full"
-                    disabled={!prize.is_claimable || isClaimingPrize}
-                    onClick={() => onClaimPrize(prize.id)}
-                    variant={prize.is_claimable ? "default" : "secondary"}
+        <div className="p-8 overflow-y-auto max-h-[60vh]">
+          {prizes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {prizes.map((prize, index) => (
+                <motion.div
+                  key={prize.id}
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 * index, type: "spring", stiffness: 100 }}
+                  whileHover={{ scale: 1.05, y: -10 }}
+                >
+                  <Card 
+                    className={cn(
+                      "relative overflow-hidden transition-all duration-300 rounded-2xl border-2 shadow-xl backdrop-blur-sm",
+                      prize.rarity === 'legendary' && 'bg-gradient-to-br from-yellow-50/80 to-orange-50/80 border-yellow-400/50 shadow-yellow-500/25',
+                      prize.rarity === 'epic' && 'bg-gradient-to-br from-purple-50/80 to-pink-50/80 border-purple-400/50 shadow-purple-500/25',
+                      prize.rarity === 'rare' && 'bg-gradient-to-br from-blue-50/80 to-cyan-50/80 border-blue-400/50 shadow-blue-500/25',
+                      prize.rarity === 'common' && 'bg-gradient-to-br from-gray-50/80 to-gray-100/80 border-gray-400/50 shadow-gray-500/25'
+                    )}
                   >
-                    {isClaimingPrize ? 'Claiming...' : prize.is_claimable ? '🎉 Claim Prize!' : '🔒 Not Available'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {prizes.length === 0 && (
-            <EmptyState
-              title="No Prizes Available"
-              description="Keep scanning to unlock amazing rewards!"
-              icon={Gift}
-            />
+                    {/* Rarity glow effect */}
+                    <div className={cn(
+                      "absolute inset-0 opacity-20 blur-xl",
+                      prize.rarity === 'legendary' && 'bg-gradient-to-r from-yellow-400 to-orange-500',
+                      prize.rarity === 'epic' && 'bg-gradient-to-r from-purple-400 to-pink-500',
+                      prize.rarity === 'rare' && 'bg-gradient-to-r from-blue-400 to-cyan-500',
+                      prize.rarity === 'common' && 'bg-gradient-to-r from-gray-400 to-gray-500'
+                    )}></div>
+                    
+                    <CardContent className="p-6 text-center relative z-10">
+                      <motion.div 
+                        className="text-6xl mb-4"
+                        animate={{ rotate: [0, 10, 0, -10, 0] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      >
+                        {prize.image_url}
+                      </motion.div>
+                      <h3 className="font-bold text-xl mb-3 text-slate-800 dark:text-white">{prize.name}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{prize.description}</p>
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge 
+                          className={cn(
+                            "text-xs px-3 py-1.5 rounded-full font-bold border-0 shadow-lg",
+                            prize.rarity === 'legendary' && 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white',
+                            prize.rarity === 'epic' && 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+                            prize.rarity === 'rare' && 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white',
+                            prize.rarity === 'common' && 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
+                          )}
+                        >
+                          ✨ {prize.rarity.toUpperCase()}
+                        </Badge>
+                        <div className="text-sm font-bold bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-full">
+                          {prize.points_required} pts
+                        </div>
+                      </div>
+                      
+                      <motion.button
+                        className={cn(
+                          "w-full py-3 px-6 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg",
+                          prize.is_claimable 
+                            ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-500/25"
+                            : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                        )}
+                        disabled={!prize.is_claimable || isClaimingPrize}
+                        onClick={() => onClaimPrize(prize.id)}
+                        whileHover={prize.is_claimable ? { scale: 1.05 } : {}}
+                        whileTap={prize.is_claimable ? { scale: 0.95 } : {}}
+                      >
+                        {isClaimingPrize ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                            />
+                            Claiming...
+                          </div>
+                        ) : prize.is_claimable ? (
+                          '🎉 Claim Now!'
+                        ) : (
+                          '🔒 Not Available'
+                        )}
+                      </motion.button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16"
+            >
+              <div className="text-8xl mb-6">🎁</div>
+              <h3 className="text-2xl font-bold text-slate-700 dark:text-slate-300 mb-4">No Prizes Available Yet</h3>
+              <p className="text-slate-600 dark:text-slate-400 text-lg">
+                Keep scanning to unlock amazing rewards! Your next prize could be just one scan away ✨
+              </p>
+            </motion.div>
           )}
         </div>
       </motion.div>
@@ -128,70 +209,178 @@ function PrizeModal({
 }
 
 const getBadgeInfo = (points: number) => {
-  if (points >= 1000) return { name: 'EcoLegend', icon: '👑', color: 'bg-purple-100 text-purple-800 border-purple-200' };
-  if (points >= 500) return { name: 'Climate Champion', icon: '⚡', color: 'bg-blue-100 text-blue-800 border-blue-200' };
-  if (points >= 100) return { name: 'Eco Warrior', icon: '🌎', color: 'bg-green-100 text-green-800 border-green-200' };
-  return { name: 'Beginner', icon: '🌿', color: 'bg-gray-100 text-gray-800 border-gray-200' };
+  if (points >= 1000) return { 
+    name: 'Legend', 
+    icon: '👑', 
+    color: 'bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-white border-0 shadow-lg shadow-purple-500/25',
+    textColor: 'text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600'
+  };
+  if (points >= 500) return { 
+    name: 'Champion', 
+    icon: '⚡', 
+    color: 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white border-0 shadow-lg shadow-blue-500/25',
+    textColor: 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600'
+  };
+  if (points >= 100) return { 
+    name: 'Warrior', 
+    icon: '🌎', 
+    color: 'bg-gradient-to-r from-green-400 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/25',
+    textColor: 'text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600'
+  };
+  return { 
+    name: 'Explorer', 
+    icon: '🌿', 
+    color: 'bg-gradient-to-r from-gray-400 to-gray-500 text-white border-0 shadow-lg shadow-gray-500/25',
+    textColor: 'text-gray-600'
+  };
 };
 
 const getRankIcon = (rank: number) => {
   switch (rank) {
-    case 1: return <Crown className="w-6 h-6 text-yellow-500" />;
-    case 2: return <Medal className="w-6 h-6 text-gray-400" />;
-    case 3: return <Award className="w-6 h-6 text-amber-600" />;
-    default: return <span className="text-lg font-bold text-muted-foreground">#{rank}</span>;
+    case 1: return (
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur opacity-75 animate-pulse"></div>
+        <div className="relative bg-gradient-to-r from-yellow-400 to-yellow-600 p-2 rounded-full shadow-lg">
+          <Crown className="w-4 h-4 text-white drop-shadow-sm" />
+        </div>
+      </div>
+    );
+    case 2: return (
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full blur opacity-75"></div>
+        <div className="relative bg-gradient-to-r from-gray-400 to-gray-600 p-2 rounded-full shadow-lg">
+          <Medal className="w-4 h-4 text-white drop-shadow-sm" />
+        </div>
+      </div>
+    );
+    case 3: return (
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full blur opacity-75"></div>
+        <div className="relative bg-gradient-to-r from-amber-500 to-amber-700 p-2 rounded-full shadow-lg">
+          <Award className="w-4 h-4 text-white drop-shadow-sm" />
+        </div>
+      </div>
+    );
+    default: return (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center shadow-md border border-slate-200 dark:border-slate-600">
+        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">#{rank}</span>
+      </div>
+    );
   }
 };
 
 const PodiumCard = ({ user, position }: { user: LeaderboardEntry; position: number }) => {
   const badge = getBadgeInfo(user.total_points);
-  const podiumColors = [
-    'from-yellow-400 to-yellow-600', // 1st
-    'from-gray-300 to-gray-500',     // 2nd
-    'from-amber-400 to-amber-600'    // 3rd
+  const podiumStyles = [
+    {
+      // 1st place - Gold with rainbow glow
+      bg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500',
+      glow: 'shadow-2xl shadow-yellow-500/40',
+      border: 'border-yellow-300/50',
+      textGradient: 'bg-gradient-to-r from-yellow-600 to-orange-600',
+      height: 'md:h-80'
+    },
+    {
+      // 2nd place - Silver with blue accent
+      bg: 'bg-gradient-to-br from-slate-300 via-gray-300 to-slate-400',
+      glow: 'shadow-xl shadow-slate-500/30',
+      border: 'border-slate-300/50',
+      textGradient: 'bg-gradient-to-r from-slate-600 to-gray-700',
+      height: 'md:h-72'
+    },
+    {
+      // 3rd place - Bronze with warm tones
+      bg: 'bg-gradient-to-br from-amber-400 via-orange-400 to-amber-600',
+      glow: 'shadow-xl shadow-amber-500/30',
+      border: 'border-amber-300/50',
+      textGradient: 'bg-gradient-to-r from-amber-700 to-orange-700',
+      height: 'md:h-72'
+    }
   ];
+
+  const style = podiumStyles[position - 1];
   
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: position * 0.1 }}
-      className="relative"
+      initial={{ y: 50, opacity: 0, scale: 0.9 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      transition={{ 
+        delay: position * 0.2,
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+      className={`relative ${style.height}`}
+      whileHover={{ scale: 1.05, y: -10 }}
     >
-      <Card className="text-center relative overflow-hidden border-2 shadow-lg">
-        <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${podiumColors[position - 1]}`} />
-        <CardContent className="p-6 relative z-10">
-          <div className="relative mb-4">
-            <Avatar className="w-20 h-20 mx-auto mb-2 ring-4 ring-white shadow-lg">
-              <AvatarImage src={user.avatar_url} alt={user.user_name} />
-              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+      {/* Glowing background effect */}
+      <div className={`absolute inset-0 ${style.bg} opacity-20 blur-xl rounded-3xl ${style.glow}`}></div>
+      
+      {/* Glass card */}
+      <Card className={`relative h-full backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-2 ${style.border} rounded-3xl overflow-hidden ${style.glow} hover:bg-white/90 dark:hover:bg-slate-900/90 transition-all duration-500`}>
+        {/* Animated gradient overlay */}
+        <div className={`absolute inset-0 ${style.bg} opacity-10 animate-pulse`}></div>
+        
+        <CardContent className="p-6 relative z-10 h-full flex flex-col items-center justify-center text-center">
+          {/* Position indicator */}
+          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+            {getRankIcon(position)}
+          </div>
+          
+          {/* Avatar with glow effect */}
+          <div className="relative mb-4 mt-4">
+            <div className={`absolute inset-0 ${style.bg} opacity-30 blur-lg rounded-full`}></div>
+            <Avatar className="w-24 h-24 relative ring-4 ring-white/50 dark:ring-slate-700/50 shadow-2xl">
+              <AvatarImage src={user.avatar_url} alt={user.user_name} className="object-cover" />
+              <AvatarFallback className={`text-2xl font-bold text-white ${style.bg} shadow-lg`}>
                 {user.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -top-2 -right-2">
-              {getRankIcon(position)}
-            </div>
-            {user.scan_streak > 7 && (
-              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
-                <div className="flex items-center bg-orange-500 text-white px-2 py-1 rounded-full text-xs">
+            
+            {/* Streak indicator with modern styling */}
+            {user.scan_streak > 5 && (
+              <motion.div 
+                className="absolute -bottom-2 -right-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="flex items-center bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
                   <Flame className="w-3 h-3 mr-1" />
                   {user.scan_streak}
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
           
-          <h3 className="font-bold text-lg mb-2">{user.user_name}</h3>
-          <div className="text-2xl font-bold text-blue-600 mb-2">{user.total_points.toLocaleString()} pts</div>
+          {/* User name with gradient text */}
+          <h3 className={`font-bold text-xl mb-2 text-transparent bg-clip-text ${style.textGradient}`}>
+            {user.user_name}
+          </h3>
           
-          <div className="space-y-2">
-            <Badge className={`${badge.color} text-xs`}>
-              {badge.icon} {badge.name}
+          {/* Points with modern styling */}
+          <div className={`text-3xl font-black mb-3 text-transparent bg-clip-text ${style.textGradient} drop-shadow-sm`}>
+            {user.total_points.toLocaleString()}
+            <span className="text-sm ml-1 opacity-70">pts</span>
+          </div>
+          
+          {/* Badge with glassmorphism */}
+          <div className="mb-4">
+            <Badge className={`${badge.color} text-sm px-4 py-2 rounded-full font-medium backdrop-blur-sm`}>
+              <span className="mr-2">{badge.icon}</span>
+              {badge.name}
             </Badge>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-              <div>📊 {user.total_scans || 0} scans</div>
-              <div>🌱 {user.eco_score_avg || 0}% eco</div>
+          </div>
+          
+          {/* Stats with modern cards */}
+          <div className="grid grid-cols-2 gap-3 w-full text-xs">
+            <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+              <div className="font-semibold text-slate-600 dark:text-slate-300">📊 Scans</div>
+              <div className="text-lg font-bold text-slate-800 dark:text-white">{user.total_scans || 0}</div>
+            </div>
+            <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+              <div className="font-semibold text-slate-600 dark:text-slate-300">🌱 Eco Score</div>
+              <div className="text-lg font-bold text-slate-800 dark:text-white">{user.eco_score_avg || 0}%</div>
             </div>
           </div>
         </CardContent>
@@ -205,56 +394,113 @@ const LeaderboardRow = ({ user, isCurrentUser }: { user: LeaderboardEntry; isCur
   
   return (
     <motion.div
-      initial={{ x: -20, opacity: 0 }}
+      initial={{ x: -50, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 100 }}
+      whileHover={{ scale: 1.02, x: 10 }}
       className={cn(
-        "flex items-center space-x-4 p-4 rounded-xl border transition-all duration-200 hover:shadow-md",
+        "group relative p-4 rounded-2xl border backdrop-blur-sm transition-all duration-300 hover:shadow-xl",
         isCurrentUser 
-          ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800" 
-          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+          ? "bg-gradient-to-r from-blue-50/80 via-purple-50/80 to-pink-50/80 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30 border-blue-300/50 dark:border-blue-700/50 shadow-lg shadow-blue-500/20" 
+          : "bg-white/60 dark:bg-slate-800/60 border-slate-200/50 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:border-slate-300/70 dark:hover:border-slate-600/70"
       )}
     >
-      <div className="flex items-center space-x-3">
-        <div className="w-8 text-center">
-          {getRankIcon(user.current_rank)}
-        </div>
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={user.avatar_url} alt={user.user_name} />
-          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white font-semibold">
-            {user.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      </div>
+      {/* Animated background gradient */}
+      {isCurrentUser && (
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      )}
       
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className={cn(
-            "font-semibold", 
-            isCurrentUser ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white"
-          )}>
-            {user.user_name}
-            {isCurrentUser && <span className="text-xs ml-2 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">You</span>}
-          </h3>
-          {user.scan_streak > 3 && (
-            <div className="flex items-center text-orange-500 text-xs">
-              <Flame className="w-3 h-3 mr-1" />
-              {user.scan_streak}
-            </div>
-          )}
+      <div className="flex items-center space-x-4 relative z-10">
+        {/* Rank with enhanced styling */}
+        <div className="flex items-center space-x-3 min-w-[4rem]">
+          <div className="w-10 text-center flex justify-center">
+            {getRankIcon(user.current_rank)}
+          </div>
+          
+          {/* Avatar with glow effect */}
+          <div className="relative">
+            <Avatar className="w-14 h-14 ring-2 ring-white/50 dark:ring-slate-700/50 shadow-lg transition-all duration-300 group-hover:ring-4 group-hover:shadow-xl">
+              <AvatarImage src={user.avatar_url} alt={user.user_name} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 text-white font-bold text-lg shadow-lg">
+                {user.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            
+            {/* Online indicator */}
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+          </div>
         </div>
         
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>📊 {user.total_scans || 0} scans</span>
-          <span>🌱 {user.eco_score_avg || 0}% eco</span>
-          <Badge className={`${badge.color} text-xs`}>
-            {badge.icon} {badge.name}
-          </Badge>
+        {/* User info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className={cn(
+              "font-bold text-lg truncate", 
+              isCurrentUser 
+                ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" 
+                : "text-slate-800 dark:text-white"
+            )}>
+              {user.user_name}
+              {isCurrentUser && (
+                <motion.span 
+                  className="text-xs ml-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full font-medium shadow-lg"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  You ✨
+                </motion.span>
+              )}
+            </h3>
+            
+            {/* Streak with enhanced styling */}
+            {user.scan_streak > 3 && (
+              <motion.div 
+                className="flex items-center bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+                initial={{ scale: 0, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <Flame className="w-3 h-3 mr-1 animate-pulse" />
+                {user.scan_streak} streak
+              </motion.div>
+            )}
+          </div>
+          
+          {/* Stats with modern cards */}
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-700/80 px-3 py-1 rounded-lg backdrop-blur-sm">
+              <span className="text-blue-500">📊</span>
+              <span className="font-medium text-slate-600 dark:text-slate-300">{user.total_scans || 0} scans</span>
+            </div>
+            <div className="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-700/80 px-3 py-1 rounded-lg backdrop-blur-sm">
+              <span className="text-green-500">🌱</span>
+              <span className="font-medium text-slate-600 dark:text-slate-300">{user.eco_score_avg || 0}% eco</span>
+            </div>
+            
+            {/* Badge with enhanced styling */}
+            <Badge className={`${badge.color} text-xs px-3 py-1.5 rounded-lg font-medium backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-300`}>
+              <span className="mr-1">{badge.icon}</span>
+              {badge.name}
+            </Badge>
+          </div>
         </div>
-      </div>
-      
-      <div className="text-right">
-        <div className="text-xl font-bold text-blue-600">{user.total_points.toLocaleString()}</div>
-        <div className="text-xs text-muted-foreground">points</div>
+        
+        {/* Points with enhanced styling */}
+        <div className="text-right min-w-[6rem]">
+          <motion.div 
+            className={cn(
+              "text-2xl font-black mb-1 drop-shadow-sm",
+              isCurrentUser 
+                ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"
+                : "text-transparent bg-clip-text bg-gradient-to-r from-slate-600 to-slate-800 dark:from-slate-200 dark:to-white"
+            )}
+            whileHover={{ scale: 1.1 }}
+          >
+            {user.total_points.toLocaleString()}
+          </motion.div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">points</div>
+        </div>
       </div>
     </motion.div>
   );
@@ -321,130 +567,265 @@ export default function Leaderboard() {
   const userStats = userRank || null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-950 dark:to-purple-950 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-yellow-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-3/4 left-1/2 w-48 h-48 bg-gradient-to-r from-green-400/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+      
       {showConfetti && <ConfettiBurst isVisible={true} />}
       
-      <div className="max-w-6xl mx-auto p-6 space-y-8">
-        {/* Header */}
+      <div className="max-w-7xl mx-auto p-6 space-y-10 relative z-10">
+        {/* Header with enhanced styling */}
         <motion.div
-          initial={{ y: -20, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="text-center mb-8"
+          transition={{ type: "spring", stiffness: 100 }}
+          className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            🏆 EcoScan Leaderboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Compete with eco-warriors worldwide and earn amazing rewards!
-          </p>
+          <motion.h1 
+            className="text-6xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 drop-shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            🏆 EcoScan Elite
+          </motion.h1>
+          <motion.p 
+            className="text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Join the revolution of eco-warriors making a difference, one scan at a time ✨
+          </motion.p>
+          
+          {/* Floating particles */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-60"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [-20, 20],
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                }}
+              />
+            ))}
+          </div>
         </motion.div>
 
-        {/* User Stats & Prize Button */}
-        <div className="flex flex-col lg:flex-row gap-6 mb-8">
+        {/* User Stats & Prize Button with glassmorphism */}
+        <motion.div 
+          className="flex flex-col lg:flex-row gap-8 mb-12"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           {userStats && (
-            <Card className="flex-1">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Star className="text-yellow-500" />
-                  Your Performance
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">#{userStats.current_rank}</div>
-                    <div className="text-sm text-muted-foreground">Rank</div>
+            <motion.div 
+              className="flex-1"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border border-white/20 dark:border-slate-700/20 shadow-2xl rounded-3xl overflow-hidden">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg">
+                      <Star className="text-white w-6 h-6" />
+                    </div>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-100 dark:to-white">
+                      Your Performance
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {[
+                      { label: 'Rank', value: `#${userStats.current_rank}`, color: 'from-blue-500 to-cyan-500', icon: '🏆' },
+                      { label: 'Points', value: userStats.total_points, color: 'from-green-500 to-emerald-500', icon: '⚡' },
+                      { label: 'Streak', value: userStats.scan_streak, color: 'from-orange-500 to-red-500', icon: '🔥' },
+                      { label: 'Scans', value: userStats.total_scans || 0, color: 'from-purple-500 to-pink-500', icon: '📊' }
+                    ].map((stat, index) => (
+                      <motion.div 
+                        key={stat.label}
+                        className="text-center p-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 * index }}
+                        whileHover={{ scale: 1.05, y: -5 }}
+                      >
+                        <div className="text-2xl mb-2">{stat.icon}</div>
+                        <div className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${stat.color} mb-1`}>
+                          {stat.value}
+                        </div>
+                        <div className="text-sm font-medium text-slate-600 dark:text-slate-400">{stat.label}</div>
+                      </motion.div>
+                    ))}
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{userStats.total_points}</div>
-                    <div className="text-sm text-muted-foreground">Points</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">{userStats.scan_streak}</div>
-                    <div className="text-sm text-muted-foreground">Streak</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{userStats.total_scans || 0}</div>
-                    <div className="text-sm text-muted-foreground">Scans</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
           
-          <Button
-            onClick={() => setShowPrizeModal(true)}
-            className="lg:w-auto w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            size="lg"
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: 1 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Gift className="mr-2" />
-            View Prizes ({availablePrizes?.length || 0})
-          </Button>
-        </div>
+            <Button
+              onClick={() => setShowPrizeModal(true)}
+              className="lg:w-auto w-full h-full min-h-[200px] bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 shadow-2xl rounded-3xl border-0 text-white font-bold text-xl backdrop-blur-sm relative overflow-hidden group"
+              size="lg"
+            >
+              {/* Animated background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur"></div>
+              
+              <div className="relative z-10 flex flex-col items-center gap-4">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                >
+                  <Gift className="w-12 h-12" />
+                </motion.div>
+                <div>
+                  <div className="text-lg">🎁 Prize Gallery</div>
+                  <div className="text-sm opacity-90">({availablePrizes?.length || 0} available)</div>
+                </div>
+              </div>
+            </Button>
+          </motion.div>
+        </motion.div>
 
-        {/* Top 3 Podium */}
+        {/* Hall of Fame with enhanced styling */}
         {topThree.length > 0 && (
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="mb-8"
+            transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+            className="mb-16"
           >
-            <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-              <Trophy className="text-yellow-500" />
-              Hall of Fame
-            </h2>
+            <motion.h2 
+              className="text-4xl font-black text-center mb-12 flex items-center justify-center gap-4"
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="text-yellow-500"
+              >
+                <Trophy className="w-12 h-12" />
+              </motion.div>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500">
+                Hall of Fame
+              </span>
+            </motion.h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 2nd Place */}
-              {topThree[1] && (
-                <div className="md:mt-8">
-                  <PodiumCard user={topThree[1]} position={2} />
-                </div>
-              )}
+            {/* Podium with enhanced layout */}
+            <div className="relative">
+              {/* Background glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/30 via-transparent to-yellow-200/30 rounded-3xl blur-3xl"></div>
               
-              {/* 1st Place */}
-              {topThree[0] && (
-                <div>
-                  <PodiumCard user={topThree[0]} position={1} />
-                </div>
-              )}
-              
-              {/* 3rd Place */}
-              {topThree[2] && (
-                <div className="md:mt-8">
-                  <PodiumCard user={topThree[2]} position={3} />
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                {/* 2nd Place */}
+                {topThree[1] && (
+                  <div className="md:mt-12 md:order-1">
+                    <PodiumCard user={topThree[1]} position={2} />
+                  </div>
+                )}
+                
+                {/* 1st Place - Center and elevated */}
+                {topThree[0] && (
+                  <div className="md:order-2 relative">
+                    {/* Winner glow effect */}
+                    <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
+                    <PodiumCard user={topThree[0]} position={1} />
+                  </div>
+                )}
+                
+                {/* 3rd Place */}
+                {topThree[2] && (
+                  <div className="md:mt-12 md:order-3">
+                    <PodiumCard user={topThree[2]} position={3} />
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* Full Leaderboard */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="text-blue-500" />
-              Global Rankings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {leaderboardData && leaderboardData.length > 0 ? (
-                leaderboardData.map((userEntry, index) => (
-                  <LeaderboardRow
-                    key={userEntry.id}
-                    user={userEntry}
-                    isCurrentUser={user?.id === userEntry.user_id}
-                  />
-                ))
-              ) : (
-                <EmptyState
-                  title="No leaderboard data"
-                  description="Be the first to start scanning and climb the rankings!"
-                  icon={Trophy}
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Full Leaderboard with modern styling */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border border-white/20 dark:border-slate-700/20 shadow-2xl rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-50/80 to-slate-100/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm border-b border-white/20 dark:border-slate-700/20">
+              <CardTitle className="flex items-center gap-4 text-2xl font-black">
+                <motion.div
+                  animate={{ rotate: [0, 10, 0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-lg"
+                >
+                  <Users className="text-white w-6 h-6" />
+                </motion.div>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-100 dark:to-white">
+                  Global Rankings
+                </span>
+                
+                {/* Live indicator */}
+                <motion.div
+                  className="flex items-center gap-2 ml-auto"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <div className="w-3 h-3 bg-green-400 rounded-full shadow-lg"></div>
+                  <span className="text-sm font-medium text-green-600 dark:text-green-400">Live</span>
+                </motion.div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="space-y-4">
+                {leaderboardData && leaderboardData.length > 0 ? (
+                  leaderboardData.map((userEntry, index) => (
+                    <motion.div
+                      key={userEntry.id}
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 * index, type: "spring", stiffness: 100 }}
+                    >
+                      <LeaderboardRow
+                        user={userEntry}
+                        isCurrentUser={user?.id === userEntry.user_id}
+                      />
+                    </motion.div>
+                  ))
+                ) : (
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="py-16"
+                  >
+                    <EmptyState
+                      title="🚀 Ready to Start Your Journey?"
+                      description="Be the pioneer eco-warrior and claim your spot at the top of the leaderboard!"
+                      icon={Trophy}
+                    />
+                  </motion.div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Prize Modal */}
         <PrizeModal
