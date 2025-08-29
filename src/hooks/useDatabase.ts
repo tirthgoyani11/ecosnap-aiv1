@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { EnhancedScoringSystem } from '../lib/enhanced-scoring-system';
 
 export interface Scan {
   id: string;
@@ -48,7 +49,7 @@ export interface Product {
   updated_at: string;
 }
 
-// Hook to get user profile
+// Hook to get user profile with automatic initialization
 export const useProfile = () => {
   const { user } = useAuth();
   
@@ -57,16 +58,62 @@ export const useProfile = () => {
     queryFn: async () => {
       if (!user) throw new Error('No user found');
       
-      const { data, error } = await supabase
+      console.log('👤 Fetching user profile...', { user_id: user.id });
+      
+      let { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      // If no profile exists, create one
+      if (!data && !error) {
+        console.log('🔧 Creating new user profile...');
+        const newProfile = {
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || null,
+          username: user.email?.split('@')[0] || 'eco-user',
+          avatar_url: user.user_metadata?.avatar_url || null,
+          points: 0,
+          total_scans: 0,
+          total_co2_saved: 0,
+          eco_score_avg: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('❌ Failed to create profile:', createError);
+          throw createError;
+        }
+
+        console.log('✅ Profile created successfully');
+        return createdProfile as UserProfile;
+      }
+      
+      if (error) {
+        console.error('❌ Profile query error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Profile fetched:', { 
+        points: data?.points, 
+        total_scans: data?.total_scans 
+      });
       return data as UserProfile;
     },
     enabled: !!user,
+    retry: 3,
+    staleTime: 10 * 1000, // 10 seconds - more frequent updates
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
 
@@ -106,6 +153,8 @@ export const useScans = (limit?: number) => {
     queryFn: async () => {
       if (!user) throw new Error('No user found');
       
+      console.log('🔍 Fetching user scans...', { user_id: user.id, limit });
+      
       let query = supabase
         .from('scans')
         .select(`
@@ -127,14 +176,23 @@ export const useScans = (limit?: number) => {
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Failed to fetch scans:', error);
+        throw error;
+      }
+      
+      console.log('✅ Fetched scans:', data?.length || 0, 'scans');
       return data as (Scan & { products?: Product })[];
     },
     enabled: !!user,
+    staleTime: 10 * 1000, // 10 seconds - more frequent updates
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
 
-// Hook to create a new scan
+// Hook to create a new scan aligned with Supabase schema
 export const useCreateScan = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -143,71 +201,149 @@ export const useCreateScan = () => {
   return useMutation({
     mutationFn: async (scanData: {
       detected_name: string;
-      scan_type: 'camera' | 'barcode' | 'upload' | 'text';
+      scan_type: 'camera' | 'barcode' | 'upload';
       eco_score?: number;
       co2_footprint?: number;
       image_url?: string;
       metadata?: any;
+      product_id?: string;
+      alternatives_count?: number;
     }) => {
       if (!user) throw new Error('No user found');
       
-      const points = scanData.eco_score ? Math.round(scanData.eco_score * 10) : 10;
+      console.log('💾 Creating scan aligned with Supabase schema...', scanData);
       
-      const { data, error } = await supabase
+      // Get current profile for scoring calculations
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!currentProfile) {
+        throw new Error('User profile not found. Please refresh and try again.');
+      }
+
+      // Calculate enhanced points
+      const userStats = {
+        totalScans: currentProfile.total_scans,
+        totalPoints: currentProfile.points,
+        totalCo2Saved: currentProfile.total_co2_saved,
+        averageEcoScore: currentProfile.eco_score_avg || 0,
+        consecutiveScans: 1,
+        lastScanDate: new Date().toISOString(),
+        categoriesScanned: {},
+        alternativesFound: scanData.alternatives_count || 0,
+        level: 1,
+        xp: currentProfile.points,
+        streak: 1
+      };
+
+      const ecoScore = scanData.eco_score || Math.floor(Math.random() * 40) + 60;
+      const co2Footprint = scanData.co2_footprint || Math.random() * 3 + 0.5;
+
+      const scoreCalculation = EnhancedScoringSystem.calculatePoints({
+        ecoScore,
+        category: 'general',
+        alternatives: scanData.alternatives_count || 0,
+        co2Footprint,
+        isConsecutive: false,
+        scanQuality: 'medium',
+        userStats
+      });
+
+      // Create scan record following exact Supabase schema
+      const scanRecord = {
+        user_id: user.id,
+        product_id: scanData.product_id || null, // FK to products table
+        scan_type: scanData.scan_type,
+        image_url: scanData.image_url || null, // Can be null
+        detected_name: scanData.detected_name,
+        eco_score: ecoScore,
+        co2_footprint: co2Footprint,
+        alternatives_suggested: scanData.alternatives_count || 0,
+        points_earned: scoreCalculation.totalPoints,
+        metadata: {
+          ...scanData.metadata,
+          scoring_breakdown: scoreCalculation.breakdown,
+          enhanced_scoring: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      console.log('📝 Inserting scan with schema-compliant data:', {
+        detected_name: scanRecord.detected_name,
+        scan_type: scanRecord.scan_type,
+        eco_score: scanRecord.eco_score,
+        points_earned: scanRecord.points_earned
+      });
+
+      const { data: scan, error } = await supabase
         .from('scans')
-        .insert({
-          user_id: user.id,
-          detected_name: scanData.detected_name,
-          scan_type: scanData.scan_type,
-          eco_score: scanData.eco_score || Math.floor(Math.random() * 40) + 60, // Mock score 60-100
-          co2_footprint: scanData.co2_footprint || Math.random() * 5 + 1, // Mock 1-6 kg CO2
-          points_earned: points,
-          image_url: scanData.image_url,
-          metadata: scanData.metadata,
-        })
+        .insert(scanRecord)
         .select()
         .single();
       
-      if (error) throw error;
-      
-      // Update user profile stats
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('points, total_scans, total_co2_saved')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (currentProfile) {
-        await supabase
-          .from('profiles')
-          .update({
-            points: currentProfile.points + points,
-            total_scans: currentProfile.total_scans + 1,
-            total_co2_saved: currentProfile.total_co2_saved + (scanData.co2_footprint || Math.random() * 5 + 1),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', user.id);
+      if (error) {
+        console.error('❌ Scan creation failed:', error);
+        throw error;
       }
       
-      return data;
+      console.log('✅ Scan created successfully:', scan.id);
+
+      // Update profile with new totals
+      const newTotalScans = currentProfile.total_scans + 1;
+      const newTotalPoints = currentProfile.points + scoreCalculation.totalPoints;
+      const newTotalCo2Saved = currentProfile.total_co2_saved + co2Footprint;
+      const newEcoScoreAvg = ((currentProfile.eco_score_avg || 0) * currentProfile.total_scans + ecoScore) / newTotalScans;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          points: newTotalPoints,
+          total_scans: newTotalScans,
+          total_co2_saved: newTotalCo2Saved,
+          eco_score_avg: Math.round(newEcoScoreAvg * 100) / 100,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error('⚠️ Profile update failed:', updateError);
+      } else {
+        console.log('✅ Profile updated - Scans:', newTotalScans, 'Points:', newTotalPoints);
+      }
+      
+      return { 
+        ...scan, 
+        scoring_details: scoreCalculation 
+      };
     },
-    onSuccess: (data) => {
-      // Invalidate and refetch queries
-      queryClient.invalidateQueries({ queryKey: ['scans'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    onSuccess: async (data) => {
+      console.log('🎉 Scan completed - triggering real-time updates');
+      
+      // Force immediate cache invalidation and refetch
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['scans'] }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.refetchQueries({ queryKey: ['scans'] }),
+        queryClient.refetchQueries({ queryKey: ['profile'] })
+      ]);
       
       toast({
-        title: "Scan completed!",
-        description: `You earned ${data.points_earned} points for scanning "${data.detected_name}"`,
+        title: "✅ Scan Completed!",
+        description: `${data.detected_name} - ${data.points_earned} points earned! Check dashboard!`,
+        duration: 4000,
       });
     },
     onError: (error) => {
+      console.error('❌ Scan creation error:', error);
       toast({
-        title: "Error",
-        description: "Failed to save scan. Please try again.",
+        title: "❌ Scan Failed",
+        description: "Failed to save scan data. Please check your connection and try again.",
         variant: "destructive",
+        duration: 5000,
       });
-      console.error('Error creating scan:', error);
     },
   });
 };
@@ -351,5 +487,70 @@ export const useUserRank = () => {
       return (higherRanked?.length || 0) + 1;
     },
     enabled: !!user?.id,
+  });
+};
+
+// Hook to get user level and achievements using enhanced scoring
+export const useUserLevel = () => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['user-level', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      // Get user profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!profile) return null;
+      
+      // Get recent scan data for achievements
+      const { data: scans } = await supabase
+        .from('scans')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      // Calculate level using enhanced scoring system
+      const level = EnhancedScoringSystem.calculateLevel(profile.points);
+      
+      // Prepare user stats for achievements
+      const userStats = {
+        totalScans: profile.total_scans,
+        totalPoints: profile.points,
+        totalCo2Saved: profile.total_co2_saved,
+        averageEcoScore: profile.eco_score_avg || 0,
+        consecutiveScans: 1, // Could be calculated from scan dates
+        lastScanDate: scans?.[0]?.created_at || new Date().toISOString(),
+        categoriesScanned: {}, // Could be enhanced with category tracking
+        alternativesFound: 0,
+        level: level.level,
+        xp: profile.points,
+        streak: 1
+      };
+      
+      // Get achievements
+      const achievements = EnhancedScoringSystem.getAchievements();
+      const unlockedAchievements = achievements.filter(achievement => 
+        achievement.condition(userStats)
+      );
+      
+      // Get sustainability rating
+      const sustainabilityRating = EnhancedScoringSystem.getSustainabilityRating(userStats);
+      
+      return {
+        ...level,
+        achievements: unlockedAchievements,
+        sustainabilityRating,
+        userStats
+      };
+    },
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

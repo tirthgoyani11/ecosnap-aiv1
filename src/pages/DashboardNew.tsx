@@ -9,9 +9,9 @@ import { ScoreRing } from "@/components/ScoreRing";
 import { CountUpStat } from "@/components/CountUpStat";
 import { AnimatedElement, StaggeredGrid } from "@/components/AnimatedComponents";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-// Temporarily remove problematic hooks
-// import { useProfile, useScans, useUserRank } from "@/hooks/useDatabase";
+import { useProfile, useScans, useUserRank, useUserLevel } from "@/hooks/useDatabase";
 import { useEcoTips } from "@/hooks/useEcoTips";
+import DataFlowTest from "@/components/DataFlowTest";
 import { 
   Scan, 
   Leaf, 
@@ -31,74 +31,70 @@ import {
   Droplet
 } from "lucide-react";
 
-// Mock data for dashboard
-const mockProfile = {
-  id: '1',
-  user_id: '1',
-  full_name: 'Eco User',
-  username: 'ecouser',
-  avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ecouser',
-  points: 2450,
-  total_scans: 87,
-  total_co2_saved: 156.5,
-  eco_score_avg: 78,
-  badges: ['Early Adopter', 'Eco Warrior'],
-  created_at: '2024-01-01',
-  updated_at: '2024-01-15'
-};
-
-const mockRecentScans = [
-  {
-    id: '1',
-    user_id: '1',
-    detected_name: 'Organic Almond Milk',
-    scan_type: 'product',
-    eco_score: 85,
-    co2_footprint: 2.3,
-    points_earned: 25,
-    alternatives_suggested: 3,
-    image_url: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200',
-    created_at: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    user_id: '1',
-    detected_name: 'Bamboo Toothbrush',
-    scan_type: 'product',
-    eco_score: 92,
-    co2_footprint: 0.5,
-    points_earned: 30,
-    alternatives_suggested: 2,
-    image_url: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=200',
-    created_at: '2024-01-14T15:20:00Z'
-  },
-  {
-    id: '3',
-    user_id: '1',
-    detected_name: 'Reusable Water Bottle',
-    scan_type: 'product',
-    eco_score: 88,
-    co2_footprint: 1.2,
-    points_earned: 28,
-    alternatives_suggested: 1,
-    image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=200',
-    created_at: '2024-01-13T09:15:00Z'
-  }
-];
-
-const mockUserRank = { rank: 42 };
-
 export default function Dashboard() {
-  // Use mock data instead of problematic hooks
-  const profile = mockProfile;
-  const recentScans = mockRecentScans;
-  const userRank = mockUserRank.rank;
+  // Use real data from hooks with enhanced refresh intervals
+  const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
+  const { data: recentScans = [], isLoading: scansLoading, refetch: refetchScans } = useScans(10);
+  const { data: userRank, isLoading: rankLoading } = useUserRank();
+  const { data: userLevel, isLoading: levelLoading } = useUserLevel();
   const { dailyTip } = useEcoTips();
-  const isLoading = false; // No more loading issues
+  
+  const isLoading = profileLoading || scansLoading || rankLoading || levelLoading;
+
+  // Real-time dashboard updates - more aggressive refresh
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      console.log('🔄 Dashboard auto-refresh triggered');
+      await Promise.all([
+        refetchProfile(),
+        refetchScans()
+      ]);
+    }, 15000); // Every 15 seconds for more real-time feel
+
+    return () => clearInterval(interval);
+  }, [refetchProfile, refetchScans]);
+
+  // Manual refresh function for immediate updates
+  const handleManualRefresh = async () => {
+    console.log('🔄 Manual dashboard refresh');
+    await Promise.all([
+      refetchProfile(),
+      refetchScans()
+    ]);
+  };
+
+  // Use actual data or fallback to defaults
+  const profileData = profile || {
+    points: 0,
+    total_scans: 0,
+    total_co2_saved: 0,
+    eco_score_avg: 0
+  };
+
+  const scansData = recentScans && recentScans.length > 0 ? recentScans : [];
+
+  console.log('📊 Dashboard render:', {
+    hasProfile: !!profile,
+    scansCount: scansData.length,
+    profilePoints: profileData.points,
+    isLoading
+  });
 
   useEffect(() => {
     document.title = "🌿 EcoSnap AI - Dashboard";
-  }, []);
+    
+    // Set up periodic refresh for real-time updates
+    const refreshInterval = setInterval(async () => {
+      console.log('🔄 Refreshing dashboard data...');
+      await Promise.all([
+        refetchProfile(),
+        refetchScans()
+      ]);
+    }, 30000); // Refresh every 30 seconds
+
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval);
+  }, [refetchProfile, refetchScans]);
 
   if (isLoading) {
     return (
@@ -164,8 +160,24 @@ export default function Dashboard() {
     points: scan.points_earned || 0
   })) || [];
 
+  // Debug logging for recent scans
+  console.log('📊 Dashboard Data:', {
+    profileLoading,
+    scansLoading,
+    profile: profile ? { 
+      total_scans: profile.total_scans, 
+      points: profile.points 
+    } : 'No profile',
+    recentScans: recentScans?.length || 0,
+    recentActivity: recentActivity.length,
+    recentScansRaw: recentScans?.slice(0, 2) // Show first 2 scans for debugging
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/50">
+      {/* Debug Component - Remove in production */}
+      <DataFlowTest />
+      
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
@@ -186,6 +198,20 @@ export default function Dashboard() {
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Current Rank</p>
                 <p className="text-2xl font-bold text-primary">#{userRank || '—'}</p>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={async () => {
+                    console.log('🔄 Manual refresh triggered');
+                    await Promise.all([
+                      refetchProfile(),
+                      refetchScans()
+                    ]);
+                  }}
+                  className="mt-2 text-xs"
+                >
+                  🔄 Refresh Data
+                </Button>
               </div>
             </div>
           </AnimatedElement>
@@ -287,6 +313,75 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
+          {/* Level Progress & Achievements */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-500" />
+                Level & Achievements
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {userLevel ? (
+                <>
+                  {/* Level Progress */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/20">
+                          <Star className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">Level {userLevel.level}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {userLevel.sustainabilityRating?.rating || 'Eco Explorer'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        {userLevel.xpForNext} XP to next level
+                      </div>
+                    </div>
+                    <Progress value={userLevel.progress} className="h-2" />
+                  </div>
+
+                  {/* Recent Achievements */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm flex items-center gap-1">
+                      <Award className="h-3 w-3" />
+                      Latest Achievements
+                    </h4>
+                    <div className="space-y-2">
+                      {userLevel.achievements?.slice(0, 3).map((achievement, index) => (
+                        <div key={achievement.id} className="flex items-center gap-3 p-2 rounded-lg bg-accent/30">
+                          <div className="text-lg">{achievement.icon}</div>
+                          <div className="flex-1">
+                            <p className="font-medium text-xs">{achievement.name}</p>
+                            <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            +{achievement.points}
+                          </Badge>
+                        </div>
+                      )) || (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <Award className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                          <p className="text-xs">Complete more scans to unlock achievements!</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <LoadingSpinner />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
           {/* Daily Eco Tip */}
           <Card className="glass-card">
             <CardHeader>
