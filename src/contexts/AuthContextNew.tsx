@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { firestoreService } from '../services/firestoreService';
+import { firestoreService } from '@/services/firestoreService';
 import { UserProfile } from '@/types/firestore.types';
 import { initializeFirebase, waitForFirebase } from '@/lib/firebase';
 import { toast } from '@/hooks/use-toast';
@@ -221,7 +221,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { user: data.user, error };
     } catch (error) {
-      return { user: null, error: error as AuthError };
+      const authError: AuthError = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: 500,
+        code: 'unknown_error',
+        __isAuthError: true,
+        name: 'AuthError'
+      };
+      return { user: null, error: authError };
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
@@ -246,7 +253,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { user: data.user, error };
     } catch (error) {
-      return { user: null, error: error as AuthError };
+      const authError: AuthError = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: 500,
+        code: 'unknown_error',
+        __isAuthError: true,
+        name: 'AuthError'
+      };
+      return { user: null, error: authError };
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
@@ -275,7 +289,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // OAuth will redirect, so we return empty values
       return { user: null, error: null };
     } catch (error) {
-      return { user: null, error: error as AuthError };
+      const authError: AuthError = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: 500,
+        code: 'unknown_error',
+        __isAuthError: true,
+        name: 'AuthError'
+      };
+      return { user: null, error: authError };
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
@@ -297,7 +318,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { error };
     } catch (error) {
-      return { error: error as AuthError };
+      const authError: AuthError = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: 500,
+        code: 'unknown_error',
+        __isAuthError: true,
+        name: 'AuthError'
+      };
+      return { error: authError };
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }

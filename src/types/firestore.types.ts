@@ -1,16 +1,17 @@
 // src/types/firestore.types.ts
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, FieldValue } from 'firebase/firestore';
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
   avatarUrl?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Timestamp | FieldValue;
+  updatedAt: Timestamp | FieldValue;
   points: number;
   totalScans: number;
   ecoScore: number;
+  achievements?: string[];
   preferences: {
     theme: 'light' | 'dark' | 'system';
     notifications: boolean;
@@ -36,7 +37,8 @@ export interface ScanResult {
   scanMethod: 'camera' | 'barcode' | 'upload' | 'text';
   imageUrl?: string;
   pointsEarned: number;
-  createdAt: Timestamp;
+  createdAt: Timestamp | FieldValue;
+  updatedAt: Timestamp | FieldValue;
   metadata?: {
     location?: string;
     confidence?: number;
@@ -61,7 +63,7 @@ export interface FavoriteProduct {
   productBrand: string;
   ecoScore: number;
   imageUrl?: string;
-  addedAt: Timestamp;
+  createdAt: Timestamp | FieldValue;
   tags: string[];
   notes?: string;
 }
@@ -69,25 +71,13 @@ export interface FavoriteProduct {
 export interface LeaderboardEntry {
   id: string;
   userId: string;
-  userName: string;
+  name: string;
   avatarUrl?: string;
   points: number;
-  streak: number;
-  lastActive: Timestamp;
-  rank: number;
   totalScans: number;
-  ecoImpact: {
-    co2Saved: number;
-    treesEquivalent: number;
-    waterSaved: number;
-  };
+  ecoScore: number;
+  rank: number;
   achievements: string[];
-  level: {
-    current: number;
-    title: string;
-    progress: number;
-    nextLevelAt: number;
-  };
 }
 
 export interface BulkScanData {
@@ -99,7 +89,7 @@ export interface BulkScanData {
   averageEcoScore: number;
   totalPointsEarned: number;
   status: 'processing' | 'completed' | 'failed';
-  createdAt: Timestamp;
+  createdAt: Timestamp | FieldValue;
   completedAt?: Timestamp;
   scans: string[]; // Array of scan IDs
 }
@@ -149,9 +139,29 @@ export interface Achievement {
 // Utility types for Firestore operations
 export type CreateUserProfile = Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'>;
 export type UpdateUserProfile = Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>;
-export type CreateScanResult = Omit<ScanResult, 'id' | 'createdAt'>;
-export type CreateFavorite = Omit<FavoriteProduct, 'id' | 'addedAt'>;
+export type CreateScanResult = Omit<ScanResult, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateScanResult = Partial<Omit<ScanResult, 'id' | 'userId' | 'createdAt'>>;
+export type CreateFavorite = Omit<FavoriteProduct, 'id' | 'createdAt'>;
 export type UpdateLeaderboardEntry = Partial<Omit<LeaderboardEntry, 'id' | 'userId'>>;
+
+// Additional utility types
+export type CreateUserProfileData = CreateUserProfile;
+export type UpdateUserProfileData = UpdateUserProfile;
+export type CreateScanData = CreateScanResult;
+export type UpdateScanData = UpdateScanResult;
+export type CreateFavoriteData = CreateFavorite;
+
+// Pagination and Query types
+export interface PaginationOptions {
+  limit?: number;
+  startAfter?: any;
+}
+
+export interface QueryResult<T> {
+  data: T[];
+  hasMore: boolean;
+  lastDoc?: any;
+}
 
 // API Response types
 export interface FirestoreResponse<T> {
