@@ -219,9 +219,9 @@ export class StatsService {
    */
   static generateMockData(): void {
     const mockLeaderboard: LeaderboardEntry[] = [
-      { username: 'EcoMaster', ecoPoints: 2500, totalScans: 150, co2Saved: 45.2, rank: 1 },
-      { username: 'GreenGuru', ecoPoints: 2200, totalScans: 120, co2Saved: 38.7, rank: 2 },
-      { username: 'SustainableSam', ecoPoints: 1800, totalScans: 95, co2Saved: 32.1, rank: 3 },
+      { username: 'Tirth Goyani', ecoPoints: 2500, totalScans: 150, co2Saved: 45.2, rank: 1 },
+      { username: 'Abhi Gabani', ecoPoints: 2200, totalScans: 120, co2Saved: 38.7, rank: 2 },
+      { username: 'Krisha Vithani', ecoPoints: 1800, totalScans: 95, co2Saved: 32.1, rank: 3 },
       { username: 'EcoWarrior', ecoPoints: 1500, totalScans: 80, co2Saved: 28.5, rank: 4 },
       { username: 'PlanetProtector', ecoPoints: 1200, totalScans: 65, co2Saved: 24.3, rank: 5 },
       { username: 'GreenThumb', ecoPoints: 1000, totalScans: 55, co2Saved: 21.8, rank: 6 },

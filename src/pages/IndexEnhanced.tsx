@@ -115,7 +115,7 @@ export default function IndexEnhanced() {
 
   const testimonials = [
     {
-      name: "Sarah Chen",
+      name: "Tirth Goyani",
       role: "Environmental Advocate",
       content: "EcoSnap changed how I shop. I've reduced my carbon footprint by 40% in just 3 months!",
       avatar: "👩‍🔬",
@@ -123,7 +123,7 @@ export default function IndexEnhanced() {
       verified: true
     },
     {
-      name: "Marcus Rodriguez",
+      name: "Abhi Gabani",
       role: "Sustainability Blogger",
       content: "The most comprehensive eco-tool I've ever used. The community features are incredible.",
       avatar: "👨‍💻",
@@ -131,7 +131,7 @@ export default function IndexEnhanced() {
       verified: true
     },
     {
-      name: "Emily Thompson",
+      name: "Krisha Vithani",
       role: "Green Living Expert",
       content: "Finally, a tool that makes sustainable living accessible and rewarding for everyone.",
       avatar: "🌱",

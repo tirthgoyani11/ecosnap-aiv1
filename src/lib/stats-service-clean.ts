@@ -89,9 +89,9 @@ export class StatsService {
 
     // Return mock leaderboard data
     return [
-      { username: 'EcoChampion', ecoPoints: 1250, totalScans: 65, co2Saved: 32.5, rank: 1 },
-      { username: 'GreenWarrior', ecoPoints: 980, totalScans: 49, co2Saved: 24.5, rank: 2 },
-      { username: 'SustainableUser', ecoPoints: 750, totalScans: 38, co2Saved: 19.0, rank: 3 }
+      { username: 'Tirth Goyani', ecoPoints: 1250, totalScans: 65, co2Saved: 32.5, rank: 1 },
+      { username: 'Abhi Gabani', ecoPoints: 980, totalScans: 49, co2Saved: 24.5, rank: 2 },
+      { username: 'Krisha Vithani', ecoPoints: 750, totalScans: 38, co2Saved: 19.0, rank: 3 }
     ];
   }
 

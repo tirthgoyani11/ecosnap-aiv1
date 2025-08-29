@@ -41,6 +41,7 @@ import RoutingTest from "./pages/RoutingTest";
 import Developer from "./pages/Developer";
 import DemoShowcase from "./pages/DemoShowcase";
 import DataFlowTest from "@/components/DataFlowTest";
+import Footer from "@/components/Footer";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -174,6 +175,7 @@ const App = () => (
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Footer />
         </div>
       </BrowserRouter>
     </TooltipProvider>
