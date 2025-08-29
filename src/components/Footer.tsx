@@ -454,7 +454,7 @@ const Footer: React.FC = () => {
               >
                 <Heart className="w-4 h-4 text-red-500 fill-current" />
               </motion.div>
-              <span>by Eco Warriors</span>
+              <span>by Tirth Goyani</span>
             </div>
           </div>
         </motion.div>
