@@ -36,10 +36,23 @@ export default function DashboardEnhanced() {
   const { user, loading } = useAuth();
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
   const [currentTip, setCurrentTip] = useState(0);
+  const [userStats, setUserStats] = useState(StatsService.getUserStats());
 
-  // Get real user statistics
-  const userStats = StatsService.getUserStats();
-  
+  // Update stats when component mounts and periodically
+  useEffect(() => {
+    const updateStats = () => {
+      setUserStats(StatsService.getUserStats());
+    };
+    
+    // Update immediately
+    updateStats();
+    
+    // Update every 2 seconds to catch changes
+    const interval = setInterval(updateStats, 2000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Real KPI data from StatsService
   const kpiData = {
     totalScans: userStats.totalScans,
