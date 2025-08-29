@@ -3,7 +3,7 @@
  * Run with: node test-gemini-api.js
  */
 
-const API_KEY = 'AIzaSyDEsa0-qw_olb30gI6Gypf60lBohGYw_XY'; // Your API key
+const API_KEY = ''; // Your API key
 
 async function testGeminiAPI() {
   try {
