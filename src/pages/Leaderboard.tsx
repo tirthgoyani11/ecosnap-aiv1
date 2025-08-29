@@ -66,12 +66,9 @@ function PrizeModal({
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              >
+              <div className="text-2xl">
                 🎁
-              </motion.div>
+              </div>
               Prize Vault
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
@@ -84,7 +81,7 @@ function PrizeModal({
             <motion.button
               onClick={onClose}
               className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-2xl flex items-center justify-center text-white font-bold text-xl transition-all duration-200 backdrop-blur-sm"
-              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
               ✕
@@ -130,13 +127,9 @@ function PrizeModal({
                     )}></div>
                     
                     <CardContent className="p-6 text-center relative z-10">
-                      <motion.div 
-                        className="text-6xl mb-4"
-                        animate={{ rotate: [0, 10, 0, -10, 0] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      >
+                      <div className="text-6xl mb-4">
                         {prize.image_url}
-                      </motion.div>
+                      </div>
                       <h3 className="font-bold text-xl mb-3 text-slate-800 dark:text-white">{prize.name}</h3>
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{prize.description}</p>
                       
@@ -273,28 +266,28 @@ const PodiumCard = ({ user, position }: { user: LeaderboardEntry; position: numb
   const badge = getBadgeInfo(user.total_points);
   const podiumStyles = [
     {
-      // 1st place - Gold with rainbow glow
+      // 1st place - Gold with rainbow glow - Tallest
       bg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500',
       glow: 'shadow-2xl shadow-yellow-500/40',
       border: 'border-yellow-300/50',
       textGradient: 'bg-gradient-to-r from-yellow-600 to-orange-600',
-      height: 'md:h-80'
+      height: 'h-96'
     },
     {
-      // 2nd place - Silver with blue accent
+      // 2nd place - Silver with blue accent - Medium
       bg: 'bg-gradient-to-br from-slate-300 via-gray-300 to-slate-400',
       glow: 'shadow-xl shadow-slate-500/30',
       border: 'border-slate-300/50',
       textGradient: 'bg-gradient-to-r from-slate-600 to-gray-700',
-      height: 'md:h-72'
+      height: 'h-80'
     },
     {
-      // 3rd place - Bronze with warm tones
+      // 3rd place - Bronze with warm tones - Medium
       bg: 'bg-gradient-to-br from-amber-400 via-orange-400 to-amber-600',
       glow: 'shadow-xl shadow-amber-500/30',
       border: 'border-amber-300/50',
       textGradient: 'bg-gradient-to-r from-amber-700 to-orange-700',
-      height: 'md:h-72'
+      height: 'h-80'
     }
   ];
 
@@ -310,7 +303,7 @@ const PodiumCard = ({ user, position }: { user: LeaderboardEntry; position: numb
         stiffness: 100,
         damping: 15
       }}
-      className={`relative ${style.height}`}
+      className={`relative ${style.height} w-full`}
       whileHover={{ scale: 1.05, y: -10 }}
     >
       {/* Glowing background effect */}
@@ -321,7 +314,7 @@ const PodiumCard = ({ user, position }: { user: LeaderboardEntry; position: numb
         {/* Animated gradient overlay */}
         <div className={`absolute inset-0 ${style.bg} opacity-10 animate-pulse`}></div>
         
-        <CardContent className="p-6 relative z-10 h-full flex flex-col items-center justify-center text-center">
+        <CardContent className="p-4 md:p-6 relative z-10 h-full flex flex-col items-center justify-center text-center">
           {/* Position indicator */}
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
             {getRankIcon(position)}
@@ -690,12 +683,9 @@ export default function Leaderboard() {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur"></div>
               
               <div className="relative z-10 flex flex-col items-center gap-4">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                >
+                <div>
                   <Gift className="w-12 h-12" />
-                </motion.div>
+                </div>
                 <div>
                   <div className="text-lg">🎁 Prize Gallery</div>
                   <div className="text-sm opacity-90">({availablePrizes?.length || 0} available)</div>
@@ -717,46 +707,61 @@ export default function Leaderboard() {
               className="text-4xl font-black text-center mb-12 flex items-center justify-center gap-4"
               whileHover={{ scale: 1.05 }}
             >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="text-yellow-500"
-              >
+              <div className="text-yellow-500">
                 <Trophy className="w-12 h-12" />
-              </motion.div>
+              </div>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500">
                 Hall of Fame
               </span>
             </motion.h2>
             
-            {/* Podium with enhanced layout */}
+            {/* Podium with proper height alignment */}
             <div className="relative">
               {/* Background glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/30 via-transparent to-yellow-200/30 rounded-3xl blur-3xl"></div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-                {/* 2nd Place */}
-                {topThree[1] && (
-                  <div className="md:mt-12 md:order-1">
-                    <PodiumCard user={topThree[1]} position={2} />
-                  </div>
-                )}
+              {/* Podium Layout - Responsive design */}
+              <div className="flex flex-col md:flex-row md:items-end md:justify-center gap-4 md:gap-6 relative z-10">
                 
-                {/* 1st Place - Center and elevated */}
-                {topThree[0] && (
-                  <div className="md:order-2 relative">
-                    {/* Winner glow effect */}
-                    <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
-                    <PodiumCard user={topThree[0]} position={1} />
-                  </div>
-                )}
-                
-                {/* 3rd Place */}
-                {topThree[2] && (
-                  <div className="md:mt-12 md:order-3">
-                    <PodiumCard user={topThree[2]} position={3} />
-                  </div>
-                )}
+                {/* Mobile: Show in order 1, 2, 3 */}
+                <div className="md:hidden space-y-6">
+                  {topThree[0] && (
+                    <div className="relative">
+                      <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
+                      <PodiumCard user={topThree[0]} position={1} />
+                    </div>
+                  )}
+                  {topThree[1] && <PodiumCard user={topThree[1]} position={2} />}
+                  {topThree[2] && <PodiumCard user={topThree[2]} position={3} />}
+                </div>
+
+                {/* Desktop: Show in podium order 2, 1, 3 */}
+                <div className="hidden md:flex md:items-end md:justify-center gap-6 w-full">
+                  {/* 2nd Place - Medium height */}
+                  {topThree[1] && (
+                    <div className="flex-1 max-w-xs">
+                      <div className="h-16"></div> {/* Spacer for height difference */}
+                      <PodiumCard user={topThree[1]} position={2} />
+                    </div>
+                  )}
+                  
+                  {/* 1st Place - Tallest, center position */}
+                  {topThree[0] && (
+                    <div className="flex-1 max-w-xs relative">
+                      {/* Winner glow effect */}
+                      <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
+                      <PodiumCard user={topThree[0]} position={1} />
+                    </div>
+                  )}
+                  
+                  {/* 3rd Place - Shortest */}
+                  {topThree[2] && (
+                    <div className="flex-1 max-w-xs">
+                      <div className="h-16"></div> {/* Spacer for height difference */}
+                      <PodiumCard user={topThree[2]} position={3} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -771,13 +776,9 @@ export default function Leaderboard() {
           <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border border-white/20 dark:border-slate-700/20 shadow-2xl rounded-3xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-slate-50/80 to-slate-100/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm border-b border-white/20 dark:border-slate-700/20">
               <CardTitle className="flex items-center gap-4 text-2xl font-black">
-                <motion.div
-                  animate={{ rotate: [0, 10, 0, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-lg"
-                >
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-lg">
                   <Users className="text-white w-6 h-6" />
-                </motion.div>
+                </div>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-100 dark:to-white">
                   Global Rankings
                 </span>
