@@ -52,9 +52,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        // Initialize Firebase first
+        // Initialize Firebase first with timeout
+        const initTimeout = setTimeout(() => {
+          console.warn('Firebase initialization taking too long, continuing without it...');
+          if (isMounted) {
+            setState(prev => ({ ...prev, loading: false, initialized: true }));
+          }
+        }, 5000); // 5 second timeout
+
         await initializeFirebase();
         await waitForFirebase();
+        clearTimeout(initTimeout);
 
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -82,6 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        // Always set initialized to true to prevent infinite loading
         if (isMounted) {
           setState(prev => ({ ...prev, loading: false, initialized: true }));
         }

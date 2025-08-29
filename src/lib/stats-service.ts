@@ -219,6 +219,5 @@ export class StatsService {
   }
 }
 
-// Make sure to export everything explicitly for Rollup compatibility
+// Export the service
 export default StatsService;
-export { StatsService };

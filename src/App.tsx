@@ -19,12 +19,15 @@ const queryClient = new QueryClient({
 
 // Pages
 import Index from "./pages/Index";
+import IndexEnhanced from "./pages/IndexEnhanced";
 import Login from "./pages/Login";
 import LoginNew from "./pages/LoginNew";
 import SignUp from "./pages/SignUp";
 import SignUpNew from "./pages/SignUpNew";
 import Scanner from "./pages/Scanner";
+import ScannerEnhanced from "./pages/ScannerEnhanced";
 import DashboardNew from './pages/DashboardNew';
+import DashboardEnhanced from './pages/DashboardEnhanced';
 import BulkScan from "./pages/BulkScan";
 import Discover from "./pages/Discover";
 import Leaderboard from "./pages/Leaderboard";
@@ -34,6 +37,7 @@ import TestPage from "./pages/TestPage";
 import SimpleTest from "./pages/SimpleTest";
 import RoutingTest from "./pages/RoutingTest";
 import Developer from "./pages/Developer";
+import DemoShowcase from "./pages/DemoShowcase";
 import DataFlowTest from "@/components/DataFlowTest";
 
 const App = () => (
@@ -46,7 +50,9 @@ const App = () => (
           <div className="min-h-screen bg-background">
             <NavBar />
             <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<IndexEnhanced />} />
+            <Route path="/home-original" element={<Index />} />
+            <Route path="/demo" element={<DemoShowcase />} />
             
             {/* Auth Routes */}
             <Route 
@@ -87,6 +93,14 @@ const App = () => (
               path="/scanner" 
               element={
                 <ProtectedRoute>
+                  <ScannerEnhanced />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/scanner-original" 
+              element={
+                <ProtectedRoute>
                   <Scanner />
                 </ProtectedRoute>
               } 
@@ -101,6 +115,14 @@ const App = () => (
             />
             <Route 
               path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardEnhanced />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard-original" 
               element={
                 <ProtectedRoute>
                   <DashboardNew />

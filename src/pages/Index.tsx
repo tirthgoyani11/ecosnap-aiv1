@@ -5,6 +5,8 @@ import { FeatureTile } from "@/components/FeatureTile";
 import { AnimatedElement, StaggeredGrid, FloatingElement } from "@/components/AnimatedComponents";
 import { ParticleField } from "@/components/ParticleField";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { 
   Scan, 
   Play, 
@@ -16,7 +18,12 @@ import {
   Award,
   ArrowRight,
   Camera,
-  BarChart3
+  BarChart3,
+  Globe,
+  CheckCircle,
+  TrendingUp,
+  Heart,
+  Star
 } from "lucide-react";
 
 const features = [
