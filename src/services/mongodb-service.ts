@@ -1,7 +1,8 @@
-// MongoDB Product Service Integration
+// MongoDB Product Service Integration - DISABLED FOR DEPLOYMENT
 // src/services/mongodb-service.ts
 
-import { MongoClient, Db, Collection } from 'mongodb';
+// MongoDB imports disabled to prevent build errors
+// import { MongoClient, Db, Collection } from 'mongodb';
 
 interface Product {
   _id?: string;
@@ -41,6 +42,8 @@ interface Scan {
   timestamp: Date;
 }
 
+/*
+// MongoDB service disabled for deployment - using Firebase/Supabase instead
 class MongoDBService {
   private client: MongoClient;
   private db: Db;
@@ -254,3 +257,12 @@ export const useMongoScan = () => {
     getAnalytics
   };
 };
+*/
+
+// Export disabled MongoDB service with null values to prevent import errors
+export const mongoService = null;
+export const useMongoScan = () => ({
+  createScan: async () => null,
+  getUserScans: async () => [],
+  getAnalytics: async () => null
+});
