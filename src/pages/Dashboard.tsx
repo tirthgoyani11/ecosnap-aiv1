@@ -256,23 +256,31 @@ export default function Dashboard() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // Real-time data refresh
-  const refreshAllData = async () => {
+  const refreshAllData = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([
-      refetchProfile(),
-      refetchScans(),
-      refetchRank()
-    ]);
-    setRefreshing(false);
-  };
+    try {
+      await Promise.all([
+        refetchProfile(),
+        refetchScans(),
+        refetchRank()
+      ]);
+      setLastUpdated(new Date());
+      console.log('✅ Dashboard data refreshed at:', new Date().toLocaleTimeString());
+    } catch (error) {
+      console.error('❌ Failed to refresh data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchProfile, refetchScans, refetchRank]);
 
   // Auto-refresh every 30 seconds for real-time updates
   useEffect(() => {
     const interval = setInterval(refreshAllData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refetchProfile, refetchScans, refetchRank]);
 
   useEffect(() => {
     document.title = "🌿 EcoSnap AI - Smart Dashboard";
@@ -284,8 +292,22 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Update timestamp when core data changes
+  useEffect(() => {
+    if (profile || recentScans || userRank) {
+      setLastUpdated(new Date());
+    }
+  }, [profile?.total_scans, recentScans?.length, userRank]);
+
   // Calculate comprehensive stats
   const stats: DashboardStats = useMemo(() => {
+    // Debug logging to track data updates
+    console.log('📊 Dashboard Stats Update:', {
+      profile: profile?.total_scans || 0,
+      scans: recentScans?.length || 0,
+      rank: (userRank as any)?.current_rank || 999999
+    });
+    
     const baseStats: DashboardStats = {
       totalScans: profile?.total_scans || 0,
       totalPoints: profile?.points || 0,
@@ -563,7 +585,7 @@ export default function Dashboard() {
                 className="backdrop-blur-sm bg-white/10 hover:bg-white/20 border-white/20"
               >
                 <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
-                Refresh
+                {refreshing ? 'Refreshing...' : 'Refresh'}
               </Button>
               
               <Button 
@@ -574,6 +596,22 @@ export default function Dashboard() {
                 {showAnalytics ? 'Hide' : 'AI'} Analytics
               </Button>
 
+              {/* Test Button for Development */}
+              <Button 
+                onClick={() => {
+                  // Simulate data change for testing
+                  setLastUpdated(new Date());
+                  setShowCelebration(true);
+                  console.log('🧪 Test data update triggered');
+                }}
+                variant="outline"
+                className="backdrop-blur-sm bg-yellow-100/20 hover:bg-yellow-200/30 border-yellow-300/30"
+                size="sm"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Test Update
+              </Button>
+
               {/* Connection Status */}
               <div className="flex items-center gap-2">
                 <motion.div
@@ -582,7 +620,12 @@ export default function Dashboard() {
                 >
                   <Wifi className="h-4 w-4 text-green-500" />
                 </motion.div>
-                <span className="text-xs text-green-600 font-medium">Live</span>
+                <div className="text-xs text-green-600 font-medium">
+                  <div>Live</div>
+                  <div className="text-xs text-slate-500">
+                    {lastUpdated.toLocaleTimeString()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
