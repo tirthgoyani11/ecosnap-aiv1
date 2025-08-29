@@ -20,96 +20,118 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-// Temporarily commented out problematic imports
-// import { useLeaderboard, useClaimPoints } from '@/hooks/useLeaderboard';
+import { 
+  useLeaderboard, 
+  useUserRank, 
+  useAvailablePrizes, 
+  useClaimPrize,
+  type LeaderboardEntry
+} from '@/hooks/useLeaderboard';
 import { LoadingSkeleton } from '@/components/LoadingSpinner';
 import { EmptyState } from '@/components/EmptyState';
-
-// Temporary interface and mock data
-interface LeaderboardEntry {
-  id: string;
-  user_id: string;
-  rank: number;
-  user_name: string;
-  avatar_url?: string;
-  points: number;
-  streak: number;
-  last_active: string;
-  total_scans?: number;
-  eco_score_avg?: number;
-  badges: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-const mockLeaderboard: LeaderboardEntry[] = [
-  { 
-    id: '1', 
-    user_id: '1', 
-    rank: 1, 
-    user_name: 'Tirth Goyani', 
-    avatar_url: null, 
-    points: 1250, 
-    streak: 15, 
-    last_active: '2024-01-15', 
-    total_scans: 65, 
-    eco_score_avg: 85, 
-    badges: ['Early Adopter', 'Scan Master'], 
-    created_at: '2024-01-01', 
-    updated_at: '2024-01-15' 
-  },
-  { 
-    id: '2', 
-    user_id: '2', 
-    rank: 2, 
-    user_name: 'Abhi Gabani', 
-    avatar_url: null, 
-    points: 980, 
-    streak: 8, 
-    last_active: '2024-01-14', 
-    total_scans: 49, 
-    eco_score_avg: 78, 
-    badges: ['Consistent Scanner'], 
-    created_at: '2024-01-02', 
-    updated_at: '2024-01-14' 
-  },
-  { 
-    id: '3', 
-    user_id: '3', 
-    rank: 3, 
-    user_name: 'Krisha Vithani', 
-    avatar_url: null, 
-    points: 750, 
-    streak: 5, 
-    last_active: '2024-01-13', 
-    total_scans: 38, 
-    eco_score_avg: 72, 
-    badges: [], 
-    created_at: '2024-01-03', 
-    updated_at: '2024-01-13' 
-  }
-];
 import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-interface LeaderboardEntry {
-  id: string;
-  user_id: string;
-  rank: number;
-  user_name: string;
-  avatar_url?: string;
-  points: number;
-  streak: number;
-  last_active: string;
-  total_scans?: number;
-  eco_score_avg?: number;
-  badges: string[];
+// Prize Modal Component
+function PrizeModal({ 
+  isOpen, 
+  onClose, 
+  prizes = [], 
+  onClaimPrize, 
+  isClaimingPrize 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  prizes: any[];
+  onClaimPrize: (prizeId: string) => void;
+  isClaimingPrize: boolean;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+      >
+        <div className="p-6 border-b dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Gift className="text-yellow-500" />
+              🎁 Available Prizes
+            </h2>
+            <Button variant="ghost" onClick={onClose}>✕</Button>
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {prizes.map((prize) => (
+              <Card 
+                key={prize.id} 
+                className={cn(
+                  "relative overflow-hidden transition-all duration-300 hover:shadow-lg",
+                  prize.rarity === 'legendary' && 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300',
+                  prize.rarity === 'epic' && 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300',
+                  prize.rarity === 'rare' && 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300',
+                  prize.rarity === 'common' && 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300'
+                )}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className="text-4xl mb-2">{prize.image_url}</div>
+                  <h3 className="font-semibold text-lg mb-2">{prize.name}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prize.description}</p>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <Badge 
+                      variant="outline"
+                      className={cn(
+                        prize.rarity === 'legendary' && 'border-yellow-500 text-yellow-700',
+                        prize.rarity === 'epic' && 'border-purple-500 text-purple-700',
+                        prize.rarity === 'rare' && 'border-blue-500 text-blue-700',
+                        prize.rarity === 'common' && 'border-gray-500 text-gray-700'
+                      )}
+                    >
+                      {prize.rarity}
+                    </Badge>
+                    <div className="text-sm font-medium">
+                      {prize.points_required} pts
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full"
+                    disabled={!prize.is_claimable || isClaimingPrize}
+                    onClick={() => onClaimPrize(prize.id)}
+                    variant={prize.is_claimable ? "default" : "secondary"}
+                  >
+                    {isClaimingPrize ? 'Claiming...' : prize.is_claimable ? '🎉 Claim Prize!' : '🔒 Not Available'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {prizes.length === 0 && (
+            <EmptyState
+              title="No Prizes Available"
+              description="Keep scanning to unlock amazing rewards!"
+              icon={Gift}
+            />
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
 }
 
 const getBadgeInfo = (points: number) => {
-  if (points >= 500) return { name: 'Climate Champion', icon: '⚡', color: 'bg-purple-100 text-purple-800 border-purple-200' };
-  if (points >= 100) return { name: 'Eco Warrior', icon: '🌎', color: 'bg-blue-100 text-blue-800 border-blue-200' };
-  return { name: 'Beginner', icon: '🌿', color: 'bg-green-100 text-green-800 border-green-200' };
+  if (points >= 1000) return { name: 'EcoLegend', icon: '👑', color: 'bg-purple-100 text-purple-800 border-purple-200' };
+  if (points >= 500) return { name: 'Climate Champion', icon: '⚡', color: 'bg-blue-100 text-blue-800 border-blue-200' };
+  if (points >= 100) return { name: 'Eco Warrior', icon: '🌎', color: 'bg-green-100 text-green-800 border-green-200' };
+  return { name: 'Beginner', icon: '🌿', color: 'bg-gray-100 text-gray-800 border-gray-200' };
 };
 
 const getRankIcon = (rank: number) => {
@@ -122,7 +144,7 @@ const getRankIcon = (rank: number) => {
 };
 
 const PodiumCard = ({ user, position }: { user: LeaderboardEntry; position: number }) => {
-  const badge = getBadgeInfo(user.points);
+  const badge = getBadgeInfo(user.total_points);
   const podiumColors = [
     'from-yellow-400 to-yellow-600', // 1st
     'from-gray-300 to-gray-500',     // 2nd
@@ -131,114 +153,108 @@ const PodiumCard = ({ user, position }: { user: LeaderboardEntry; position: numb
   
   return (
     <motion.div
-      initial={{ scale: 0, y: 50 }}
-      animate={{ scale: 1, y: 0 }}
-      transition={{ delay: position * 0.2, type: 'spring', stiffness: 200 }}
-      className={cn(
-        "relative p-6 rounded-2xl bg-gradient-to-br text-white shadow-lg",
-        `bg-gradient-to-br ${podiumColors[position - 1]}`,
-        position === 1 && "transform scale-110"
-      )}
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: position * 0.1 }}
+      className="relative"
     >
-      <div className="text-center space-y-4">
-        <div className="relative">
-          <Avatar className="w-16 h-16 mx-auto border-4 border-white shadow-lg">
-            <AvatarImage src={user.avatar_url} alt={user.user_name} />
-            <AvatarFallback className="text-lg font-bold">
-              {user.user_name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute -top-2 -right-2">
-            {getRankIcon(position)}
+      <Card className="text-center relative overflow-hidden border-2 shadow-lg">
+        <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${podiumColors[position - 1]}`} />
+        <CardContent className="p-6 relative z-10">
+          <div className="relative mb-4">
+            <Avatar className="w-20 h-20 mx-auto mb-2 ring-4 ring-white shadow-lg">
+              <AvatarImage src={user.avatar_url} alt={user.user_name} />
+              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                {user.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -top-2 -right-2">
+              {getRankIcon(position)}
+            </div>
+            {user.scan_streak > 7 && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center bg-orange-500 text-white px-2 py-1 rounded-full text-xs">
+                  <Flame className="w-3 h-3 mr-1" />
+                  {user.scan_streak}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-        
-        <div>
-          <h3 className="font-bold text-lg">{user.user_name}</h3>
-          <p className="text-sm opacity-90">
-            <Zap className="w-4 h-4 inline mr-1" />
-            {user.points.toLocaleString()} pts
-          </p>
-          <p className="text-sm opacity-90">
-            <Flame className="w-4 h-4 inline mr-1" />
-            {user.streak} day streak
-          </p>
-        </div>
-        
-        <Badge className={cn("text-xs", badge.color)}>
-          <span className="mr-1">{badge.icon}</span>
-          {badge.name}
-        </Badge>
-      </div>
+          
+          <h3 className="font-bold text-lg mb-2">{user.user_name}</h3>
+          <div className="text-2xl font-bold text-blue-600 mb-2">{user.total_points.toLocaleString()} pts</div>
+          
+          <div className="space-y-2">
+            <Badge className={`${badge.color} text-xs`}>
+              {badge.icon} {badge.name}
+            </Badge>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div>📊 {user.total_scans || 0} scans</div>
+              <div>🌱 {user.eco_score_avg || 0}% eco</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };
 
-const LeaderboardRow = ({ user, currentUserId, index }: { 
-  user: LeaderboardEntry; 
-  currentUserId?: string; 
-  index: number; 
-}) => {
-  const isCurrentUser = user.user_id === currentUserId;
-  const badge = getBadgeInfo(user.points);
+const LeaderboardRow = ({ user, isCurrentUser }: { user: LeaderboardEntry; isCurrentUser?: boolean }) => {
+  const badge = getBadgeInfo(user.total_points);
   
   return (
     <motion.div
-      initial={{ opacity: 0, x: -50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
       className={cn(
-        "flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:-translate-y-1",
+        "flex items-center space-x-4 p-4 rounded-xl border transition-all duration-200 hover:shadow-md",
         isCurrentUser 
-          ? "bg-primary/5 border-primary/30 shadow-sm" 
-          : "bg-card hover:bg-accent/50"
+          ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800" 
+          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
       )}
     >
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center justify-center w-8 h-8">
-          {getRankIcon(user.rank)}
+      <div className="flex items-center space-x-3">
+        <div className="w-8 text-center">
+          {getRankIcon(user.current_rank)}
+        </div>
+        <Avatar className="w-12 h-12">
+          <AvatarImage src={user.avatar_url} alt={user.user_name} />
+          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white font-semibold">
+            {user.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+      
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className={cn(
+            "font-semibold", 
+            isCurrentUser ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white"
+          )}>
+            {user.user_name}
+            {isCurrentUser && <span className="text-xs ml-2 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">You</span>}
+          </h3>
+          {user.scan_streak > 3 && (
+            <div className="flex items-center text-orange-500 text-xs">
+              <Flame className="w-3 h-3 mr-1" />
+              {user.scan_streak}
+            </div>
+          )}
         </div>
         
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={user.avatar_url} alt={user.user_name} />
-          <AvatarFallback>{user.user_name.charAt(0).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className={cn("font-semibold", isCurrentUser && "text-primary")}>
-              {user.user_name}
-              {isCurrentUser && <span className="ml-2 text-xs text-muted-foreground">(You)</span>}
-            </span>
-            <Badge className={cn("text-xs", badge.color)}>
-              <span className="mr-1">{badge.icon}</span>
-              {badge.name}
-            </Badge>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Last active: {new Date(user.last_active).toLocaleDateString()}
-          </div>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span>📊 {user.total_scans || 0} scans</span>
+          <span>🌱 {user.eco_score_avg || 0}% eco</span>
+          <Badge className={`${badge.color} text-xs`}>
+            {badge.icon} {badge.name}
+          </Badge>
         </div>
       </div>
       
       <div className="text-right">
-        <div className="flex items-center space-x-4">
-          <div>
-            <div className="flex items-center text-lg font-bold">
-              <Zap className="w-4 h-4 mr-1 text-primary" />
-              {user.points.toLocaleString()}
-            </div>
-            <div className="text-sm text-muted-foreground">points</div>
-          </div>
-          
-          <div>
-            <div className="flex items-center text-lg font-bold text-orange-600">
-              <Flame className="w-4 h-4 mr-1" />
-              {user.streak}
-            </div>
-            <div className="text-sm text-muted-foreground">streak</div>
-          </div>
-        </div>
+        <div className="text-xl font-bold text-blue-600">{user.total_points.toLocaleString()}</div>
+        <div className="text-xs text-muted-foreground">points</div>
       </div>
     </motion.div>
   );
@@ -246,191 +262,199 @@ const LeaderboardRow = ({ user, currentUserId, index }: {
 
 export default function Leaderboard() {
   const { user } = useAuth();
-  const [timeframe, setTimeframe] = useState<'week' | 'all'>('all');
+  const [showPrizeModal, setShowPrizeModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  
-  // Mock data usage - replace with real hooks later
-  const leaderboardData = mockLeaderboard;
-  const isLoading = false;
-  const error = null;
-  
-  const handleClaimMilestone = async () => {
+
+  // Use comprehensive leaderboard hooks
+  const { data: leaderboardData, isLoading: isLoadingLeaderboard, error: leaderboardError } = useLeaderboard();
+  const { data: userRank, isLoading: isLoadingRank } = useUserRank();
+  const { data: availablePrizes, isLoading: isLoadingPrizes } = useAvailablePrizes();
+  const claimPrizeMutation = useClaimPrize();
+
+  const handleClaimPrize = async (prizeId: string) => {
     try {
-      // Mock claim points functionality
+      await claimPrizeMutation.mutateAsync(prizeId);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
+      toast.success('🎉 Prize claimed successfully!');
     } catch (error) {
-      console.error('Failed to claim points:', error);
+      toast.error('Failed to claim prize. Please try again.');
     }
   };
-  
-  if (isLoading) return <LoadingSkeleton />;
-  
-  if (error || !leaderboardData) {
+
+  // Loading states
+  if (isLoadingLeaderboard || isLoadingRank) {
     return (
-      <EmptyState 
-        icon={Trophy}
-        title="Leaderboard Unavailable"
-        description="Unable to load leaderboard data. Please try again later."
-      />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <LoadingSkeleton className="h-10 w-64 mx-auto mb-4" />
+            <LoadingSkeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map(i => (
+              <LoadingSkeleton key={i} className="h-64" />
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
-  
-  const topThree = leaderboardData.slice(0, 3);
-  const remaining = leaderboardData.slice(3);
-  const currentUserEntry = leaderboardData.find(entry => entry.user_id === user?.id);
-  
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {showConfetti && <ConfettiBurst isVisible={showConfetti} onComplete={() => setShowConfetti(false)} />}
-      
-      {/* Header Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
-        <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-6 py-3 rounded-full text-sm font-medium mb-4">
-          <Trophy className="w-5 h-5" />
-          <span>EcoSnap Champions</span>
+
+  // Error states
+  if (leaderboardError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-6xl mx-auto">
+          <EmptyState
+            title="Failed to load leaderboard"
+            description="Please try again later or contact support if the problem persists."
+            icon={Trophy}
+          />
         </div>
-        
-        <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-4">
-          🌱 EcoSnap Leaderboard
-        </h1>
-        
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Compete with eco-warriors worldwide! Scan products, earn points, and climb the rankings.
-        </p>
-        
-        {/* Timeframe Toggle */}
-        <Tabs value={timeframe} onValueChange={(value) => setTimeframe(value as 'week' | 'all')} className="mb-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="week" className="text-sm">
-              <Calendar className="w-4 h-4 mr-2" />
-              This Week
-            </TabsTrigger>
-            <TabsTrigger value="all" className="text-sm">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              All-Time
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </motion.div>
+      </div>
+    );
+  }
+
+  const topThree = leaderboardData?.slice(0, 3) || [];
+  const remainingUsers = leaderboardData?.slice(3) || [];
+  const userStats = userRank || null;
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {showConfetti && <ConfettiBurst isVisible={true} />}
       
-      {/* Current User Stats */}
-      {currentUserEntry && (
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-center mb-8"
         >
-          <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={currentUserEntry.avatar_url} alt={currentUserEntry.user_name} />
-                    <AvatarFallback>{currentUserEntry.user_name.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-lg">Your Rank: #{currentUserEntry.rank}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {currentUserEntry.points} points • {currentUserEntry.streak} day streak
-                    </p>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            🏆 EcoScan Leaderboard
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            Compete with eco-warriors worldwide and earn amazing rewards!
+          </p>
+        </motion.div>
+
+        {/* User Stats & Prize Button */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-8">
+          {userStats && (
+            <Card className="flex-1">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Star className="text-yellow-500" />
+                  Your Performance
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">#{userStats.current_rank}</div>
+                    <div className="text-sm text-muted-foreground">Rank</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{userStats.total_points}</div>
+                    <div className="text-sm text-muted-foreground">Points</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">{userStats.scan_streak}</div>
+                    <div className="text-sm text-muted-foreground">Streak</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">{userStats.total_scans || 0}</div>
+                    <div className="text-sm text-muted-foreground">Scans</div>
                   </div>
                 </div>
-                
-                <Button 
-                  onClick={handleClaimMilestone}
-                  disabled={false}
-                  className="bg-gradient-to-r from-primary to-secondary hover:scale-105 transition-transform"
-                >
-                  <Gift className="w-4 h-4 mr-2" />
-                  Claim +50 Points
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-      
-      {/* Podium Section */}
-      {topThree.length >= 3 && (
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-12"
-        >
-          <Card className="p-8 bg-gradient-to-br from-background to-accent/20 border-0 shadow-xl">
-            <CardHeader className="text-center pb-8">
-              <CardTitle className="text-2xl font-bold flex items-center justify-center">
-                <Trophy className="w-6 h-6 mr-2 text-primary" />
-                Top Performers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                {/* 2nd Place */}
-                <div className="md:order-1 md:mt-8">
+              </CardContent>
+            </Card>
+          )}
+          
+          <Button
+            onClick={() => setShowPrizeModal(true)}
+            className="lg:w-auto w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            size="lg"
+          >
+            <Gift className="mr-2" />
+            View Prizes ({availablePrizes?.length || 0})
+          </Button>
+        </div>
+
+        {/* Top 3 Podium */}
+        {topThree.length > 0 && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="mb-8"
+          >
+            <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
+              <Trophy className="text-yellow-500" />
+              Hall of Fame
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 2nd Place */}
+              {topThree[1] && (
+                <div className="md:mt-8">
                   <PodiumCard user={topThree[1]} position={2} />
                 </div>
-                
-                {/* 1st Place */}
-                <div className="md:order-2">
+              )}
+              
+              {/* 1st Place */}
+              {topThree[0] && (
+                <div>
                   <PodiumCard user={topThree[0]} position={1} />
                 </div>
-                
-                {/* 3rd Place */}
-                <div className="md:order-3 md:mt-8">
+              )}
+              
+              {/* 3rd Place */}
+              {topThree[2] && (
+                <div className="md:mt-8">
                   <PodiumCard user={topThree[2]} position={3} />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-      
-      {/* Full Leaderboard */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Full Leaderboard */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="w-5 h-5 mr-2" />
-              Full Rankings
-              <Badge variant="secondary" className="ml-2">
-                {leaderboardData.length} participants
-              </Badge>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="text-blue-500" />
+              Global Rankings
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <AnimatePresence>
-              {remaining.map((user, index) => (
-                <LeaderboardRow 
-                  key={user.user_id} 
-                  user={user} 
-                  currentUserId={user?.id}
-                  index={index}
+          <CardContent>
+            <div className="space-y-3">
+              {leaderboardData && leaderboardData.length > 0 ? (
+                leaderboardData.map((userEntry, index) => (
+                  <LeaderboardRow
+                    key={userEntry.id}
+                    user={userEntry}
+                    isCurrentUser={user?.id === userEntry.user_id}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  title="No leaderboard data"
+                  description="Be the first to start scanning and climb the rankings!"
+                  icon={Trophy}
                 />
-              ))}
-            </AnimatePresence>
-            
-            {remaining.length === 0 && (
-              <EmptyState 
-                icon={Sparkles}
-                title="Be the First!"
-                description="Start scanning products to appear on the leaderboard."
-              />
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
-      </motion.div>
+
+        {/* Prize Modal */}
+        <PrizeModal
+          isOpen={showPrizeModal}
+          onClose={() => setShowPrizeModal(false)}
+          prizes={availablePrizes || []}
+          onClaimPrize={handleClaimPrize}
+          isClaimingPrize={claimPrizeMutation.isPending}
+        />
+      </div>
     </div>
   );
 }
