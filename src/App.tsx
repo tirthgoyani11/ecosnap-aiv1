@@ -33,6 +33,8 @@ import NotFound from "./pages/NotFound";
 import TestPage from "./pages/TestPage";
 import SimpleTest from "./pages/SimpleTest";
 import RoutingTest from "./pages/RoutingTest";
+import Developer from "./pages/Developer";
+import DataFlowTest from "@/components/DataFlowTest";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -134,6 +136,8 @@ const App = () => (
             <Route path="/test" element={<TestPage />} />
             <Route path="/simple" element={<SimpleTest />} />
             <Route path="/routing-test" element={<RoutingTest />} />
+            <Route path="/data-test" element={<DataFlowTest />} />
+            <Route path="/developer" element={<Developer />} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />

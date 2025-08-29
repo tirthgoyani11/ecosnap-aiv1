@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { firestoreService } from '../services/firestoreService';
+import { firestoreService } from '@/services/firestoreService';
 import { UserProfile } from '@/types/firestore.types';
 import { initializeFirebase, waitForFirebase } from '@/lib/firebase';
 import { toast } from '@/hooks/use-toast';
@@ -101,7 +101,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('Auth state change:', event, session?.user?.id);
 
       try {
-        if (session?.user) {
+        if (session?.user && session.user.id) {
+          console.log('Loading profile for authenticated user:', session.user.id);
           const userProfile = await loadUserProfile(session.user);
           setState(prev => ({
             ...prev,
@@ -111,7 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             loading: false
           }));
 
-          if (event === 'SIGNED_IN') {
+          if (event === 'SIGNED_IN' && userProfile) {
             toast({
               title: "Welcome back!",
               description: `Hello ${userProfile?.name || session.user.email}`,
@@ -144,6 +145,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loadUserProfile = async (user: User): Promise<UserProfile | null> => {
     try {
+      // Validate user object
+      if (!user || !user.id) {
+        console.warn('Invalid user object provided to loadUserProfile');
+        return null;
+      }
+
+      console.log('Loading profile for user:', user.id);
       await waitForFirebase();
       
       // Try to get existing profile
@@ -178,16 +186,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             description: "Your profile has been created successfully",
           });
         }
+      } else {
+        console.log('User profile loaded successfully for:', user.id);
       }
       
       return userProfile;
     } catch (error) {
       console.error('Error loading user profile:', error);
-      toast({
-        title: "Profile Error",
-        description: "Failed to load user profile. Some features may not work correctly.",
-        variant: "destructive"
-      });
+      
+      // Check if it's a Firebase connection error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('Failed to get document') || 
+          errorMessage.includes('network') || 
+          errorMessage.includes('timeout') ||
+          errorMessage.includes('UNAVAILABLE') ||
+          errorMessage.includes('permission-denied')) {
+        // Network or connection error - create a temporary profile
+        console.warn('Network/permission error loading profile, creating temporary profile:', errorMessage);
+        
+        // Create a temporary profile for offline use
+        return {
+          id: user.id,
+          name: user.user_metadata?.full_name || 
+                user.user_metadata?.name || 
+                user.email?.split('@')[0] || 
+                'Eco User',
+          email: user.email || '',
+          avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+          points: 0,
+          totalScans: 0,
+          ecoScore: 0,
+          preferences: {
+            theme: 'system' as const,
+            notifications: true,
+            sustainabilityGoals: []
+          }
+        } as UserProfile;
+      }
+      
+      // Only show toast for unexpected errors, and only if the user is actually authenticated
+      if (user && user.id) {
+        toast({
+          title: "Profile Error",
+          description: "Unable to load profile. Please try refreshing the page.",
+          variant: "destructive"
+        });
+      }
       return null;
     }
   };

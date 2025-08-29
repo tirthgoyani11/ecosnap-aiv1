@@ -62,29 +62,12 @@ class FirebaseManager {
 
       // Initialize Firestore with offline persistence
       if (!this.firestore) {
-        if (import.meta.env.DEV) {
-          // Development mode - use more aggressive caching
-          this.firestore = initializeFirestore(this.app, {
-            localCache: persistentLocalCache({
-              tabManager: persistentMultipleTabManager()
-            })
-          });
-          
-          // Connect to emulator in development
-          try {
-            connectFirestoreEmulator(this.firestore, 'localhost', 8080);
-            console.log('🔧 Connected to Firestore emulator');
-          } catch (error) {
-            console.log('ℹ️ Firestore emulator not available, using production');
-          }
-        } else {
-          // Production mode - standard initialization
-          this.firestore = initializeFirestore(this.app, {
-            localCache: persistentLocalCache({
-              tabManager: persistentMultipleTabManager()
-            })
-          });
-        }
+        // Always use production mode for now to avoid emulator issues
+        this.firestore = initializeFirestore(this.app, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+          })
+        });
         console.log('✅ Firestore initialized with offline persistence');
       }
 

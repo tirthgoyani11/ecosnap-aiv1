@@ -11,7 +11,6 @@ import { AnimatedElement, StaggeredGrid } from "@/components/AnimatedComponents"
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useProfile, useScans, useUserRank, useUserLevel } from "@/hooks/useDatabase";
 import { useEcoTips } from "@/hooks/useEcoTips";
-import DataFlowTest from "@/components/DataFlowTest";
 import { 
   Scan, 
   Leaf, 
@@ -175,20 +174,18 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/50">
-      {/* Debug Component - Remove in production */}
-      <DataFlowTest />
       
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
           <AnimatedElement animation="fadeIn">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">Your Eco Dashboard</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold">Your Eco Dashboard</h1>
                   <p className="text-sm text-muted-foreground">
                     Track your environmental impact and sustainable choices
                   </p>
@@ -218,9 +215,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
         {/* Main Stats Grid */}
-        <StaggeredGrid className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StaggeredGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <KPIStat
             icon={Scan}
             title="Total Scans"
@@ -257,9 +254,9 @@ export default function Dashboard() {
           />
         </StaggeredGrid>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8 mb-6 sm:mb-8">
           {/* Eco Impact Equivalents */}
-          <Card className="lg:col-span-2 glass-card">
+          <Card className="xl:col-span-2 glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Leaf className="h-5 w-5 text-green-500" />
@@ -267,7 +264,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div className="text-center">
                   <div className="p-4 rounded-full bg-green-100 dark:bg-green-900/20 inline-block mb-3">
                     <TreePine className="h-8 w-8 text-green-600" />
@@ -419,7 +416,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
           {/* Recent Activity */}
           <Card className="glass-card">
             <CardHeader>

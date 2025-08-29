@@ -86,6 +86,17 @@ export default function Dashboard() {
     }
   ];
 
+  // Calculate stats based on profile data
+  const stats = {
+    totalScans: profile?.total_scans || 0,
+    ecoPoints: profile?.points || 0,
+    co2Saved: profile?.total_co2_saved || 0,
+    alternativesFound: Math.min(Math.round((profile?.total_scans || 0) * 0.3), profile?.total_scans || 0), // Estimate 30% alternative finding rate
+    productsScanned: profile?.total_scans || 0,
+    sustainabilityRating: profile?.points > 1000 ? "Excellent" : profile?.points > 500 ? "Good" : profile?.points > 100 ? "Fair" : "Beginner",
+    achievements: achievements.filter(a => a.earned)
+  };
+
   // Calculate eco impact equivalents
   const co2Saved = profile?.total_co2_saved || 0;
   const ecoImpact = {
