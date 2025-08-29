@@ -30,6 +30,8 @@ import DashboardNew from './pages/DashboardNew';
 import DashboardEnhanced from './pages/DashboardEnhanced';
 import BulkScan from "./pages/BulkScan";
 import Discover from "./pages/Discover";
+import DiscoverNew from "./pages/DiscoverNew";
+import DiscoverNewEnhanced from "./pages/DiscoverNewEnhanced";
 import Leaderboard from "./pages/Leaderboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -134,6 +136,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Discover />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/discover-new" 
+              element={
+                <ProtectedRoute>
+                  <DiscoverNewEnhanced />
                 </ProtectedRoute>
               } 
             />
