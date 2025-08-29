@@ -953,25 +953,25 @@ export const SmartScanner: React.FC = () => {
                   <Card className={`h-full border-2 transition-all duration-300 ${
                     scanMode === mode 
                       ? `border-transparent bg-gradient-to-br ${color} text-white shadow-2xl` 
-                      : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gradient-to-br ${bgColor} hover:shadow-xl`
+                      : `border-gray-300 dark:border-gray-600 hover:border-transparent bg-white dark:bg-gray-800 hover:bg-gradient-to-br hover:${color} hover:text-white hover:shadow-xl`
                   }`}>
                     <CardContent className="p-6 text-center space-y-4 h-full flex flex-col justify-between">
                       <div>
                         <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 mb-4 ${
                           scanMode === mode 
                             ? 'bg-white/20 text-white' 
-                            : `bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl group-hover:scale-110`
+                            : `bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl group-hover:scale-110 group-hover:bg-white/20`
                         }`}>
                           <Icon size={32} />
                         </div>
                         
-                        <h3 className={`text-xl font-bold mb-2 ${
-                          scanMode === mode ? 'text-white' : 'text-gray-800 dark:text-gray-200'
+                        <h3 className={`text-xl font-bold mb-2 transition-colors duration-300 ${
+                          scanMode === mode ? 'text-white' : 'text-gray-900 dark:text-gray-100 group-hover:text-white'
                         }`}>
                           {label}
                         </h3>
-                        <p className={`text-sm mb-4 ${
-                          scanMode === mode ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'
+                        <p className={`text-sm mb-4 transition-colors duration-300 ${
+                          scanMode === mode ? 'text-white/90' : 'text-gray-700 dark:text-gray-300 group-hover:text-white/90'
                         }`}>
                           {desc}
                         </p>
@@ -979,10 +979,10 @@ export const SmartScanner: React.FC = () => {
                       
                       <div className="space-y-2">
                         {features.map((feature, idx) => (
-                          <div key={idx} className={`text-xs px-3 py-1 rounded-full ${
+                          <div key={idx} className={`text-xs px-3 py-1 rounded-full transition-all duration-300 ${
                             scanMode === mode 
                               ? 'bg-white/20 text-white' 
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 group-hover:bg-white/20 group-hover:text-white'
                           }`}>
                             ✓ {feature}
                           </div>
