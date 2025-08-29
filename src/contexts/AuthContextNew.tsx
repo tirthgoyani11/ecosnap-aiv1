@@ -183,11 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return userProfile;
     } catch (error) {
       console.error('Error loading user profile:', error);
-      toast({
-        title: "Profile Error",
-        description: "Failed to load user profile. Some features may not work correctly.",
-        variant: "destructive"
-      });
+      // Silent error handling - no toast notification
       return null;
     }
   };

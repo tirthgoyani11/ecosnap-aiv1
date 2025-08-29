@@ -234,14 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } as UserProfile;
       }
       
-      // Only show toast for unexpected errors, and only if the user is actually authenticated
-      if (user && user.id) {
-        toast({
-          title: "Profile Error",
-          description: "Unable to load profile. Please try refreshing the page.",
-          variant: "destructive"
-        });
-      }
+      // Silent error handling - no toast notification
       return null;
     }
   };
