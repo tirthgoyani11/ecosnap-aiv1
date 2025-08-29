@@ -105,18 +105,19 @@ export class GeminiScanService {
         return this.getMockGeminiResponse();
       }
 
-      console.log('📡 Calling real Gemini Vision API...');
+      console.log('📡 Calling real Gemini 2.0 Flash API...');
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${this.GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-goog-api-key': this.GEMINI_API_KEY
         },
         body: JSON.stringify({
           contents: [{
             parts: [
               {
-                text: "Analyze this product image. Identify the product name, brand, category, ingredients if visible, and assess its environmental sustainability. Provide a detailed analysis in JSON format with the following structure: { productName: string, brand: string, category: string, ingredients: string[], sustainability: { packaging: number, materials: number, manufacturing: number, transport: number }, certifications: string[], healthScore: number, environmentalImpact: string, recommendations: string[] }"
+                text: "Analyze this product image comprehensively. I need detailed sustainability analysis in JSON format. Please identify: 1. Product name and brand 2. Category (Food & Beverages, Personal Care, Household, etc.) 3. Visible ingredients if any 4. Environmental sustainability scores (0-100) for: - Packaging sustainability - Materials used - Manufacturing process - Transportation impact 5. Any visible certifications (Organic, Fair Trade, etc.) 6. Health score based on visible information 7. Environmental impact description 8. Sustainability recommendations. Return ONLY valid JSON in this exact format: { \"productName\": \"string\", \"brand\": \"string\", \"category\": \"string\", \"ingredients\": [\"string\"], \"sustainability\": { \"packaging\": number, \"materials\": number, \"manufacturing\": number, \"transport\": number }, \"certifications\": [\"string\"], \"healthScore\": number, \"environmentalImpact\": \"string\", \"recommendations\": [\"string\"] }"
               },
               {
                 inline_data: {
@@ -127,7 +128,7 @@ export class GeminiScanService {
             ]
           }],
           generationConfig: {
-            temperature: 0.4,
+            temperature: 0.3,
             topK: 32,
             topP: 1,
             maxOutputTokens: 4096,
@@ -142,7 +143,13 @@ export class GeminiScanService {
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Gemini API response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();

@@ -10,6 +10,7 @@ import { InteractiveButton, ModernCard, ProgressRing, NotificationToast } from "
 import { RealProductAPI } from "@/lib/real-product-api";
 import StatsService from "@/lib/stats-service";
 import { GeminiScanService, GeminiScanResult } from "@/lib/gemini-scan-service";
+import { GeminiAPITester } from "@/lib/gemini-api-tester";
 import { AnalyticsView } from "@/components/AnalyticsView";
 import { Link } from "react-router-dom";
 import { CameraScanner } from "@/components/CameraScanner";
@@ -82,6 +83,21 @@ export default function ScannerEnhanced() {
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   const geminiService = new GeminiScanService();
+
+  // Add debug functions to window for testing
+  useEffect(() => {
+    // @ts-ignore
+    window.testGeminiAPI = () => GeminiAPITester.runAllTests();
+    // @ts-ignore
+    window.testGeminiConnection = () => GeminiAPITester.testConnection();
+    
+    return () => {
+      // @ts-ignore
+      delete window.testGeminiAPI;
+      // @ts-ignore
+      delete window.testGeminiConnection;
+    };
+  }, []);
 
   // Handle camera scan result with Gemini AI
   const handleCameraScanResult = async (result: any) => {
