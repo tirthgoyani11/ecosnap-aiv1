@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Search, Trophy } from 'lucide-react';
+import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Search, Trophy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -818,6 +818,54 @@ export const SmartScanner: React.FC = () => {
     if (file) await handleGeminiFileUpload(file); // Use Gemini for uploads
   }, [handleGeminiFileUpload]);
 
+  // Drag & Drop handlers for enhanced UI
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload an image file (JPG, PNG, WEBP)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload an image smaller than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await handleGeminiFileUpload(file);
+    }
+  }, [handleGeminiFileUpload, toast]);
+
   return (
     <div className="space-y-6">
         <Card>
@@ -940,59 +988,128 @@ export const SmartScanner: React.FC = () => {
       {scanMode === 'upload' && (
         <Card>
           <CardContent className="p-6">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-green-500 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <Upload size={48} className="mx-auto mb-4 text-gray-400" />
-              <p>Click to upload product image</p>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-              <Button className="mt-4" disabled={loading}>{loading ? 'Processing...' : 'Choose Image'}</Button>
+            <div 
+              className="border-2 border-dashed rounded-xl p-8 text-center hover:border-green-500 cursor-pointer transition-all duration-300 bg-gradient-to-br from-green-50 to-blue-50 hover:from-green-100 hover:to-blue-100 hover:shadow-lg"
+              onClick={() => fileInputRef.current?.click()}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+            >
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+                  <Upload size={32} className="text-white" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-gray-800">📤 Upload Product Image</h3>
+                  <p className="text-gray-600">
+                    <span className="font-medium text-green-600">Click to browse</span> or <span className="font-medium text-blue-600">drag & drop</span> your image here
+                  </p>
+                  <p className="text-sm text-gray-500">Supports: JPG, PNG, WEBP (Max 10MB)</p>
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Analyzing with AI...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Choose Image
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
       {scanMode === 'barcode' && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="text-center mb-4">
-                <Search size={48} className="mx-auto mb-4 text-gray-400" />
-                <p className="text-lg font-semibold mb-2">Search Product</p>
-                <p className="text-sm text-gray-600">Enter a product name, barcode, or description to get detailed analysis</p>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+          <CardContent className="p-8 relative">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full transform translate-x-16 -translate-y-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/30 to-blue-200/30 rounded-full transform -translate-x-12 translate-y-12"></div>
+            
+            <div className="space-y-6 relative">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg transform hover:scale-105 transition-transform duration-300">
+                  <Search size={36} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                  Search Product
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto leading-relaxed">
+                  Enter a product name, barcode, or description to get detailed sustainability analysis powered by AI
+                </p>
               </div>
               
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  placeholder="e.g. Nutella, 3017620422003, organic cookies..."
-                  value={barcodeInput}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleGeminiTextSearch()}
-                  className="flex-1 text-center text-lg"
-                  disabled={barcodeLoading}
-                />
+              <div className="max-w-lg mx-auto">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder="e.g. Nutella, 3017620422003, organic cookies..."
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleGeminiTextSearch()}
+                    className="pl-12 pr-4 py-4 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-blue-500 shadow-sm bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+                    disabled={barcodeLoading}
+                  />
+                  {barcodeInput && (
+                    <button
+                      onClick={() => setBarcodeInput('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
               
-              <Button 
-                onClick={handleGeminiTextSearch} 
-                disabled={barcodeLoading || !barcodeInput.trim()} 
-                className="w-full py-3 text-lg font-semibold"
-                size="lg"
-              >
-                {barcodeLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Scan className="mr-2 h-4 w-4" />
-                    Analyze Product
-                  </>
-                )}
-              </Button>
+              <div className="max-w-sm mx-auto">
+                <Button 
+                  onClick={handleGeminiTextSearch} 
+                  disabled={barcodeLoading || !barcodeInput.trim()} 
+                  className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:shadow-md"
+                  size="lg"
+                >
+                  {barcodeLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Analyze with AI
+                    </>
+                  )}
+                </Button>
+              </div>
               
-              <div className="text-center text-sm text-gray-500 mt-4">
-                <p>💡 Tip: Works with product names, barcodes, or descriptions</p>
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-800/60 rounded-full text-sm text-gray-600 dark:text-gray-300 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50">
+                  <span className="text-lg">💡</span>
+                  <span>Works with product names, barcodes, or descriptions</span>
+                </div>
+              </div>
+              
+              {/* Example suggestions */}
+              <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+                {['Coca Cola', 'iPhone 15', 'Organic Milk'].map((example) => (
+                  <button
+                    key={example}
+                    onClick={() => setBarcodeInput(example)}
+                    className="px-3 py-1.5 text-sm bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-700/80 border border-gray-200/50 dark:border-gray-600/50 rounded-lg transition-all duration-200 hover:shadow-sm backdrop-blur-sm"
+                    disabled={barcodeLoading}
+                  >
+                    {example}
+                  </button>
+                ))}
               </div>
             </div>
           </CardContent>
