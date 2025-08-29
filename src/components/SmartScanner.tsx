@@ -867,49 +867,171 @@ export const SmartScanner: React.FC = () => {
   }, [handleGeminiFileUpload, toast]);
 
   return (
-    <div className="space-y-6">
-        <Card>
-        <CardHeader><CardTitle className="text-lg font-bold text-center">Scanner Mode</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { mode: 'camera', icon: Camera, label: 'Live Scan' }, 
-              { mode: 'upload', icon: Upload, label: 'Upload Photo' },
-              { mode: 'barcode', icon: Search, label: 'Text Search' }
-            ].map(({ mode, icon: Icon, label }) => (
-              <Button key={mode} variant={scanMode === mode ? "default" : "outline"} className="flex flex-col h-auto p-4 space-y-2" onClick={() => setScanMode(mode as any)}>
-                <Icon size={24} /><span className="font-medium text-sm">{label}</span>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>      {scanMode === 'camera' && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-lg bg-black aspect-video">
+    <div className="space-y-6 max-w-4xl mx-auto p-4">
+        {/* 🚀 ULTIMATE SCANNER MODE SELECTION */}
+        <Card className="border-0 shadow-2xl bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 dark:from-purple-950 dark:via-blue-950 dark:to-green-950 overflow-hidden relative">
+          {/* Background decorations */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-200/20 via-blue-200/20 to-green-200/20 rounded-full transform translate-x-32 -translate-y-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-200/20 via-blue-200/20 to-purple-200/20 rounded-full transform -translate-x-24 translate-y-24"></div>
+          
+          <CardHeader className="relative z-10 text-center pb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl mb-4 mx-auto shadow-lg">
+              <Sparkles size={32} className="text-white" />
+            </div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 bg-clip-text text-transparent">
+              🌟 EcoSnap AI Scanner
+            </CardTitle>
+            <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
+              Choose your scanning method and discover the eco-impact of any product
+            </p>
+          </CardHeader>
+          
+          <CardContent className="relative z-10 pb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              {[
+                { 
+                  mode: 'camera', 
+                  icon: Camera, 
+                  label: '📱 Live Camera', 
+                  desc: 'Real-time scanning with AI recognition',
+                  color: 'from-green-500 to-emerald-600',
+                  bgColor: 'from-green-50 to-emerald-50',
+                  features: ['Live feed', 'Instant results', 'AR overlay']
+                },
+                { 
+                  mode: 'upload', 
+                  icon: Upload, 
+                  label: '📸 Upload Photo', 
+                  desc: 'Drag & drop or browse your images',
+                  color: 'from-blue-500 to-cyan-600',
+                  bgColor: 'from-blue-50 to-cyan-50',
+                  features: ['Drag & drop', 'File validation', 'Bulk upload']
+                },
+                { 
+                  mode: 'barcode', 
+                  icon: Search, 
+                  label: '🔍 Smart Search', 
+                  desc: 'Search by name, barcode, or description',
+                  color: 'from-purple-500 to-pink-600',
+                  bgColor: 'from-purple-50 to-pink-50',
+                  features: ['Text search', 'Barcode lookup', 'AI suggestions']
+                }
+              ].map(({ mode, icon: Icon, label, desc, color, bgColor, features }) => (
+                <div
+                  key={mode}
+                  className={`relative group cursor-pointer transition-all duration-500 transform hover:scale-105 ${
+                    scanMode === mode ? 'scale-105' : ''
+                  }`}
+                  onClick={() => setScanMode(mode as any)}
+                >
+                  <Card className={`h-full border-2 transition-all duration-300 ${
+                    scanMode === mode 
+                      ? `border-transparent bg-gradient-to-br ${color} text-white shadow-2xl` 
+                      : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gradient-to-br ${bgColor} hover:shadow-lg`
+                  }`}>
+                    <CardContent className="p-6 text-center space-y-4">
+                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 ${
+                        scanMode === mode 
+                          ? 'bg-white/20 text-white' 
+                          : `bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl`
+                      }`}>
+                        <Icon size={32} />
+                      </div>
+                      
+                      <div>
+                        <h3 className={`text-xl font-bold mb-2 ${
+                          scanMode === mode ? 'text-white' : 'text-gray-800 dark:text-gray-200'
+                        }`}>
+                          {label}
+                        </h3>
+                        <p className={`text-sm mb-4 ${
+                          scanMode === mode ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'
+                        }`}>
+                          {desc}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {features.map((feature, idx) => (
+                          <div key={idx} className={`text-xs px-3 py-1 rounded-full ${
+                            scanMode === mode 
+                              ? 'bg-white/20 text-white' 
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                          }`}>
+                            ✓ {feature}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {scanMode === mode && (
+                        <div className="mt-4">
+                          <Badge className="bg-white/20 text-white border-white/30">
+                            🚀 Active
+                          </Badge>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+      {scanMode === 'camera' && (
+        <Card className="border-0 shadow-2xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 overflow-hidden">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+              <Camera size={28} className="text-green-600" />
+              📱 Live Camera Scanner
+            </CardTitle>
+            <p className="text-gray-600 dark:text-gray-300">
+              Point your camera at any product for instant AI-powered analysis
+            </p>
+          </CardHeader>
+          
+          <CardContent className="p-8">
+            <div className="relative max-w-2xl mx-auto">
+              <div className="relative overflow-hidden rounded-2xl bg-black shadow-2xl border-4 border-green-200 dark:border-green-700">
                 {!isScanning && (
-                  <div className="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center text-white">
-                    <Camera size={48} className="mb-4 text-gray-400" />
-                    <p className="text-lg font-medium mb-2">Starting Camera...</p>
-                    <p className="text-sm text-gray-400 mb-4">Please allow camera access when prompted</p>
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => {
-                        // Force refresh camera
-                        stopCamera();
-                        setTimeout(() => {
-                          if (scanMode === 'camera') {
-                            // This will trigger the useEffect to restart camera
-                            setFacingMode(f => f === 'environment' ? 'user' : 'environment');
-                            setTimeout(() => setFacingMode(f => f === 'environment' ? 'user' : 'environment'), 100);
-                          }
-                        }, 100);
-                      }}
-                      className="mt-2"
-                    >
-                      Retry Camera
-                    </Button>
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col items-center justify-center text-white p-8">
+                    <div className="relative mb-6">
+                      <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center animate-pulse">
+                        <Camera size={40} className="text-white" />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full animate-ping"></div>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3 text-center">🎥 Starting Camera...</h3>
+                    <p className="text-lg text-gray-300 mb-2 text-center">Please allow camera access when prompted</p>
+                    <p className="text-sm text-gray-400 mb-6 text-center max-w-md">
+                      Position your device's camera toward any product for instant eco-analysis
+                    </p>
+                    
+                    <div className="space-y-3">
+                      <Button 
+                        variant="secondary" 
+                        onClick={() => {
+                          stopCamera();
+                          setTimeout(() => {
+                            if (scanMode === 'camera') {
+                              setFacingMode(f => f === 'environment' ? 'user' : 'environment');
+                              setTimeout(() => setFacingMode(f => f === 'environment' ? 'user' : 'environment'), 100);
+                            }
+                          }, 100);
+                        }}
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 px-6 py-3 rounded-xl font-semibold shadow-lg"
+                      >
+                        🔄 Retry Camera Access
+                      </Button>
+                      
+                      <div className="flex gap-2 text-xs text-gray-400 justify-center">
+                        <span>✓ Works with all products</span>
+                        <span>•</span>
+                        <span>✓ Instant results</span>
+                        <span>•</span>
+                        <span>✓ AI powered</span>
+                      </div>
+                    </div>
                   </div>
                 )}
                 
@@ -923,62 +1045,88 @@ export const SmartScanner: React.FC = () => {
 
                 {isScanning && !loading && (
                   <div className="absolute inset-0 pointer-events-none">
-                    {/* Scanning overlay */}
-                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                      <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
-                        Camera: {facingMode === 'environment' ? 'Back' : 'Front'}
+                    {/* Enhanced scanning overlay */}
+                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                      <Badge className="bg-green-600/80 text-white border-green-400/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                        📹 Camera: {facingMode === 'environment' ? 'Back' : 'Front'}
                       </Badge>
-                      <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
-                        Ready to Scan
+                      <Badge className="bg-emerald-600/80 text-white border-emerald-400/50 px-3 py-1 rounded-full backdrop-blur-sm animate-pulse">
+                        🟢 Ready to Scan
                       </Badge>
                     </div>
                     
-                    {/* Scanning frame */}
-                    <div className="absolute inset-8 border-2 border-white/50 rounded-lg">
-                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-lg"></div>
-                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
-                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
-                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
+                    {/* Enhanced scanning frame */}
+                    <div className="absolute inset-8 border-3 border-green-400/70 rounded-2xl shadow-2xl">
+                      <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-green-300 rounded-tl-2xl animate-pulse"></div>
+                      <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-green-300 rounded-tr-2xl animate-pulse delay-100"></div>
+                      <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-green-300 rounded-bl-2xl animate-pulse delay-200"></div>
+                      <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-green-300 rounded-br-2xl animate-pulse delay-300"></div>
+                      
+                      {/* Scanning line animation */}
+                      <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse"></div>
+                      </div>
                     </div>
                     
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                      <p className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-                        Position product in frame and tap Scan
-                      </p>
+                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+                      <div className="bg-black/70 backdrop-blur-sm text-white px-6 py-3 rounded-2xl border border-green-400/30 text-center">
+                        <p className="font-semibold text-lg mb-1">🎯 Position product in frame</p>
+                        <p className="text-sm text-gray-300">Tap "Scan Product" when ready</p>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
               
-              <div className="flex justify-center items-center space-x-4 mt-4">
+              {/* Enhanced camera controls */}
+              <div className="flex justify-center items-center space-x-6 mt-8">
                 <Button 
                   variant="outline" 
-                  size="icon" 
+                  size="lg" 
                   onClick={toggleCamera} 
                   disabled={loading || !isScanning}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 px-6 py-3 border-2 border-green-300 hover:border-green-400 rounded-xl font-semibold text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 transition-all duration-300"
                 >
-                  <RotateCcw size={20} />
+                  <RotateCcw size={24} className="mr-2" />
+                  🔄 Flip Camera
                 </Button>
                 
                 <Button 
                   onClick={captureAndAnalyze} 
                   disabled={loading || !isScanning} 
-                  className="px-8 py-3 text-lg font-semibold flex-1 max-w-xs"
+                  className="px-10 py-4 text-xl font-bold flex-1 max-w-md bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 rounded-2xl"
                   size="lg"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing...
+                      <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                      🤖 AI Analyzing...
                     </>
                   ) : (
                     <>
-                      <Scan className="mr-2 h-4 w-4" />
-                      Scan Product
+                      <Scan className="mr-3 h-6 w-6" />
+                      🚀 Scan Product Now
                     </>
                   )}
                 </Button>
+              </div>
+              
+              {/* Camera tips */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200/50 dark:border-green-700/50">
+                <div className="flex items-center justify-center gap-6 text-sm text-green-700 dark:text-green-300">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">💡</span>
+                    <span>Good lighting helps</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📏</span>
+                    <span>Keep product centered</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎯</span>
+                    <span>Focus on labels</span>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -986,41 +1134,102 @@ export const SmartScanner: React.FC = () => {
       )}
 
       {scanMode === 'upload' && (
-        <Card>
-          <CardContent className="p-6">
+        <Card className="border-0 shadow-2xl bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 dark:from-blue-950 dark:via-cyan-950 dark:to-teal-950 overflow-hidden">
+          <CardContent className="p-8 relative">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-200/20 to-cyan-200/20 rounded-full transform translate-x-20 -translate-y-20"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-teal-200/20 to-blue-200/20 rounded-full transform -translate-x-16 translate-y-16"></div>
+            
             <div 
-              className="border-2 border-dashed rounded-xl p-8 text-center hover:border-green-500 cursor-pointer transition-all duration-300 bg-gradient-to-br from-green-50 to-blue-50 hover:from-green-100 hover:to-blue-100 hover:shadow-lg"
+              className="relative border-3 border-dashed border-blue-300 dark:border-blue-600 rounded-2xl p-12 text-center transition-all duration-500 cursor-pointer group hover:border-blue-500 hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-cyan-100/50 dark:hover:from-blue-900/50 dark:hover:to-cyan-900/50 hover:shadow-2xl hover:scale-[1.02]"
               onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
             >
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-                  <Upload size={32} className="text-white" />
+              <div className="space-y-6">
+                {/* Animated upload icon */}
+                <div className="relative">
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl shadow-2xl transform group-hover:scale-110 transition-all duration-500 group-hover:rotate-12">
+                    <Upload size={40} className="text-white" />
+                  </div>
+                  {/* Floating particles */}
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-bounce delay-100"></div>
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-r from-cyan-400 to-teal-400 rounded-full animate-bounce delay-300"></div>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-gray-800">📤 Upload Product Image</h3>
-                  <p className="text-gray-600">
-                    <span className="font-medium text-green-600">Click to browse</span> or <span className="font-medium text-blue-600">drag & drop</span> your image here
+                
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                    � Upload Product Image
+                  </h3>
+                  <p className="text-lg text-gray-700 dark:text-gray-300 max-w-md mx-auto leading-relaxed">
+                    <span className="font-bold text-blue-600">Click to browse</span> or <span className="font-bold text-cyan-600">drag & drop</span> your product image for instant AI analysis
                   </p>
-                  <p className="text-sm text-gray-500">Supports: JPG, PNG, WEBP (Max 10MB)</p>
+                  
+                  {/* Enhanced file info */}
+                  <div className="flex flex-wrap justify-center gap-3 mt-6">
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-3 py-1">
+                      📁 JPG, PNG, WEBP
+                    </Badge>
+                    <Badge className="bg-cyan-100 text-cyan-700 border-cyan-200 px-3 py-1">
+                      📏 Max 10MB
+                    </Badge>
+                    <Badge className="bg-teal-100 text-teal-700 border-teal-200 px-3 py-1">
+                      🤖 AI Powered
+                    </Badge>
+                  </div>
+                  
+                  {/* Upload features */}
+                  <div className="grid grid-cols-2 gap-4 mt-8 max-w-md mx-auto text-sm">
+                    {[
+                      { icon: '⚡', text: 'Instant Analysis' },
+                      { icon: '🌱', text: 'Eco Score Rating' },
+                      { icon: '🔍', text: 'Product Recognition' },
+                      { icon: '💡', text: 'Green Alternatives' }
+                    ].map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <span className="text-lg">{feature.icon}</span>
+                        <span>{feature.text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl" disabled={loading}>
+                
+                <input 
+                  ref={fileInputRef} 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileUpload} 
+                  className="hidden" 
+                  multiple={false}
+                />
+                
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg"
+                  disabled={loading}
+                  size="lg"
+                >
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Analyzing with AI...
+                      <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                      🤖 Analyzing with AI...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Choose Image
+                      <Sparkles className="mr-3 h-6 w-6" />
+                      🚀 Choose Image & Analyze
                     </>
                   )}
                 </Button>
+                
+                {/* Pro tip */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200/50 dark:border-blue-700/50">
+                  <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center justify-center gap-2">
+                    <span className="text-lg">💡</span>
+                    <span>Pro tip: Take clear photos with good lighting for best results!</span>
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -1028,41 +1237,51 @@ export const SmartScanner: React.FC = () => {
       )}
 
       {scanMode === 'barcode' && (
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
-          <CardContent className="p-8 relative">
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full transform translate-x-16 -translate-y-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/30 to-blue-200/30 rounded-full transform -translate-x-12 translate-y-12"></div>
+        <Card className="border-0 shadow-2xl bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 dark:from-purple-950 dark:via-indigo-950 dark:to-pink-950 overflow-hidden">
+          <CardContent className="p-10 relative">
+            {/* Enhanced background decorations */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-purple-200/20 via-indigo-200/20 to-pink-200/20 rounded-full transform translate-x-24 -translate-y-24"></div>
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-pink-200/20 via-purple-200/20 to-indigo-200/20 rounded-full transform -translate-x-18 translate-y-18"></div>
+            <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-gradient-to-r from-indigo-200/10 to-purple-200/10 rounded-full transform -translate-x-12 -translate-y-12"></div>
             
-            <div className="space-y-6 relative">
+            <div className="space-y-8 relative z-10 max-w-2xl mx-auto">
+              {/* Enhanced header */}
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg transform hover:scale-105 transition-transform duration-300">
-                  <Search size={36} className="text-white" />
+                <div className="relative inline-block mb-6">
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 rounded-3xl shadow-2xl transform hover:scale-110 hover:rotate-12 transition-all duration-500">
+                    <Search size={40} className="text-white" />
+                  </div>
+                  {/* Floating search particles */}
+                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-ping"></div>
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full animate-bounce delay-500"></div>
                 </div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                  Search Product
+                
+                <h3 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent mb-4">
+                  🔍 Smart Product Search
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto leading-relaxed">
-                  Enter a product name, barcode, or description to get detailed sustainability analysis powered by AI
+                <p className="text-xl text-gray-700 dark:text-gray-300 max-w-lg mx-auto leading-relaxed">
+                  Enter any product name, barcode, or description for instant AI-powered sustainability analysis
                 </p>
               </div>
               
-              <div className="max-w-lg mx-auto">
+              {/* Enhanced search input */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 dark:from-purple-800 dark:to-pink-800 rounded-2xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-6 w-6" />
                   <Input
                     type="text"
-                    placeholder="e.g. Nutella, 3017620422003, organic cookies..."
+                    placeholder="🔍 Search: Coca Cola, iPhone 15, 3017620422003, organic cookies..."
                     value={barcodeInput}
                     onChange={(e) => setBarcodeInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleGeminiTextSearch()}
-                    className="pl-12 pr-4 py-4 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-blue-500 shadow-sm bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+                    className="pl-14 pr-12 py-6 text-xl border-3 border-purple-200 dark:border-purple-700 rounded-2xl focus:border-purple-500 focus:ring-purple-500 shadow-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all duration-300 hover:shadow-xl focus:shadow-2xl"
                     disabled={barcodeLoading}
                   />
                   {barcodeInput && (
                     <button
                       onClick={() => setBarcodeInput('')}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-2xl"
                     >
                       ×
                     </button>
@@ -1070,45 +1289,74 @@ export const SmartScanner: React.FC = () => {
                 </div>
               </div>
               
-              <div className="max-w-sm mx-auto">
+              {/* Enhanced search button */}
+              <div className="text-center">
                 <Button 
                   onClick={handleGeminiTextSearch} 
                   disabled={barcodeLoading || !barcodeInput.trim()} 
-                  className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:shadow-md"
+                  className="w-full max-w-md py-6 text-xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-700 hover:via-indigo-700 hover:to-pink-700 border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 disabled:transform-none disabled:shadow-lg rounded-2xl"
                   size="lg"
                 >
                   {barcodeLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Analyzing...
+                      <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                      🤖 AI Analyzing...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Analyze with AI
+                      <Sparkles className="mr-3 h-6 w-6" />
+                      🚀 Analyze with AI Magic
                     </>
                   )}
                 </Button>
               </div>
               
+              {/* Enhanced features showcase */}
               <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-800/60 rounded-full text-sm text-gray-600 dark:text-gray-300 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50">
-                  <span className="text-lg">💡</span>
-                  <span>Works with product names, barcodes, or descriptions</span>
+                <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/70 dark:bg-gray-800/70 rounded-full text-lg text-gray-700 dark:text-gray-300 backdrop-blur-sm border border-purple-200/50 dark:border-purple-700/50 shadow-lg">
+                  <span className="text-2xl">🧠</span>
+                  <span className="font-medium">AI-powered • Works with names, barcodes & descriptions</span>
                 </div>
               </div>
               
-              {/* Example suggestions */}
-              <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
-                {['Coca Cola', 'iPhone 15', 'Organic Milk'].map((example) => (
-                  <button
-                    key={example}
-                    onClick={() => setBarcodeInput(example)}
-                    className="px-3 py-1.5 text-sm bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-700/80 border border-gray-200/50 dark:border-gray-600/50 rounded-lg transition-all duration-200 hover:shadow-sm backdrop-blur-sm"
-                    disabled={barcodeLoading}
-                  >
-                    {example}
-                  </button>
+              {/* Interactive example suggestions */}
+              <div className="space-y-4">
+                <p className="text-center text-gray-600 dark:text-gray-400 font-medium">
+                  ✨ Try these examples:
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {[
+                    { text: '🥤 Coca Cola', color: 'from-red-500 to-red-600' },
+                    { text: '📱 iPhone 15', color: 'from-blue-500 to-blue-600' },
+                    { text: '🥛 Organic Milk', color: 'from-green-500 to-green-600' },
+                    { text: '🍫 Nutella', color: 'from-amber-500 to-amber-600' },
+                    { text: '☕ Starbucks Coffee', color: 'from-emerald-500 to-emerald-600' }
+                  ].map((example) => (
+                    <button
+                      key={example.text}
+                      onClick={() => setBarcodeInput(example.text.replace(/^[^a-zA-Z0-9]+/, ''))}
+                      className={`px-4 py-2 text-sm font-medium bg-gradient-to-r ${example.color} text-white hover:shadow-lg transform hover:scale-105 border border-gray-200/20 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:transform-none`}
+                      disabled={barcodeLoading}
+                    >
+                      {example.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* AI capabilities showcase */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                {[
+                  { icon: '🔍', title: 'Smart Recognition', desc: 'AI identifies products instantly' },
+                  { icon: '🌱', title: 'Eco Scoring', desc: 'Sustainability ratings 0-100' },
+                  { icon: '💡', title: 'Green Tips', desc: 'Eco-friendly alternatives' },
+                  { icon: '📊', title: 'Deep Analysis', desc: 'Carbon footprint & more' }
+                ].map((feature, idx) => (
+                  <div key={idx} className="text-center p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-purple-200/30 dark:border-purple-700/30 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all duration-300">
+                    <div className="text-2xl mb-2">{feature.icon}</div>
+                    <div className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{feature.title}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{feature.desc}</div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1125,23 +1373,79 @@ export const SmartScanner: React.FC = () => {
         </Card>
       )}
 
-      {productResult && <ProductResultCard product={productResult} onSearchAlternative={handleSearchAlternative} />}
-      {!productResult && hasResults && <ProductResultCard product={{
-        productName: products[0]?.name,
-        brand: products[0]?.brand || 'Unknown',
-        category: products[0]?.category || 'general',
-        ecoScore: products[0]?.ecoScore ?? 0,
-        packagingScore: 55,
-        carbonScore: 55,
-        ingredientScore: 55,
-        certificationScore: 50,
-        recyclable: false,
-        co2Impact: -1,
-        healthScore: 50,
-        certifications: [],
-        ecoDescription: products[0]?.description || '',
-        alternatives: (products[0]?.alternatives || []).map((a:any) => ({ product_name: a.name, reasoning: a.description }))
-      }} onSearchAlternative={handleSearchAlternative} />}
+      {/* 🎉 ULTIMATE RESULTS DISPLAY */}
+      {productResult && (
+        <Card className="border-0 shadow-2xl bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-950 dark:via-green-950 dark:to-teal-950 overflow-hidden">
+          <CardContent className="p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl mb-4 shadow-lg animate-bounce">
+                <CheckCircle size={32} className="text-white" />
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                🎉 Analysis Complete!
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                AI has analyzed your product - here are the results
+              </p>
+            </div>
+            
+            <ProductResultCard product={productResult} onSearchAlternative={handleSearchAlternative} />
+            
+            <div className="text-center mt-8 space-y-4">
+              <Button
+                onClick={() => setProductResult(null)}
+                className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                size="lg"
+              >
+                🔍 Scan Another Product
+              </Button>
+              
+              <div className="flex justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <span>✨ Powered by AI</span>
+                <span>•</span>
+                <span>🌱 Eco-focused</span>
+                <span>•</span>
+                <span>📊 Data-driven</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {!productResult && hasResults && (
+        <Card className="border-0 shadow-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+          <CardContent className="p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl mb-4 shadow-lg animate-pulse">
+                <Sparkles size={32} className="text-white" />
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                🔍 Search Results
+              </h2>
+            </div>
+            
+            <ProductResultCard 
+              product={{
+                productName: products[0]?.name,
+                brand: products[0]?.brand || 'Unknown',
+                category: products[0]?.category || 'general',
+                ecoScore: products[0]?.ecoScore ?? 0,
+                packagingScore: 55,
+                carbonScore: 55,
+                ingredientScore: 55,
+                certificationScore: 50,
+                recyclable: false,
+                co2Impact: -1,
+                healthScore: 50,
+                certifications: [],
+                ecoDescription: products[0]?.description || '',
+                alternatives: (products[0]?.alternatives || []).map((a:any) => ({ product_name: a.name, reasoning: a.description }))
+              }} 
+              onSearchAlternative={handleSearchAlternative} 
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Hidden canvas for image capture */}
       <canvas ref={canvasRef} className="hidden" />

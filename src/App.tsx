@@ -25,7 +25,7 @@ import LoginNew from "./pages/LoginNew";
 import SignUp from "./pages/SignUp";
 import SignUpNew from "./pages/SignUpNew";
 import Scanner from "./pages/Scanner";
-import ScannerEnhanced from "./pages/ScannerEnhanced";
+import { SmartScanner } from "../src/components/SmartScanner";
 import DashboardNew from './pages/DashboardNew';
 import DashboardEnhanced from './pages/DashboardEnhanced';
 import BulkScan from "./pages/BulkScan";
@@ -96,7 +96,7 @@ const App = () => (
               path="/scanner" 
               element={
                 <ProtectedRoute>
-                  <ScannerEnhanced />
+                  <SmartScanner />
                 </ProtectedRoute>
               } 
             />
