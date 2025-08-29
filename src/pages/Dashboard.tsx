@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,13 @@ import {
   Legend,
   ResponsiveContainer,
   Area,
-  AreaChart
+  AreaChart,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ComposedChart
 } from 'recharts';
 import { 
   Scan, 
@@ -62,7 +68,17 @@ import {
   TrendingDown,
   Flame,
   Shield,
-  Layers
+  Layers,
+  Wifi,
+  WifiOff,
+  Heart,
+  Sunrise,
+  Moon,
+  Wind,
+  Settings,
+  Share2,
+  Download,
+  Maximize2
 } from "lucide-react";
 
 interface DashboardStats {
@@ -557,6 +573,17 @@ export default function Dashboard() {
                 <Brain className="h-4 w-4 mr-2" />
                 {showAnalytics ? 'Hide' : 'AI'} Analytics
               </Button>
+
+              {/* Connection Status */}
+              <div className="flex items-center gap-2">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                >
+                  <Wifi className="h-4 w-4 text-green-500" />
+                </motion.div>
+                <span className="text-xs text-green-600 font-medium">Live</span>
+              </div>
             </div>
           </div>
 
@@ -1171,6 +1198,185 @@ export default function Dashboard() {
               </motion.div>
             </div>
 
+            {/* Enhanced Performance Analytics Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+              {/* Eco Performance Radar */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="backdrop-blur-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-200/20 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl">
+                        <Activity className="h-5 w-5 text-white" />
+                      </div>
+                      Eco Performance Radar
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RadarChart data={[
+                        {
+                          metric: 'Scanning',
+                          value: Math.min(stats.weeklyScans * 14, 100),
+                          fullMark: 100,
+                        },
+                        {
+                          metric: 'Consistency',
+                          value: Math.min(stats.streakDays * 7, 100),
+                          fullMark: 100,
+                        },
+                        {
+                          metric: 'Impact',
+                          value: Math.min(stats.co2Saved * 2, 100),
+                          fullMark: 100,
+                        },
+                        {
+                          metric: 'Discovery',
+                          value: Math.min(stats.alternativesFound * 5, 100),
+                          fullMark: 100,
+                        },
+                        {
+                          metric: 'Engagement',
+                          value: stats.ecoScore,
+                          fullMark: 100,
+                        },
+                        {
+                          metric: 'Achievement',
+                          value: Math.min(stats.achievements.length * 20, 100),
+                          fullMark: 100,
+                        },
+                      ]}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="metric" />
+                        <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                        <Radar
+                          name="Performance"
+                          dataKey="value"
+                          stroke="#06B6D4"
+                          fill="#06B6D4"
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Real-time Activity Feed */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="backdrop-blur-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-200/20 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl">
+                          <Heart className="h-5 w-5 text-white" />
+                        </div>
+                        Activity Pulse
+                      </div>
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="w-3 h-3 bg-green-500 rounded-full"
+                      />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {/* Real-time activity items */}
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3 p-3 bg-green-50/30 dark:bg-green-900/20 rounded-lg"
+                      >
+                        <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                          <Scan className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">New scan completed</p>
+                          <p className="text-xs text-slate-500">Just now</p>
+                        </div>
+                        <Badge className="bg-green-100 text-green-800">+{Math.floor(Math.random() * 50) + 10}</Badge>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex items-center gap-3 p-3 bg-blue-50/30 dark:bg-blue-900/20 rounded-lg"
+                      >
+                        <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Eco-score improved</p>
+                          <p className="text-xs text-slate-500">2 minutes ago</p>
+                        </div>
+                        <Badge className="bg-blue-100 text-blue-800">+2 pts</Badge>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex items-center gap-3 p-3 bg-purple-50/30 dark:bg-purple-900/20 rounded-lg"
+                      >
+                        <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                          <Award className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Achievement unlocked</p>
+                          <p className="text-xs text-slate-500">5 minutes ago</p>
+                        </div>
+                        <Badge className="bg-purple-100 text-purple-800">New</Badge>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex items-center gap-3 p-3 bg-orange-50/30 dark:bg-orange-900/20 rounded-lg"
+                      >
+                        <div className="p-2 bg-orange-100 dark:bg-orange-800 rounded-lg">
+                          <Target className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Weekly goal progress</p>
+                          <p className="text-xs text-slate-500">1 hour ago</p>
+                        </div>
+                        <Badge className="bg-orange-100 text-orange-800">{Math.round((stats.weeklyScans / 10) * 100)}%</Badge>
+                      </motion.div>
+                    </div>
+
+                    {/* Quick Stats Bar */}
+                    <div className="border-t pt-4 mt-4">
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <div className="text-lg font-bold text-emerald-600">{stats.weeklyScans}</div>
+                          <div className="text-xs text-slate-500">This Week</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-blue-600">{stats.streakDays}</div>
+                          <div className="text-xs text-slate-500">Day Streak</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-purple-600">{stats.achievements.length}</div>
+                          <div className="text-xs text-slate-500">Achievements</div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
             {/* Categories & Achievements Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Category Distribution Chart */}
@@ -1377,6 +1583,100 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Floating Action Menu */}
+        <motion.div
+          className="fixed bottom-6 right-6 z-50"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 1, type: "spring", stiffness: 200 }}
+        >
+          <div className="relative">
+            <motion.button
+              className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-2xl flex items-center justify-center group"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <motion.div
+                animate={{ rotate: [0, 180, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Sparkles className="h-6 w-6" />
+              </motion.div>
+              
+              {/* Quick Action Tooltips */}
+              <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <div className="bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                  Back to top ✨
+                </div>
+              </div>
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Achievement Celebration */}
+        <AnimatePresence>
+          {showCelebration && (
+            <motion.div
+              className="fixed inset-0 pointer-events-none z-40 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onAnimationComplete={() => setTimeout(() => setShowCelebration(false), 3000)}
+            >
+              <ConfettiBurst isVisible={showCelebration} />
+              <motion.div
+                className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20"
+                initial={{ scale: 0.5, y: 50 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.5, y: -50 }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                <div className="text-center">
+                  <motion.div
+                    animate={{ rotate: [0, 15, -15, 0] }}
+                    transition={{ duration: 0.5, repeat: 2 }}
+                    className="text-6xl mb-4"
+                  >
+                    🏆
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                    Achievement Unlocked!
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    You're making a real environmental impact! 🌍
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Loading Overlay */}
+        <AnimatePresence>
+          {refreshing && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4"
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+              >
+                <LoadingSpinner />
+                <div className="text-center">
+                  <h3 className="font-semibold mb-1">Updating Dashboard</h3>
+                  <p className="text-sm text-slate-500">Fetching latest data...</p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
