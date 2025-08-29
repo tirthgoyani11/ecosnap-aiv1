@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Search, Trophy, Sparkles } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Search, Trophy, Sparkles, BarChart3, History, Recycle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,7 @@ import { useBarcodeAPI } from '@/hooks/useBarcodeAPI';
 import { useToast } from '@/hooks/use-toast';
 import { StatsService } from '../lib/stats-service-clean';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCreateScan } from '@/hooks/useDatabase';
+import { useCreateScan, useProfile, useScans, useUserRank } from '@/hooks/useDatabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { Gemini } from '@/integrations/gemini';
 
@@ -867,7 +867,33 @@ export const SmartScanner: React.FC = () => {
   }, [handleGeminiFileUpload, toast]);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 dark:from-slate-900 dark:via-blue-900 dark:to-green-900">
+      {/* Full-Screen Header */}
+      <div className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 text-white py-6 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold flex items-center gap-3">
+                <Sparkles size={40} className="animate-pulse" />
+                EcoSnap AI Scanner
+              </h1>
+              <p className="text-xl text-blue-100 mt-2">
+                Discover the environmental impact of any product with AI-powered analysis
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold">{user?.email?.split('@')[0] || 'Scanner'}</div>
+              <div className="text-blue-200">Premium AI Analysis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          
+          {/* Left Column - Scanner Interface (2/3 width) */}
+          <div className="xl:col-span-2 space-y-8">
         {/* 🚀 ULTIMATE SCANNER MODE SELECTION */}
         <Card className="border-0 shadow-2xl bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 dark:from-purple-950 dark:via-blue-950 dark:to-green-950 overflow-hidden relative">
           {/* Background decorations */}
@@ -875,25 +901,22 @@ export const SmartScanner: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-200/20 via-blue-200/20 to-purple-200/20 rounded-full transform -translate-x-24 translate-y-24"></div>
           
           <CardHeader className="relative z-10 text-center pb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl mb-4 mx-auto shadow-lg">
-              <Sparkles size={32} className="text-white" />
-            </div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 bg-clip-text text-transparent">
-              🌟 EcoSnap AI Scanner
+              🌟 Choose Your Scanning Method
             </CardTitle>
             <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
-              Choose your scanning method and discover the eco-impact of any product
+              Select how you want to analyze your products with AI
             </p>
           </CardHeader>
           
           <CardContent className="relative z-10 pb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { 
                   mode: 'camera', 
                   icon: Camera, 
                   label: '📱 Live Camera', 
-                  desc: 'Real-time scanning with AI recognition',
+                  desc: 'Real-time scanning with instant AI recognition',
                   color: 'from-green-500 to-emerald-600',
                   bgColor: 'from-green-50 to-emerald-50',
                   features: ['Live feed', 'Instant results', 'AR overlay']
@@ -902,16 +925,16 @@ export const SmartScanner: React.FC = () => {
                   mode: 'upload', 
                   icon: Upload, 
                   label: '📸 Upload Photo', 
-                  desc: 'Drag & drop or browse your images',
+                  desc: 'Drag & drop or browse your product images',
                   color: 'from-blue-500 to-cyan-600',
                   bgColor: 'from-blue-50 to-cyan-50',
-                  features: ['Drag & drop', 'File validation', 'Bulk upload']
+                  features: ['Drag & drop', 'File validation', 'Batch upload']
                 },
                 { 
                   mode: 'barcode', 
                   icon: Search, 
                   label: '🔍 Smart Search', 
-                  desc: 'Search by name, barcode, or description',
+                  desc: 'Search by product name, barcode, or description',
                   color: 'from-purple-500 to-pink-600',
                   bgColor: 'from-purple-50 to-pink-50',
                   features: ['Text search', 'Barcode lookup', 'AI suggestions']
@@ -927,18 +950,18 @@ export const SmartScanner: React.FC = () => {
                   <Card className={`h-full border-2 transition-all duration-300 ${
                     scanMode === mode 
                       ? `border-transparent bg-gradient-to-br ${color} text-white shadow-2xl` 
-                      : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gradient-to-br ${bgColor} hover:shadow-lg`
+                      : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gradient-to-br ${bgColor} hover:shadow-xl`
                   }`}>
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 ${
-                        scanMode === mode 
-                          ? 'bg-white/20 text-white' 
-                          : `bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl`
-                      }`}>
-                        <Icon size={32} />
-                      </div>
-                      
+                    <CardContent className="p-6 text-center space-y-4 h-full flex flex-col justify-between">
                       <div>
+                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 mb-4 ${
+                          scanMode === mode 
+                            ? 'bg-white/20 text-white' 
+                            : `bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl group-hover:scale-110`
+                        }`}>
+                          <Icon size={32} />
+                        </div>
+                        
                         <h3 className={`text-xl font-bold mb-2 ${
                           scanMode === mode ? 'text-white' : 'text-gray-800 dark:text-gray-200'
                         }`}>
@@ -961,15 +984,13 @@ export const SmartScanner: React.FC = () => {
                             ✓ {feature}
                           </div>
                         ))}
-                      </div>
-                      
-                      {scanMode === mode && (
-                        <div className="mt-4">
-                          <Badge className="bg-white/20 text-white border-white/30">
-                            🚀 Active
+                        
+                        {scanMode === mode && (
+                          <Badge className="bg-white/20 text-white border-white/30 mt-3">
+                            🚀 Active Mode
                           </Badge>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -1449,6 +1470,283 @@ export const SmartScanner: React.FC = () => {
 
       {/* Hidden canvas for image capture */}
       <canvas ref={canvasRef} className="hidden" />
+
+          </div>
+
+          {/* Right Column - History & Stats */}
+          <div className="space-y-6">
+            <ScanHistory />
+            <QuickStats />
+          </div>
+
+        </div>
+      </div>
     </div>
+  );
+};
+
+// Scan History Component
+const ScanHistory = () => {
+  const { data: userScans, isLoading: scansLoading } = useScans(10); // Get last 10 scans
+  const { data: profile } = useProfile();
+
+  // Transform real scan data for display
+  const scanHistory = useMemo(() => {
+    if (!userScans || userScans.length === 0) return [];
+    
+    return userScans.map((scan) => ({
+      id: scan.id,
+      productName: scan.detected_name || 'Unknown Product',
+      scanType: scan.scan_type as 'camera' | 'upload' | 'barcode',
+      ecoScore: scan.eco_score || 0,
+      co2Impact: scan.co2_footprint || 0,
+      timestamp: formatTimeAgo(new Date(scan.created_at)),
+      image: scan.image_url || null,
+      category: scan.metadata?.category || 'General',
+      alternatives: scan.alternatives_suggested || 0,
+      recyclable: scan.metadata?.recyclable || Math.random() > 0.5,
+      sustainabilityTips: scan.metadata?.sustainability_tips || ['Reduce, reuse, recycle'],
+      pointsEarned: scan.points_earned || 0,
+      brand: scan.metadata?.brand || 'Unknown Brand'
+    }));
+  }, [userScans]);
+
+  // Helper function to format time ago
+  function formatTimeAgo(date: Date): string {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    return date.toLocaleDateString();
+  }
+
+  if (scansLoading) {
+    return (
+      <Card className="border-0 shadow-2xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+            <Trophy size={28} className="text-indigo-600" />
+            📊 Loading History...
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-0 shadow-2xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+          <Trophy size={28} className="text-indigo-600" />
+          📊 Recent Scans
+        </CardTitle>
+        <p className="text-center text-gray-600 dark:text-gray-400">
+          Your latest eco-scanning activity and impact ({scanHistory.length} total)
+        </p>
+      </CardHeader>
+      <CardContent className="max-h-96 overflow-y-auto">
+        <div className="space-y-4">
+          {scanHistory.length > 0 ? scanHistory.map((scan) => (
+            <div
+              key={scan.id}
+              className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-indigo-100 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 text-lg">
+                  {scan.productName}
+                </h4>
+                <Badge className={`${
+                  scan.ecoScore >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                  scan.ecoScore >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                } font-bold`}>
+                  {scan.ecoScore}/100
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <span className="flex items-center gap-1">
+                  <Package size={16} />
+                  {scan.brand}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Cloud size={16} />
+                  {scan.co2Impact.toFixed(1)}kg CO₂
+                </span>
+                {scan.pointsEarned > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Zap size={16} className="text-yellow-500" />
+                    +{scan.pointsEarned} pts
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {scan.category}
+                  </Badge>
+                  {scan.scanType === 'camera' && (
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
+                      <Camera size={10} className="mr-1" /> Camera
+                    </Badge>
+                  )}
+                  {scan.scanType === 'upload' && (
+                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-xs">
+                      <Upload size={10} className="mr-1" /> Upload
+                    </Badge>
+                  )}
+                  {scan.scanType === 'barcode' && (
+                    <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-xs">
+                      <Search size={10} className="mr-1" /> Search
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-xs text-gray-500">
+                  {scan.timestamp}
+                </span>
+              </div>
+            </div>
+          )) : (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <Package size={48} className="mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-semibold mb-2">No scans yet</p>
+              <p className="text-sm">Start scanning products to build your eco-journey!</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Quick Stats Component
+const QuickStats = () => {
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: userRank, isLoading: rankLoading } = useUserRank();
+
+  if (profileLoading) {
+    return (
+      <Card className="border-0 shadow-2xl bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950 dark:to-teal-950">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+            <BarChart3 size={28} className="text-green-600" />
+            🌱 Loading Stats...
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Calculate dynamic stats from real data
+  const totalScans = profile?.total_scans || 0;
+  const avgEcoScore = profile?.eco_score_avg ? Math.round(profile.eco_score_avg) : 0;
+  const co2Saved = profile?.total_co2_saved || 0;
+  const ecoRank = userRank || 999;
+  const points = profile?.points || 0;
+
+  // Calculate percentile for ranking
+  const getPercentile = (rank: number) => {
+    if (rank <= 10) return "Top 1%";
+    if (rank <= 50) return "Top 5%";
+    if (rank <= 100) return "Top 10%";
+    if (rank <= 500) return "Top 25%";
+    return "Getting there!";
+  };
+
+  return (
+    <Card className="border-0 shadow-2xl bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950 dark:to-teal-950">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+          <BarChart3 size={28} className="text-green-600" />
+          🌱 Your Impact
+        </CardTitle>
+        <p className="text-center text-gray-600 dark:text-gray-400">
+          Real-time eco-scanning statistics
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 gap-4">
+          {[
+            { 
+              icon: <Scan size={24} className="text-blue-600" />, 
+              label: "Total Scans", 
+              value: totalScans.toString(), 
+              change: totalScans > 0 ? "Keep scanning!" : "Start scanning",
+              color: "blue"
+            },
+            { 
+              icon: <Leaf size={24} className="text-green-600" />, 
+              label: "Avg Eco Score", 
+              value: avgEcoScore > 0 ? `${avgEcoScore}/100` : "No data", 
+              change: avgEcoScore >= 70 ? "Great choices!" : avgEcoScore > 0 ? "Improving" : "Scan to see",
+              color: "green"
+            },
+            { 
+              icon: <Cloud size={24} className="text-gray-600" />, 
+              label: "CO₂ Saved", 
+              value: co2Saved > 0 ? `${co2Saved.toFixed(1)}kg` : "0kg", 
+              change: co2Saved > 10 ? "Amazing impact!" : co2Saved > 0 ? "Building impact" : "Start saving",
+              color: "gray"
+            },
+            { 
+              icon: <Trophy size={24} className="text-yellow-600" />, 
+              label: "Eco Rank", 
+              value: ecoRank < 999 ? `#${ecoRank}` : "Unranked", 
+              change: ecoRank < 999 ? getPercentile(ecoRank) : "Scan to rank",
+              color: "yellow"
+            },
+            { 
+              icon: <Zap size={24} className="text-purple-600" />, 
+              label: "Eco Points", 
+              value: points.toString(), 
+              change: points > 1000 ? "Eco Master!" : points > 100 ? "Growing strong" : "Just started",
+              color: "purple"
+            }
+          ].map((stat, idx) => (
+            <div 
+              key={idx}
+              className={`p-4 bg-white dark:bg-gray-800 rounded-xl border-l-4 border-${stat.color}-500 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {stat.icon}
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">
+                    {stat.label}
+                  </span>
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                {stat.value}
+              </div>
+              <div className={`text-sm text-${stat.color}-600 dark:text-${stat.color}-400`}>
+                {stat.change}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-6 p-4 bg-gradient-to-r from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-700/50">
+          <div className="text-center">
+            <div className="text-3xl mb-2">🌍</div>
+            <div className="font-bold text-green-800 dark:text-green-400 mb-1">
+              Eco Champion!
+            </div>
+            <div className="text-sm text-green-700 dark:text-green-500">
+              Your choices are making a difference
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
