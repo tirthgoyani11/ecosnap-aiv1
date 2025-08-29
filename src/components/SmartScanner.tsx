@@ -1,10 +1,13 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Search, Trophy, Sparkles, BarChart3, History, Recycle } from 'lucide-react';
+import { Camera, Upload, Scan, Zap, X, RotateCcw, Loader2, CheckCircle, AlertCircle, Leaf, Package, Cloud, FlaskConical, ShieldCheck, HeartPulse, Search, Trophy, Sparkles, BarChart3, History, Recycle, Info, Clock, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { useAdvancedProductSearch } from '@/hooks/useAdvancedProductSearch';
 import { useBarcodeAPI } from '@/hooks/useBarcodeAPI';
 import { useToast } from '@/hooks/use-toast';
@@ -1485,10 +1488,239 @@ export const SmartScanner: React.FC = () => {
   );
 };
 
+// 📊 DETAILED SCAN POPUP COMPONENT  
+const ScanDetailPopup = ({ scan, isOpen, onClose }) => {
+  if (!scan) return null;
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      time: date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
+    };
+  };
+
+  const { date, time } = formatDateTime(scan.created_at);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-white via-blue-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white">
+              <Package size={24} />
+            </div>
+            {scan.detected_name || 'Product Details'}
+          </DialogTitle>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[70vh] pr-4">
+          <div className="space-y-6">
+            
+            {/* Header Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="bg-white/80 dark:bg-gray-800/80 border-l-4 border-l-blue-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={20} className="text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Eco Score</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {scan.eco_score || 0}/100
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        (scan.eco_score || 0) >= 80 ? 'bg-green-500' :
+                        (scan.eco_score || 0) >= 60 ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`}
+                      style={{ width: `${scan.eco_score || 0}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 dark:bg-gray-800/80 border-l-4 border-l-green-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Cloud size={20} className="text-green-600" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">CO₂ Impact</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {(scan.co2_footprint || 0).toFixed(1)}kg
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    Carbon footprint
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 dark:bg-gray-800/80 border-l-4 border-l-purple-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Zap size={20} className="text-purple-600" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Points Earned</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    +{scan.points_earned || 0}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    Eco points
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 dark:bg-gray-800/80 border-l-4 border-l-yellow-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Package size={20} className="text-yellow-600" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Alternatives</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {scan.alternatives_suggested || 0}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    Found options
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Scan Information */}
+            <Card className="bg-white/80 dark:bg-gray-800/80">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <Info size={20} className="text-blue-600" />
+                  Scan Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Clock size={16} className="text-blue-600" />
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Scan Date</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{date}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">at {time}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      {scan.scan_type === 'camera' && <Camera size={16} className="text-green-600" />}
+                      {scan.scan_type === 'upload' && <Upload size={16} className="text-blue-600" />}
+                      {scan.scan_type === 'barcode' && <Search size={16} className="text-purple-600" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Scan Method</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                        {scan.scan_type} scanning
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {scan.metadata?.brand && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Package size={16} className="text-gray-600" />
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Brand</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{scan.metadata.brand}</p>
+                    </div>
+                  </div>
+                )}
+
+                {scan.metadata?.category && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-blue-500 rounded"></div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">Category</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{scan.metadata.category}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Environmental Impact Details */}
+            <Card className="bg-white/80 dark:bg-gray-800/80">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <Leaf size={20} className="text-green-600" />
+                  Environmental Impact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                      {Math.round((scan.co2_footprint || 0) / 22)} 
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">Trees equivalent</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Annual CO₂ absorption</p>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                      {Math.round((scan.co2_footprint || 0) * 2.4)}
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">Miles not driven</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Car equivalent</p>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                      {Math.round((scan.co2_footprint || 0) * 65)}L
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">Water saved</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Production equivalent</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Close Button */}
+            <div className="flex justify-center pt-4">
+              <Button 
+                onClick={onClose}
+                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-2"
+              >
+                Close Details
+              </Button>
+            </div>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Scan History Component
 const ScanHistory = () => {
   const { data: userScans, isLoading: scansLoading } = useScans(10); // Get last 10 scans
   const { data: profile } = useProfile();
+  const [selectedScan, setSelectedScan] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  // Handle scan click
+  const handleScanClick = (scan) => {
+    setSelectedScan(scan);
+    setIsPopupOpen(true);
+  };
+
+  const closePopup = () => {
+    setIsPopupOpen(false);
+    setSelectedScan(null);
+  };
 
   // Transform real scan data for display
   const scanHistory = useMemo(() => {
@@ -1555,32 +1787,36 @@ const ScanHistory = () => {
           {scanHistory.length > 0 ? scanHistory.map((scan) => (
             <div
               key={scan.id}
-              className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-indigo-100 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+              className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-indigo-100 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:border-blue-300 dark:hover:border-blue-600"
+              onClick={() => handleScanClick(userScans?.find(s => s.id === scan.id))}
             >
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-bold text-gray-800 dark:text-gray-200 text-lg">
                   {scan.productName}
                 </h4>
-                <Badge className={`${
-                  scan.ecoScore >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                  scan.ecoScore >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                } font-bold`}>
-                  {scan.ecoScore}/100
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={`${
+                    scan.ecoScore >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                    scan.ecoScore >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                  } font-bold`}>
+                    {scan.ecoScore}/100
+                  </Badge>
+                  <Info size={14} className="text-blue-600 dark:text-blue-400" />
+                </div>
               </div>
               
-              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-3">
-                <span className="flex items-center gap-1">
+              <div className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300 mb-3">
+                <span className="flex items-center gap-1 font-medium">
                   <Package size={16} />
                   {scan.brand}
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 font-medium">
                   <Cloud size={16} />
                   {scan.co2Impact.toFixed(1)}kg CO₂
                 </span>
                 {scan.pointsEarned > 0 && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-medium">
                     <Zap size={16} className="text-yellow-500" />
                     +{scan.pointsEarned} pts
                   </span>
@@ -1608,18 +1844,31 @@ const ScanHistory = () => {
                     </Badge>
                   )}
                 </div>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
                   {scan.timestamp}
                 </span>
+              </div>
+              
+              {/* Click indicator */}
+              <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1 font-medium">
+                <Info size={10} />
+                <span>Click for detailed view</span>
               </div>
             </div>
           )) : (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <Package size={48} className="mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-semibold mb-2">No scans yet</p>
-              <p className="text-sm">Start scanning products to build your eco-journey!</p>
+              <p className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-300">No scans yet</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Start scanning products to build your eco-journey!</p>
             </div>
           )}
+          
+          {/* Add the popup component */}
+          <ScanDetailPopup 
+            scan={selectedScan}
+            isOpen={isPopupOpen}
+            onClose={closePopup}
+          />
         </div>
       </CardContent>
     </Card>

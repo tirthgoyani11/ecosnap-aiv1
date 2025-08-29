@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,9 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: recentScans, isLoading: scansLoading } = useScans(10);
-  const { data: userRank, isLoading: rankLoading } = useUserRank();
+  const { data: profile, isLoading: profileLoading, error: profileError } = useProfile();
+  const { data: recentScans, isLoading: scansLoading, error: scansError } = useScans(10);
+  const { data: userRank, isLoading: rankLoading, error: rankError } = useUserRank();
   const { dailyTip, getHighImpactTips } = useEcoTips();
   const [loading, setLoading] = useState(true);
 
@@ -40,10 +40,25 @@ export default function Dashboard() {
     // Simulate loading for smooth animation
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('📊 Dashboard Data Status:', {
+      profile: profile,
+      profileLoading,
+      profileError,
+      recentScans: recentScans?.length || 0,
+      scansLoading,
+      scansError,
+      userRank,
+      rankLoading,
+      rankError
+    });
+  }, [profile, profileLoading, profileError, recentScans, scansLoading, scansError, userRank, rankLoading, rankError]);
 
   const isLoading = profileLoading || scansLoading || rankLoading;
 
@@ -86,15 +101,16 @@ export default function Dashboard() {
     }
   ];
 
-  // Calculate stats based on profile data
+  // Calculate stats based on profile data with better fallbacks
   const stats = {
     totalScans: profile?.total_scans || 0,
     ecoPoints: profile?.points || 0,
     co2Saved: profile?.total_co2_saved || 0,
-    alternativesFound: Math.min(Math.round((profile?.total_scans || 0) * 0.3), profile?.total_scans || 0), // Estimate 30% alternative finding rate
+    alternativesFound: Math.min(Math.round((profile?.total_scans || 0) * 0.3), profile?.total_scans || 0),
     productsScanned: profile?.total_scans || 0,
     sustainabilityRating: profile?.points > 1000 ? "Excellent" : profile?.points > 500 ? "Good" : profile?.points > 100 ? "Fair" : "Beginner",
-    achievements: achievements.filter(a => a.earned)
+    achievements: achievements.filter(a => a.earned),
+    avgEcoScore: profile?.eco_score_avg || 0
   };
 
   // Calculate eco impact equivalents
@@ -105,21 +121,37 @@ export default function Dashboard() {
     waterSaved: Math.round(co2Saved * 65), // Rough estimate of water saved in liters
   };
 
-  const recentActivity = recentScans?.slice(0, 3).map(scan => ({
-    type: "scan",
-    product: scan.detected_name || "Product Scan",
-    score: scan.eco_score || 0,
-    action: "Scan completed",
-    time: new Date(scan.created_at).toLocaleDateString()
-  })) || [
-    {
-      type: "scan",
-      product: "No recent scans",
-      score: 0,
-      action: "Start scanning to see activity",
-      time: "Never"
+  // Format recent activity with better error handling
+  const recentActivity = useMemo(() => {
+    if (!recentScans || recentScans.length === 0) {
+      return [
+        {
+          type: "scan",
+          product: "No recent scans",
+          score: 0,
+          action: "Start scanning to see activity",
+          time: "Never",
+          id: "empty"
+        }
+      ];
     }
-  ];
+
+    return recentScans.slice(0, 3).map(scan => ({
+      type: "scan",
+      product: scan.detected_name || "Unknown Product",
+      score: scan.eco_score || 0,
+      action: `${scan.scan_type} scan completed`,
+      time: new Date(scan.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      id: scan.id,
+      co2Impact: scan.co2_footprint || 0,
+      pointsEarned: scan.points_earned || 0
+    }));
+  }, [recentScans]);
 
   if (loading) {
     return (
@@ -141,18 +173,25 @@ export default function Dashboard() {
         {/* Header */}
         <AnimatedElement animation="fadeIn">
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            <div className="inline-flex items-center gap-2">
               <BarChart3 size={32} className="text-green-600" />
-              <h1 className="text-3xl md:text-4xl font-bold">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
                 Your Impact Dashboard
               </h1>
             </div>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Track your sustainable journey and see how your choices are making a difference for the planet
+            <p className="text-gray-700 dark:text-gray-200 max-w-2xl mx-auto text-lg font-medium">
+              Track your eco-conscious journey and see your positive impact on the environment in real-time.
             </p>
-            <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
-              Rating: {stats.sustainabilityRating}
-            </Badge>
+            <div className="inline-flex items-center gap-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-full border shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Live Data</span>
+              </div>
+              <div className="w-px h-4 bg-gray-300"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                Updated {new Date().toLocaleTimeString()}
+              </span>
+            </div>
           </div>
         </AnimatedElement>
 
@@ -273,40 +312,65 @@ export default function Dashboard() {
 
             {/* Recent Activity */}
             <AnimatedElement animation="fadeInUp" delay={0.2}>
-              <Card>
+              <Card className="shadow-lg border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                     <BarChart3 className="h-5 w-5 text-green-600" />
                     Recent Activity
                   </CardTitle>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Your latest eco-scanning achievements
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {recentActivity.map((activity, index) => (
                       <div 
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        key={activity.id || index}
+                        className="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100/80 dark:hover:bg-gray-600/50 transition-colors border border-gray-200/50 dark:border-gray-600/50"
                       >
                         <div className="flex items-center gap-3">
-                          {activity.type === "scan" ? (
-                            <Scan className="h-4 w-4 text-blue-600" />
-                          ) : activity.type === "achievement" ? (
-                            <Award className="h-4 w-4 text-yellow-600" />
-                          ) : (
-                            <Leaf className="h-4 w-4 text-green-600" />
-                          )}
+                          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white">
+                            {activity.type === "scan" ? (
+                              <Scan size={18} />
+                            ) : activity.type === "achievement" ? (
+                              <Award size={18} />
+                            ) : (
+                              <Leaf size={18} />
+                            )}
+                          </div>
                           <div>
-                            <p className="font-medium text-sm">{activity.product}</p>
-                            <p className="text-xs text-gray-600">{activity.action}</p>
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">
+                              {activity.product}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              {activity.action}
+                            </p>
+                            {activity.co2Impact > 0 && (
+                              <p className="text-xs text-green-600 dark:text-green-400">
+                                Saved {activity.co2Impact.toFixed(1)}kg CO₂
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
-                          {activity.score && (
-                            <div className="text-sm font-medium text-green-600">
+                          {activity.score > 0 && (
+                            <div className={`text-sm font-bold px-2 py-1 rounded ${
+                              activity.score >= 80 ? 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/50' :
+                              activity.score >= 60 ? 'text-yellow-700 bg-yellow-100 dark:text-yellow-300 dark:bg-yellow-900/50' :
+                              'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/50'
+                            }`}>
                               {activity.score}/100
                             </div>
                           )}
-                          <div className="text-xs text-gray-500">{activity.time}</div>
+                          {activity.pointsEarned > 0 && (
+                            <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                              +{activity.pointsEarned} points
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {activity.time}
+                          </div>
                         </div>
                       </div>
                     ))}
