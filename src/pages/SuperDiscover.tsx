@@ -1292,14 +1292,14 @@ export default function SuperDiscoverPage() {
                             )}
                           </div>
 
-                          <div className="flex space-x-2">
+                          <div className="flex gap-2">
                             <Button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 addToCart(product);
                               }}
                               disabled={!product.inStock}
-                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex-1"
+                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex-1 h-10"
                             >
                               <ShoppingCart className="h-4 w-4 mr-2" />
                               Add to Cart
@@ -1311,7 +1311,8 @@ export default function SuperDiscoverPage() {
                                 handlePriceComparison(product);
                               }}
                               variant="outline"
-                              className="border-green-300 text-green-600 hover:bg-green-50"
+                              size="default"
+                              className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 h-10 px-4 flex-shrink-0 min-w-[100px]"
                             >
                               <TrendingUp className="h-4 w-4 mr-1" />
                               Compare
@@ -1457,7 +1458,7 @@ export default function SuperDiscoverPage() {
                       <Button
                         onClick={() => handlePriceComparison(selectedProduct)}
                         variant="outline"
-                        className="h-12 px-6 border-green-300 text-green-600 hover:bg-green-50"
+                        className="h-12 px-6 border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200 flex-shrink-0"
                       >
                         <TrendingUp className="h-4 w-4 mr-1" />
                         Compare Prices

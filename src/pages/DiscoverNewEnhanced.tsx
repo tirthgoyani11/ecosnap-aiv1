@@ -541,6 +541,7 @@ const DiscoverPage: React.FC = () => {
                                     variant="outline"
                                     onClick={() => handleToggleCompare(selectedProduct)}
                                     disabled={compareList.length >= 3 && !isInCompare(selectedProduct.id)}
+                                    className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200"
                                   >
                                     <GitCompare className="h-4 w-4 mr-2" />
                                     Compare
@@ -556,6 +557,7 @@ const DiscoverPage: React.FC = () => {
                           variant="secondary"
                           onClick={() => handleToggleCompare(product)}
                           disabled={compareList.length >= 3 && !isInCompare(product.id)}
+                          className="bg-green-50 text-green-600 border-green-300 hover:bg-green-100 hover:border-green-400 transition-all duration-200"
                         >
                           <GitCompare className="h-4 w-4" />
                         </Button>
