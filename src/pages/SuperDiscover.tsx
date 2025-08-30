@@ -764,20 +764,19 @@ export default function SuperDiscoverPage() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+      <div className="relative z-10 container mx-auto px-4 py-6">
         {/* Header with Search and Live Status */}
         <motion.div
-          className="mb-10"
+          className="mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 rounded-3xl p-6 lg:p-8 shadow-2xl border border-white/20">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 rounded-3xl p-6 shadow-2xl border border-white/20">
             {/* Title and Description */}
-            <div className="flex-shrink-0">
+            <div>
               <motion.h1 
-                className="text-3xl lg:text-4xl xl:text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2"
+                className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -785,7 +784,7 @@ export default function SuperDiscoverPage() {
                 🛒 Super Shopping
               </motion.h1>
               <motion.p 
-                className="text-slate-600 dark:text-slate-400 text-sm lg:text-base"
+                className="text-slate-500 dark:text-slate-400 text-lg"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -802,28 +801,13 @@ export default function SuperDiscoverPage() {
                   placeholder="Search eco-friendly products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="pl-10 h-12 bg-white/50 backdrop-blur-sm border-white/30 focus:border-blue-400 rounded-2xl"
                 />
-                <button
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 
-                           bg-gradient-to-r from-green-500 to-emerald-600 
-                           text-white px-3 py-1.5 rounded-lg hover:from-green-600 hover:to-emerald-700 
-                           transition-all duration-300 disabled:opacity-50 text-sm"
-                >
-                  {isSearching ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  ) : (
-                    'Search'
-                  )}
-                </button>
               </div>
             </div>
 
             {/* Cart Button */}
-            <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="flex items-center gap-4">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12 px-6 rounded-2xl">
@@ -1136,8 +1120,8 @@ export default function SuperDiscoverPage() {
             <div className={cn(
               "grid gap-6",
               viewMode === 'grid' 
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "grid-cols-1 max-w-5xl mx-auto"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "grid-cols-1 max-w-4xl mx-auto"
             )}>
               {filteredProducts.map((product, index) => (
                 <motion.div
@@ -1149,7 +1133,7 @@ export default function SuperDiscoverPage() {
                 >
                   <Card className={cn(
                     "group relative overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300",
-                    viewMode === 'grid' ? "min-h-[420px] flex flex-col" : "flex flex-row"
+                    viewMode === 'list' && "flex flex-row"
                   )}>
                     {/* Product Image */}
                     <div className={cn(
@@ -1221,12 +1205,8 @@ export default function SuperDiscoverPage() {
                     </div>
 
                     {/* Product Details */}
-                    <CardContent className={cn(
-                      "p-4 flex flex-col justify-between h-full", 
-                      viewMode === 'list' && "flex-1"
-                    )}>
-                      {/* Main Content */}
-                      <div className="flex-1 space-y-3">
+                    <CardContent className={cn("p-4", viewMode === 'list' && "flex-1")}>
+                      <div className="space-y-3">
                         {/* Brand and Title */}
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{product.brand}</p>
@@ -1293,12 +1273,10 @@ export default function SuperDiscoverPage() {
                             )}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Price and Actions Section */}
-                      <div className="space-y-3 mt-auto">
+                        {/* Price and Actions */}
                         <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                          <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-lg text-slate-900 dark:text-white">
                                 {product.price}
@@ -1313,34 +1291,32 @@ export default function SuperDiscoverPage() {
                               <p className="text-xs text-red-500 font-medium">Out of Stock</p>
                             )}
                           </div>
-                        </div>
 
-                        {/* Action Buttons */}
-                        <div className="space-y-2">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(product);
-                            }}
-                            disabled={!product.inStock}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full"
-                          >
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Add to Cart
-                          </Button>
-                          
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePriceComparison(product);
-                            }}
-                            variant="outline"
-                            className="border-green-300 text-green-600 hover:bg-green-50 w-full"
-                            size="sm"
-                          >
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                            Compare Prices
-                          </Button>
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                              }}
+                              disabled={!product.inStock}
+                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex-1"
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              Add to Cart
+                            </Button>
+                            
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePriceComparison(product);
+                              }}
+                              variant="outline"
+                              className="border-green-300 text-green-600 hover:bg-green-50"
+                            >
+                              <TrendingUp className="h-4 w-4 mr-1" />
+                              Compare
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
