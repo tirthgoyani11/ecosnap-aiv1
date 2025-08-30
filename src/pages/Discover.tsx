@@ -1,11 +1,18 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { 
   Search, 
   Filter,
@@ -22,15 +29,403 @@ import {
   ArrowRight,
   TreePine,
   Recycle,
-  Lightbulb
+  Lightbulb,
+  Plus,
+  Minus,
+  X,
+  MapPin,
+  Clock,
+  Truck,
+  Shield,
+  Flame,
+  Camera,
+  Image as ImageIcon,
+  Wifi,
+  RefreshCw,
+  Bell,
+  Settings,
+  Grid,
+  List,
+  SortDesc,
+  ThumbsUp,
+  MessageSquare,
+  ExternalLink,
+  Package,
+  CreditCard,
+  Gift,
+  Target,
+  Layers,
+  Wind,
+  Droplets,
+  Sun,
+  Globe,
+  Users,
+  BarChart3
 } from "lucide-react";
-import { useProducts, useProductSearch } from "@/hooks/useDatabase";
-import { LoadingSkeleton } from "@/components/LoadingSpinner";
-import { EmptyState } from "@/components/EmptyState";
-import { cn } from "@/lib/utils";
 
-// Mock eco-friendly products for the discover page
-const featuredProducts = [
+// Enhanced Product Interface
+interface EnhancedProduct {
+  id: string;
+  name: string;
+  brand: string;
+  eco_score: number;
+  price: string;
+  originalPrice?: string;
+  discount?: number;
+  rating: number;
+  reviews: number;
+  image_url: string;
+  category: string;
+  description: string;
+  co2_saved: number;
+  tags: string[];
+  inStock: boolean;
+  fastDelivery: boolean;
+  freeShipping: boolean;
+  verified: boolean;
+  trending: boolean;
+  newArrival: boolean;
+  specifications?: Record<string, string>;
+  sustainability?: {
+    carbonNeutral: boolean;
+    recycledMaterials: number;
+    biodegradable: boolean;
+    locallyMade: boolean;
+  };
+}
+
+// Real-time Product Suggestions Interface
+interface ProductSuggestion {
+  id: string;
+  reason: string;
+  confidence: number;
+  product: EnhancedProduct;
+}
+
+// Shopping Cart Item
+interface CartItem extends EnhancedProduct {
+  quantity: number;
+}
+
+// Enhanced mock product data with real shopping features
+const featuredProducts: EnhancedProduct[] = [
+  {
+    id: '1',
+    name: 'Bamboo Water Bottle Premium',
+    brand: 'EcoLife Pro',
+    eco_score: 95,
+    price: '$24.99',
+    originalPrice: '$34.99',
+    discount: 29,
+    rating: 4.9,
+    reviews: 2847,
+    image_url: '/placeholder.svg',
+    category: 'Drinkware',
+    description: 'Premium sustainable bamboo water bottle with temperature control and leak-proof design',
+    co2_saved: 3.2,
+    tags: ['Sustainable', 'Zero Waste', 'BPA Free', 'Premium'],
+    inStock: true,
+    fastDelivery: true,
+    freeShipping: true,
+    verified: true,
+    trending: true,
+    newArrival: false,
+    specifications: {
+      'Capacity': '750ml',
+      'Material': '100% Bamboo Fiber',
+      'Temperature': 'Keeps cold 24h, hot 12h',
+      'Warranty': '2 Years'
+    },
+    sustainability: {
+      carbonNeutral: true,
+      recycledMaterials: 85,
+      biodegradable: true,
+      locallyMade: false
+    }
+  },
+  {
+    id: '2',
+    name: 'Organic Cotton T-Shirt Collection',
+    brand: 'Green Thread Co.',
+    eco_score: 91,
+    price: '$28.00',
+    originalPrice: '$35.00',
+    discount: 20,
+    rating: 4.7,
+    reviews: 1543,
+    image_url: '/placeholder.svg',
+    category: 'Clothing',
+    description: '100% organic cotton, ethically sourced and produced with fair trade certification',
+    co2_saved: 2.8,
+    tags: ['Organic', 'Fair Trade', 'Biodegradable', 'Ethical'],
+    inStock: true,
+    fastDelivery: false,
+    freeShipping: true,
+    verified: true,
+    trending: false,
+    newArrival: true,
+    specifications: {
+      'Material': '100% Organic Cotton',
+      'Certification': 'GOTS Certified',
+      'Origin': 'Fair Trade Certified',
+      'Care': 'Machine Wash Cold'
+    },
+    sustainability: {
+      carbonNeutral: false,
+      recycledMaterials: 0,
+      biodegradable: true,
+      locallyMade: true
+    }
+  },
+  {
+    id: '3',
+    name: 'Solar Power Bank 20000mAh',
+    brand: 'SunTech Pro',
+    eco_score: 88,
+    price: '$45.99',
+    originalPrice: '$59.99',
+    discount: 23,
+    rating: 4.6,
+    reviews: 3284,
+    image_url: '/placeholder.svg',
+    category: 'Electronics',
+    description: 'High-capacity solar power bank with wireless charging and LED indicators',
+    co2_saved: 5.4,
+    tags: ['Solar Powered', 'Wireless Charging', 'Fast Charge', 'Durable'],
+    inStock: true,
+    fastDelivery: true,
+    freeShipping: true,
+    verified: true,
+    trending: true,
+    newArrival: false,
+    specifications: {
+      'Capacity': '20000mAh',
+      'Solar Panel': '5W Monocrystalline',
+      'Wireless': '10W Qi Charging',
+      'Ports': '2x USB-A, 1x USB-C'
+    },
+    sustainability: {
+      carbonNeutral: true,
+      recycledMaterials: 45,
+      biodegradable: false,
+      locallyMade: false
+    }
+  },
+  {
+    id: '4',
+    name: 'Compostable Phone Case Set',
+    brand: 'BioCover',
+    eco_score: 93,
+    price: '$19.99',
+    rating: 4.8,
+    reviews: 892,
+    image_url: '/placeholder.svg',
+    category: 'Electronics',
+    description: 'Fully compostable phone cases made from plant-based materials',
+    co2_saved: 1.2,
+    tags: ['Compostable', 'Plant-Based', 'Biodegradable', 'Protective'],
+    inStock: true,
+    fastDelivery: true,
+    freeShipping: false,
+    verified: true,
+    trending: false,
+    newArrival: true,
+    sustainability: {
+      carbonNeutral: true,
+      recycledMaterials: 0,
+      biodegradable: true,
+      locallyMade: true
+    }
+  },
+  {
+    id: '5',
+    name: 'Stainless Steel Lunch Box',
+    brand: 'EcoMeal',
+    eco_score: 89,
+    price: '$32.99',
+    originalPrice: '$42.99',
+    discount: 23,
+    rating: 4.5,
+    reviews: 1672,
+    image_url: '/placeholder.svg',
+    category: 'Kitchen',
+    description: 'Premium stainless steel lunch box with compartments and bamboo utensils',
+    co2_saved: 4.1,
+    tags: ['Stainless Steel', 'Zero Waste', 'Leak Proof', 'Includes Utensils'],
+    inStock: true,
+    fastDelivery: false,
+    freeShipping: true,
+    verified: true,
+    trending: true,
+    newArrival: false,
+    sustainability: {
+      carbonNeutral: false,
+      recycledMaterials: 75,
+      biodegradable: false,
+      locallyMade: true
+    }
+  }
+];
+
+export default function SuperDiscoverPage() {
+  const { toast } = useToast();
+  
+  // State Management
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState('trending');
+  const [showFilters, setShowFilters] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<EnhancedProduct | null>(null);
+  const [realtimeSuggestions, setRealtimeSuggestions] = useState<ProductSuggestion[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  // Filters State
+  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [ecoScoreMin, setEcoScoreMin] = useState(70);
+  const [showInStockOnly, setShowInStockOnly] = useState(true);
+  const [showFreeShippingOnly, setShowFreeShippingOnly] = useState(false);
+
+  // Real-time updates simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Simulate real-time product suggestions
+      const suggestions: ProductSuggestion[] = [
+        {
+          id: 'suggestion-1',
+          reason: 'Based on your eco-score preferences',
+          confidence: 94,
+          product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+        },
+        {
+          id: 'suggestion-2',
+          reason: 'Popular in your area',
+          confidence: 87,
+          product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+        },
+        {
+          id: 'suggestion-3',
+          reason: 'Similar to your recent scans',
+          confidence: 92,
+          product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+        }
+      ];
+      setRealtimeSuggestions(suggestions);
+      setLastUpdated(new Date());
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Filter and search products
+  const filteredProducts = useMemo(() => {
+    let filtered = featuredProducts;
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+
+    // Category filter
+    if (selectedCategory !== 'All') {
+      if (selectedCategory === 'Trending') {
+        filtered = filtered.filter(p => p.trending);
+      } else if (selectedCategory === 'New') {
+        filtered = filtered.filter(p => p.newArrival);
+      } else if (selectedCategory === 'Sustainable') {
+        filtered = filtered.filter(p => p.eco_score >= 90);
+      } else {
+        filtered = filtered.filter(p => p.category === selectedCategory);
+      }
+    }
+
+    // Price range filter
+    filtered = filtered.filter(product => {
+      const price = parseFloat(product.price.replace('$', ''));
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+
+    // Eco score filter
+    filtered = filtered.filter(product => product.eco_score >= ecoScoreMin);
+
+    // Stock filter
+    if (showInStockOnly) {
+      filtered = filtered.filter(product => product.inStock);
+    }
+
+    // Free shipping filter
+    if (showFreeShippingOnly) {
+      filtered = filtered.filter(product => product.freeShipping);
+    }
+
+    // Sorting
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => parseFloat(a.price.replace('$', '')) - parseFloat(b.price.replace('$', '')));
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => parseFloat(b.price.replace('$', '')) - parseFloat(a.price.replace('$', '')));
+        break;
+      case 'eco-score':
+        filtered.sort((a, b) => b.eco_score - a.eco_score);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'reviews':
+        filtered.sort((a, b) => b.reviews - a.reviews);
+        break;
+      default: // trending
+        filtered.sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0));
+    }
+
+    return filtered;
+  }, [searchQuery, selectedCategory, sortBy, priceRange, ecoScoreMin, showInStockOnly, showFreeShippingOnly]);
+
+  // Cart functions
+  const addToCart = useCallback((product: EnhancedProduct) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+    toast({
+      title: "Added to Cart! 🛒",
+      description: `${product.name} has been added to your cart.`,
+    });
+  }, [toast]);
+
+  const removeFromCart = useCallback((productId: string) => {
+    setCart(prev => prev.filter(item => item.id !== productId));
+  }, []);
+
+  const toggleWishlist = useCallback((productId: string) => {
+    setWishlist(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      }
+      return [...prev, productId];
+    });
+  }, []);
+
+  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartValue = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace('$', '')) * item.quantity), 0);
+
+  const categories = ['All', 'Trending', 'New', 'Sustainable', 'Drinkware', 'Clothing', 'Electronics', 'Kitchen'];
+
+  return (
   {
     id: '1',
     name: 'Bamboo Water Bottle',

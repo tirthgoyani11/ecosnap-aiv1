@@ -30,6 +30,7 @@ import DashboardNew from './pages/DashboardNew';
 import Dashboard from './pages/Dashboard';
 import BulkScan from "./pages/BulkScan";
 import Discover from "./pages/Discover";
+import SuperDiscover from "./pages/SuperDiscover";
 import DiscoverNew from "./pages/DiscoverNew";
 import DiscoverNewEnhanced from "./pages/DiscoverNewEnhanced";
 import Leaderboard from "./pages/Leaderboard";
@@ -136,7 +137,7 @@ const App = () => (
               path="/discover" 
               element={
                 <ProtectedRoute>
-                  <Discover />
+                  <SuperDiscover />
                 </ProtectedRoute>
               } 
             />
