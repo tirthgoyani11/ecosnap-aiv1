@@ -764,10 +764,11 @@ export default function SuperDiscoverPage() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         {/* Header with Search and Live Status */}
         <motion.div
-          className="mb-8"
+          className="mb-10"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -801,8 +802,23 @@ export default function SuperDiscoverPage() {
                   placeholder="Search eco-friendly products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="pl-10 h-12 bg-white/50 backdrop-blur-sm border-white/30 focus:border-blue-400 rounded-2xl"
                 />
+                <button
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 
+                           bg-gradient-to-r from-green-500 to-emerald-600 
+                           text-white px-3 py-1.5 rounded-lg hover:from-green-600 hover:to-emerald-700 
+                           transition-all duration-300 disabled:opacity-50 text-sm"
+                >
+                  {isSearching ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  ) : (
+                    'Search'
+                  )}
+                </button>
               </div>
             </div>
 
@@ -1120,8 +1136,8 @@ export default function SuperDiscoverPage() {
             <div className={cn(
               "grid gap-6",
               viewMode === 'grid' 
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "grid-cols-1 max-w-4xl mx-auto"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "grid-cols-1 max-w-5xl mx-auto"
             )}>
               {filteredProducts.map((product, index) => (
                 <motion.div

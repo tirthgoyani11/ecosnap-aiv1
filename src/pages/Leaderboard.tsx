@@ -721,7 +721,7 @@ export default function Leaderboard() {
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/30 via-transparent to-yellow-200/30 rounded-3xl blur-3xl"></div>
               
               {/* Podium Layout - Responsive design */}
-              <div className="flex flex-col lg:flex-row lg:items-end lg:justify-center gap-6 relative z-10 max-w-6xl mx-auto">
+              <div className="relative z-10 max-w-5xl mx-auto">
                 
                 {/* Mobile & Tablet: Show in order 1, 2, 3 */}
                 <div className="lg:hidden space-y-6">
@@ -735,32 +735,48 @@ export default function Leaderboard() {
                   {topThree[2] && <PodiumCard user={topThree[2]} position={3} />}
                 </div>
 
-                {/* Desktop: Show in podium order 2, 1, 3 */}
-                <div className="hidden lg:flex lg:items-end lg:justify-center gap-8 w-full">
-                  {/* 2nd Place - Medium height */}
-                  {topThree[1] && (
-                    <div className="flex-1 max-w-sm">
-                      <div className="h-8 mb-4"></div> {/* Reduced spacer for better alignment */}
-                      <PodiumCard user={topThree[1]} position={2} />
+                {/* Desktop: Traditional Podium Formation */}
+                <div className="hidden lg:block">
+                  {/* Podium Base Visual */}
+                  <div className="flex items-end justify-center gap-4 mb-8">
+                    {/* 2nd Place Platform */}
+                    <div className="w-32 h-16 bg-gradient-to-t from-gray-300 to-gray-200 rounded-t-lg border-t-4 border-gray-400 flex items-center justify-center">
+                      <span className="text-gray-600 font-bold text-lg">2nd</span>
                     </div>
-                  )}
+                    
+                    {/* 1st Place Platform (Tallest) */}
+                    <div className="w-32 h-24 bg-gradient-to-t from-yellow-400 to-yellow-300 rounded-t-lg border-t-4 border-yellow-500 flex items-center justify-center">
+                      <span className="text-yellow-800 font-bold text-xl">1st</span>
+                    </div>
+                    
+                    {/* 3rd Place Platform */}
+                    <div className="w-32 h-12 bg-gradient-to-t from-amber-300 to-amber-200 rounded-t-lg border-t-4 border-amber-400 flex items-center justify-center">
+                      <span className="text-amber-700 font-bold text-lg">3rd</span>
+                    </div>
+                  </div>
                   
-                  {/* 1st Place - Tallest, center position */}
-                  {topThree[0] && (
-                    <div className="flex-1 max-w-sm relative">
-                      {/* Winner glow effect */}
-                      <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
-                      <PodiumCard user={topThree[0]} position={1} />
+                  {/* Cards positioned above platforms */}
+                  <div className="flex items-end justify-center gap-4 -mt-8">
+                    {/* 2nd Place Card */}
+                    <div className="w-80 transform translate-y-4">
+                      {topThree[1] && <PodiumCard user={topThree[1]} position={2} />}
                     </div>
-                  )}
-                  
-                  {/* 3rd Place - Shortest */}
-                  {topThree[2] && (
-                    <div className="flex-1 max-w-sm">
-                      <div className="h-8 mb-4"></div> {/* Reduced spacer for better alignment */}
-                      <PodiumCard user={topThree[2]} position={3} />
+                    
+                    {/* 1st Place Card (Highest) */}
+                    <div className="w-80 relative">
+                      {topThree[0] && (
+                        <div className="relative">
+                          <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
+                          <PodiumCard user={topThree[0]} position={1} />
+                        </div>
+                      )}
                     </div>
-                  )}
+                    
+                    {/* 3rd Place Card */}
+                    <div className="w-80 transform translate-y-8">
+                      {topThree[2] && <PodiumCard user={topThree[2]} position={3} />}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
