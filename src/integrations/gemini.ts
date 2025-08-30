@@ -159,4 +159,31 @@ export class Gemini {
 
     return this.parseGeminiResponse(responseText);
   }
+
+  static async generateText(prompt: string): Promise<string | null> {
+    const requestBody = {
+      contents: [{
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      }
+    };
+
+    try {
+      const response = await this.makeApiCall(requestBody);
+      const responseText = response.candidates[0]?.content.parts[0]?.text;
+
+      if (!responseText) {
+        console.error("No text found in Gemini response");
+        return null;
+      }
+
+      return responseText;
+    } catch (error) {
+      console.error("Failed to generate text with Gemini:", error);
+      return null;
+    }
+  }
 }

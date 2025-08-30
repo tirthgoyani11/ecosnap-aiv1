@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Gemini } from "@/integrations/gemini";
 import { 
   Search, 
   Filter,
@@ -29,7 +30,6 @@ import {
   Truck,
   Shield,
   Flame,
-  Wifi,
   RefreshCw,
   Grid,
   List,
@@ -87,181 +87,140 @@ interface CartItem extends EnhancedProduct {
   quantity: number;
 }
 
-// Enhanced mock product data with real shopping features
-const featuredProducts: EnhancedProduct[] = [
-  {
-    id: '1',
-    name: 'Bamboo Water Bottle Premium',
-    brand: 'EcoLife Pro',
-    eco_score: 95,
-    price: '$24.99',
-    originalPrice: '$34.99',
-    discount: 29,
-    rating: 4.9,
-    reviews: 2847,
-    image_url: '/placeholder.svg',
-    category: 'Drinkware',
-    description: 'Premium sustainable bamboo water bottle with temperature control and leak-proof design',
-    co2_saved: 3.2,
-    tags: ['Sustainable', 'Zero Waste', 'BPA Free', 'Premium'],
-    inStock: true,
-    fastDelivery: true,
-    freeShipping: true,
-    verified: true,
-    trending: true,
-    newArrival: false,
-    specifications: {
-      'Capacity': '750ml',
-      'Material': '100% Bamboo Fiber',
-      'Temperature': 'Keeps cold 24h, hot 12h',
-      'Warranty': '2 Years'
-    },
-    sustainability: {
-      carbonNeutral: true,
-      recycledMaterials: 85,
-      biodegradable: true,
-      locallyMade: false
+// Unsplash API Service
+class UnsplashService {
+  private static ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+  private static BASE_URL = 'https://api.unsplash.com';
+
+  static async searchImages(query: string, count: number = 1): Promise<string[]> {
+    if (!this.ACCESS_KEY) {
+      console.warn('Unsplash API key not found, using placeholder images');
+      return Array(count).fill('/placeholder.svg');
     }
-  },
-  {
-    id: '2',
-    name: 'Organic Cotton T-Shirt Collection',
-    brand: 'Green Thread Co.',
-    eco_score: 91,
-    price: '$28.00',
-    originalPrice: '$35.00',
-    discount: 20,
-    rating: 4.7,
-    reviews: 1543,
-    image_url: '/placeholder.svg',
-    category: 'Clothing',
-    description: '100% organic cotton, ethically sourced and produced with fair trade certification',
-    co2_saved: 2.8,
-    tags: ['Organic', 'Fair Trade', 'Biodegradable', 'Ethical'],
-    inStock: true,
-    fastDelivery: false,
-    freeShipping: true,
-    verified: true,
-    trending: false,
-    newArrival: true,
-    sustainability: {
-      carbonNeutral: false,
-      recycledMaterials: 0,
-      biodegradable: true,
-      locallyMade: true
-    }
-  },
-  {
-    id: '3',
-    name: 'Solar Power Bank 20000mAh',
-    brand: 'SunTech Pro',
-    eco_score: 88,
-    price: '$45.99',
-    originalPrice: '$59.99',
-    discount: 23,
-    rating: 4.6,
-    reviews: 3284,
-    image_url: '/placeholder.svg',
-    category: 'Electronics',
-    description: 'High-capacity solar power bank with wireless charging and LED indicators',
-    co2_saved: 5.4,
-    tags: ['Solar Powered', 'Wireless Charging', 'Fast Charge', 'Durable'],
-    inStock: true,
-    fastDelivery: true,
-    freeShipping: true,
-    verified: true,
-    trending: true,
-    newArrival: false,
-    sustainability: {
-      carbonNeutral: true,
-      recycledMaterials: 45,
-      biodegradable: false,
-      locallyMade: false
-    }
-  },
-  {
-    id: '4',
-    name: 'Compostable Phone Case Set',
-    brand: 'BioCover',
-    eco_score: 93,
-    price: '$19.99',
-    rating: 4.8,
-    reviews: 892,
-    image_url: '/placeholder.svg',
-    category: 'Electronics',
-    description: 'Fully compostable phone cases made from plant-based materials',
-    co2_saved: 1.2,
-    tags: ['Compostable', 'Plant-Based', 'Biodegradable', 'Protective'],
-    inStock: true,
-    fastDelivery: true,
-    freeShipping: false,
-    verified: true,
-    trending: false,
-    newArrival: true,
-    sustainability: {
-      carbonNeutral: true,
-      recycledMaterials: 0,
-      biodegradable: true,
-      locallyMade: true
-    }
-  },
-  {
-    id: '5',
-    name: 'Stainless Steel Lunch Box',
-    brand: 'EcoMeal',
-    eco_score: 89,
-    price: '$32.99',
-    originalPrice: '$42.99',
-    discount: 23,
-    rating: 4.5,
-    reviews: 1672,
-    image_url: '/placeholder.svg',
-    category: 'Kitchen',
-    description: 'Premium stainless steel lunch box with compartments and bamboo utensils',
-    co2_saved: 4.1,
-    tags: ['Stainless Steel', 'Zero Waste', 'Leak Proof', 'Includes Utensils'],
-    inStock: true,
-    fastDelivery: false,
-    freeShipping: true,
-    verified: true,
-    trending: true,
-    newArrival: false,
-    sustainability: {
-      carbonNeutral: false,
-      recycledMaterials: 75,
-      biodegradable: false,
-      locallyMade: true
-    }
-  },
-  {
-    id: '6',
-    name: 'Hemp Yoga Mat',
-    brand: 'ZenEco',
-    eco_score: 94,
-    price: '$65.99',
-    originalPrice: '$79.99',
-    discount: 18,
-    rating: 4.8,
-    reviews: 756,
-    image_url: '/placeholder.svg',
-    category: 'Fitness',
-    description: 'Natural hemp yoga mat with cork backing, non-slip and antimicrobial',
-    co2_saved: 3.7,
-    tags: ['Hemp', 'Cork', 'Natural', 'Non-Slip'],
-    inStock: true,
-    fastDelivery: true,
-    freeShipping: true,
-    verified: true,
-    trending: true,
-    newArrival: true,
-    sustainability: {
-      carbonNeutral: true,
-      recycledMaterials: 0,
-      biodegradable: true,
-      locallyMade: true
+
+    try {
+      const response = await fetch(
+        `${this.BASE_URL}/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
+        {
+          headers: {
+            'Authorization': `Client-ID ${this.ACCESS_KEY}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch from Unsplash');
+      }
+
+      const data = await response.json();
+      return data.results.map((photo: any) => photo.urls.regular) || ['/placeholder.svg'];
+    } catch (error) {
+      console.error('Unsplash API error:', error);
+      return Array(count).fill('/placeholder.svg');
     }
   }
-];
+}
+
+// Product Generator using Gemini API
+class ProductGenerator {
+  static async generateProducts(categories: string[]): Promise<EnhancedProduct[]> {
+    const products: EnhancedProduct[] = [];
+    
+    for (const category of categories) {
+      try {
+        const prompt = `Generate 2 realistic eco-friendly products for the category "${category}". 
+        Return JSON format with the following structure:
+        {
+          "products": [
+            {
+              "name": "Product Name",
+              "brand": "Brand Name",
+              "category": "${category}",
+              "description": "Detailed description",
+              "eco_score": 85,
+              "price_inr": 2499,
+              "original_price_inr": 3199,
+              "rating": 4.5,
+              "reviews": 1234,
+              "co2_saved": 2.5,
+              "tags": ["Sustainable", "Organic"],
+              "specifications": {
+                "Material": "Bamboo Fiber",
+                "Weight": "250g"
+              },
+              "sustainability": {
+                "carbonNeutral": true,
+                "recycledMaterials": 75,
+                "biodegradable": true,
+                "locallyMade": true
+              }
+            }
+          ]
+        }
+        Make prices realistic for Indian market. Include Indian brands where appropriate.`;
+
+        const geminiResponse = await Gemini.generateText(prompt);
+        
+        if (geminiResponse) {
+          const jsonMatch = geminiResponse.match(/```json\n([\s\S]*?)\n```/) || 
+                          geminiResponse.match(/\{[\s\S]*\}/);
+          
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0].replace(/```json\n?|\n?```/g, ''));
+            
+            for (const productData of data.products || []) {
+              // Get real image from Unsplash
+              const images = await UnsplashService.searchImages(
+                `${productData.name} ${category} sustainable eco-friendly product`,
+                1
+              );
+
+              const product: EnhancedProduct = {
+                id: `${category.toLowerCase()}-${Date.now()}-${Math.random()}`,
+                name: productData.name,
+                brand: productData.brand,
+                eco_score: productData.eco_score || 85,
+                price: `₹${productData.price_inr?.toLocaleString('en-IN') || '2,499'}`,
+                originalPrice: productData.original_price_inr 
+                  ? `₹${productData.original_price_inr.toLocaleString('en-IN')}` 
+                  : undefined,
+                discount: productData.original_price_inr 
+                  ? Math.round(((productData.original_price_inr - productData.price_inr) / productData.original_price_inr) * 100)
+                  : undefined,
+                rating: productData.rating || 4.5,
+                reviews: productData.reviews || Math.floor(Math.random() * 5000) + 100,
+                image_url: images[0],
+                category: productData.category || category,
+                description: productData.description,
+                co2_saved: productData.co2_saved || Math.round(Math.random() * 5 + 1),
+                tags: productData.tags || ['Sustainable', 'Eco-friendly'],
+                inStock: true,
+                fastDelivery: Math.random() > 0.3,
+                freeShipping: Math.random() > 0.4,
+                verified: true,
+                trending: Math.random() > 0.7,
+                newArrival: Math.random() > 0.8,
+                specifications: productData.specifications,
+                sustainability: productData.sustainability || {
+                  carbonNeutral: true,
+                  recycledMaterials: 75,
+                  biodegradable: true,
+                  locallyMade: true
+                }
+              };
+
+              products.push(product);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to generate products for ${category}:`, error);
+      }
+    }
+
+    return products;
+  }
+}
 
 export default function SuperDiscoverPage() {
   const { toast } = useToast();
@@ -277,44 +236,95 @@ export default function SuperDiscoverPage() {
   const [selectedProduct, setSelectedProduct] = useState<EnhancedProduct | null>(null);
   const [realtimeSuggestions, setRealtimeSuggestions] = useState<ProductSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [featuredProducts, setFeaturedProducts] = useState<EnhancedProduct[]>([]);
+  const [isGeneratingProducts, setIsGeneratingProducts] = useState(true);
 
   // Filters State
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 50000]);
   const [ecoScoreMin, setEcoScoreMin] = useState(70);
   const [showInStockOnly, setShowInStockOnly] = useState(true);
   const [showFreeShippingOnly, setShowFreeShippingOnly] = useState(false);
 
+  // Generate products on component mount
+  useEffect(() => {
+    const generateInitialProducts = async () => {
+      setIsGeneratingProducts(true);
+      try {
+        const categories = ['Drinkware', 'Clothing', 'Electronics', 'Kitchen', 'Fitness', 'Personal Care'];
+        const products = await ProductGenerator.generateProducts(categories);
+        setFeaturedProducts(products);
+      } catch (error) {
+        console.error('Failed to generate products:', error);
+        // Fallback to a few basic products if Gemini fails
+        setFeaturedProducts([
+          {
+            id: '1',
+            name: 'Bamboo Water Bottle',
+            brand: 'EcoVessel',
+            eco_score: 92,
+            price: '₹1,299',
+            originalPrice: '₹1,899',
+            discount: 32,
+            rating: 4.7,
+            reviews: 1247,
+            image_url: '/placeholder.svg',
+            category: 'Drinkware',
+            description: 'Sustainable bamboo water bottle with steel interior',
+            co2_saved: 2.5,
+            tags: ['Sustainable', 'BPA Free'],
+            inStock: true,
+            fastDelivery: true,
+            freeShipping: true,
+            verified: true,
+            trending: true,
+            newArrival: false,
+            sustainability: {
+              carbonNeutral: true,
+              recycledMaterials: 75,
+              biodegradable: true,
+              locallyMade: true
+            }
+          }
+        ]);
+      } finally {
+        setIsGeneratingProducts(false);
+      }
+    };
+
+    generateInitialProducts();
+  }, []);
+
   // Real-time updates simulation
   useEffect(() => {
     const interval = setInterval(() => {
-      // Simulate real-time product suggestions
-      const suggestions: ProductSuggestion[] = [
-        {
-          id: 'suggestion-1',
-          reason: 'Based on your eco-score preferences',
-          confidence: 94,
-          product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
-        },
-        {
-          id: 'suggestion-2',
-          reason: 'Popular in your area',
-          confidence: 87,
-          product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
-        },
-        {
-          id: 'suggestion-3',
-          reason: 'Similar to your recent scans',
-          confidence: 92,
-          product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
-        }
-      ];
-      setRealtimeSuggestions(suggestions);
-      setLastUpdated(new Date());
-    }, 5000);
+      if (featuredProducts.length > 0) {
+        // Simulate real-time product suggestions
+        const suggestions: ProductSuggestion[] = [
+          {
+            id: 'suggestion-1',
+            reason: 'Based on your eco-score preferences',
+            confidence: 94,
+            product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+          },
+          {
+            id: 'suggestion-2',
+            reason: 'Popular in your area',
+            confidence: 87,
+            product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+          },
+          {
+            id: 'suggestion-3',
+            reason: 'Similar to your recent scans',
+            confidence: 92,
+            product: featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+          }
+        ];
+        setRealtimeSuggestions(suggestions);
+      }
+    }, 8000); // Update every 8 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [featuredProducts]);
 
   // Filter and search products
   const filteredProducts = useMemo(() => {
@@ -345,7 +355,7 @@ export default function SuperDiscoverPage() {
 
     // Price range filter
     filtered = filtered.filter(product => {
-      const price = parseFloat(product.price.replace('$', ''));
+      const price = parseFloat(product.price.replace('₹', '').replace(/,/g, ''));
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
@@ -365,10 +375,18 @@ export default function SuperDiscoverPage() {
     // Sorting
     switch (sortBy) {
       case 'price-low':
-        filtered.sort((a, b) => parseFloat(a.price.replace('$', '')) - parseFloat(b.price.replace('$', '')));
+        filtered.sort((a, b) => {
+          const priceA = parseFloat(a.price.replace('₹', '').replace(/,/g, ''));
+          const priceB = parseFloat(b.price.replace('₹', '').replace(/,/g, ''));
+          return priceA - priceB;
+        });
         break;
       case 'price-high':
-        filtered.sort((a, b) => parseFloat(b.price.replace('$', '')) - parseFloat(a.price.replace('$', '')));
+        filtered.sort((a, b) => {
+          const priceA = parseFloat(a.price.replace('₹', '').replace(/,/g, ''));
+          const priceB = parseFloat(b.price.replace('₹', '').replace(/,/g, ''));
+          return priceB - priceA;
+        });
         break;
       case 'eco-score':
         filtered.sort((a, b) => b.eco_score - a.eco_score);
@@ -384,7 +402,7 @@ export default function SuperDiscoverPage() {
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, sortBy, priceRange, ecoScoreMin, showInStockOnly, showFreeShippingOnly]);
+  }, [searchQuery, selectedCategory, sortBy, priceRange, ecoScoreMin, showInStockOnly, showFreeShippingOnly, featuredProducts]);
 
   // Cart functions
   const addToCart = useCallback((product: EnhancedProduct) => {
@@ -425,9 +443,12 @@ export default function SuperDiscoverPage() {
   }, [toast]);
 
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCartValue = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace('$', '')) * item.quantity), 0);
+  const totalCartValue = cart.reduce((sum, item) => {
+    const price = parseFloat(item.price.replace('₹', '').replace(/,/g, ''));
+    return sum + (price * item.quantity);
+  }, 0);
 
-  const categories = ['All', 'Trending', 'New', 'Sustainable', 'Drinkware', 'Clothing', 'Electronics', 'Kitchen', 'Fitness'];
+  const categories = ['All', 'Trending', 'New', 'Sustainable', 'Drinkware', 'Clothing', 'Electronics', 'Kitchen', 'Fitness', 'Personal Care'];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-950 dark:to-purple-950">
@@ -501,25 +522,8 @@ export default function SuperDiscoverPage() {
               </div>
             </div>
 
-            {/* Live Status and Cart */}
+            {/* Cart Button */}
             <div className="flex items-center gap-4">
-              {/* Live Status */}
-              <div className="flex items-center gap-2">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                >
-                  <Wifi className="h-4 w-4 text-green-500" />
-                </motion.div>
-                <div className="text-xs">
-                  <div className="text-green-600 font-medium">Live</div>
-                  <div className="text-slate-500">
-                    {lastUpdated.toLocaleTimeString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Cart Button */}
               <Sheet>
                 <SheetTrigger asChild>
                   <Button className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12 px-6 rounded-2xl">
@@ -592,7 +596,7 @@ export default function SuperDiscoverPage() {
                         ))}
                         <Separator />
                         <div className="flex justify-between items-center font-bold">
-                          <span>Total: ${totalCartValue.toFixed(2)}</span>
+                          <span>Total: ₹{totalCartValue.toLocaleString('en-IN')}</span>
                           <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                             Checkout
                           </Button>
@@ -734,8 +738,40 @@ export default function SuperDiscoverPage() {
                 </div>
 
                 {/* Results Count */}
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  {filteredProducts.length} products found
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {filteredProducts.length} products found
+                  </div>
+                  
+                  {/* Regenerate Products Button */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      setIsGeneratingProducts(true);
+                      try {
+                        const categories = ['Drinkware', 'Clothing', 'Electronics', 'Kitchen', 'Fitness', 'Personal Care'];
+                        const products = await ProductGenerator.generateProducts(categories);
+                        setFeaturedProducts(products);
+                        toast({
+                          title: "Products Refreshed! ✨",
+                          description: "New AI-generated products with real images loaded.",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Failed to generate products",
+                          description: "Please try again later.",
+                        });
+                      } finally {
+                        setIsGeneratingProducts(false);
+                      }
+                    }}
+                    disabled={isGeneratingProducts}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 hover:from-purple-600 hover:to-pink-600"
+                  >
+                    <RefreshCw className={cn("h-3 w-3 mr-1", isGeneratingProducts && "animate-spin")} />
+                    AI Refresh
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -748,7 +784,17 @@ export default function SuperDiscoverPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          {isLoading ? (
+          {isGeneratingProducts ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <LoadingSpinner />
+              <div className="text-center">
+                <p className="text-lg font-semibold">🤖 AI is generating personalized products...</p>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Using Gemini AI and real Unsplash images with Indian pricing
+                </p>
+              </div>
+            </div>
+          ) : isLoading ? (
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner />
               <span className="ml-3">Loading amazing eco-products...</span>
