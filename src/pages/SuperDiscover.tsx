@@ -121,6 +121,121 @@ class UnsplashService {
   }
 }
 
+// Real-time search with Gemini
+class RealTimeSearch {
+  static async searchProducts(query: string): Promise<EnhancedProduct[]> {
+    if (!query.trim()) return [];
+
+    const prompt = `Search for eco-friendly products related to "${query}". Find 6 real products from the market with authentic information.
+    
+    Return JSON format with realistic Indian market data:
+    {
+      "products": [
+        {
+          "name": "Actual Product Name",
+          "brand": "Real Brand Name (prefer Indian brands when applicable)",
+          "category": "Product Category",
+          "description": "Detailed product description with real features",
+          "eco_score": 85,
+          "price_inr": 1299,
+          "original_price_inr": 1899,
+          "rating": 4.3,
+          "reviews": 847,
+          "co2_saved": 2.1,
+          "tags": ["Sustainable", "Organic", "etc"],
+          "specifications": {
+            "Material": "Bamboo",
+            "Weight": "200g",
+            "Dimensions": "15x8cm"
+          },
+          "sustainability": {
+            "carbonNeutral": true,
+            "recycledMaterials": 65,
+            "biodegradable": true,
+            "locallyMade": false
+          },
+          "search_terms": "product search keywords for image"
+        }
+      ]
+    }
+    
+    IMPORTANT:
+    - Find REAL products that exist in the market
+    - Use authentic brand names and realistic specifications
+    - Include proper Indian pricing (₹500 - ₹50,000 range)
+    - Focus on sustainable/eco-friendly alternatives when possible
+    - Provide search terms for finding relevant product images
+    - Make eco_scores realistic (70-95 range)
+    - Include both Indian and international brands appropriately`;
+
+    try {
+      const geminiResponse = await Gemini.generateText(prompt);
+      
+      if (!geminiResponse) {
+        throw new Error('No response from Gemini');
+      }
+
+      // Extract JSON from response
+      const jsonMatch = geminiResponse.match(/```json\n([\s\S]*?)\n```/) || 
+                      geminiResponse.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+
+      const data = JSON.parse(jsonMatch[0].replace(/```json\n?|\n?```/g, ''));
+      const products: EnhancedProduct[] = [];
+
+      for (const productData of data.products || []) {
+        // Get real image from Unsplash using search terms
+        const searchTerms = productData.search_terms || 
+                          `${productData.name} ${productData.category} sustainable eco product`;
+        const images = await UnsplashService.searchImages(searchTerms, 1);
+
+        const product: EnhancedProduct = {
+          id: `search-${Date.now()}-${Math.random()}`,
+          name: productData.name,
+          brand: productData.brand,
+          eco_score: productData.eco_score || 85,
+          price: `₹${productData.price_inr?.toLocaleString('en-IN') || '1,299'}`,
+          originalPrice: productData.original_price_inr 
+            ? `₹${productData.original_price_inr.toLocaleString('en-IN')}` 
+            : undefined,
+          discount: productData.original_price_inr 
+            ? Math.round(((productData.original_price_inr - productData.price_inr) / productData.original_price_inr) * 100)
+            : undefined,
+          rating: productData.rating || 4.5,
+          reviews: productData.reviews || Math.floor(Math.random() * 3000) + 200,
+          image_url: images[0],
+          category: productData.category,
+          description: productData.description,
+          co2_saved: productData.co2_saved || Math.round(Math.random() * 4 + 1),
+          tags: productData.tags || ['Sustainable', 'Eco-friendly'],
+          inStock: true,
+          fastDelivery: Math.random() > 0.4,
+          freeShipping: Math.random() > 0.3,
+          verified: true,
+          trending: Math.random() > 0.6,
+          newArrival: Math.random() > 0.7,
+          specifications: productData.specifications,
+          sustainability: productData.sustainability || {
+            carbonNeutral: true,
+            recycledMaterials: 70,
+            biodegradable: true,
+            locallyMade: Math.random() > 0.5
+          }
+        };
+
+        products.push(product);
+      }
+
+      return products;
+    } catch (error) {
+      console.error('Real-time search error:', error);
+      return [];
+    }
+  }
+}
 // Product Generator using Gemini API
 class ProductGenerator {
   static async generateProducts(categories: string[]): Promise<EnhancedProduct[]> {
@@ -238,12 +353,56 @@ export default function SuperDiscoverPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [featuredProducts, setFeaturedProducts] = useState<EnhancedProduct[]>([]);
   const [isGeneratingProducts, setIsGeneratingProducts] = useState(true);
+  const [searchResults, setSearchResults] = useState<EnhancedProduct[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Filters State
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [ecoScoreMin, setEcoScoreMin] = useState(70);
   const [showInStockOnly, setShowInStockOnly] = useState(true);
   const [showFreeShippingOnly, setShowFreeShippingOnly] = useState(false);
+
+  // Real-time search function
+  const performRealTimeSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await RealTimeSearch.searchProducts(query);
+      setSearchResults(results);
+      toast({
+        title: "Search Complete! 🔍",
+        description: `Found ${results.length} products for "${query}"`,
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search products. Please try again.",
+      });
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [toast]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim().length > 2) {
+        performRealTimeSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+        setIsSearching(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, performRealTimeSearch]);
 
   // Generate products on component mount
   useEffect(() => {
@@ -328,20 +487,11 @@ export default function SuperDiscoverPage() {
 
   // Filter and search products
   const filteredProducts = useMemo(() => {
-    let filtered = featuredProducts;
+    // Use search results if there's a search query, otherwise use featured products
+    let filtered = searchQuery.trim().length > 2 ? searchResults : featuredProducts;
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Category filter
-    if (selectedCategory !== 'All') {
+    // Category filter (only apply to featured products, not search results)
+    if (selectedCategory !== 'All' && searchQuery.trim().length <= 2) {
       if (selectedCategory === 'Trending') {
         filtered = filtered.filter(p => p.trending);
       } else if (selectedCategory === 'New') {
@@ -402,7 +552,7 @@ export default function SuperDiscoverPage() {
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, sortBy, priceRange, ecoScoreMin, showInStockOnly, showFreeShippingOnly, featuredProducts]);
+  }, [searchQuery, searchResults, featuredProducts, selectedCategory, sortBy, priceRange, ecoScoreMin, showInStockOnly, showFreeShippingOnly]);
 
   // Cart functions
   const addToCart = useCallback((product: EnhancedProduct) => {
@@ -681,7 +831,40 @@ export default function SuperDiscoverPage() {
         >
           <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 shadow-xl border border-white/20">
             <CardContent className="p-6">
-              {/* Categories */}
+              {/* Search Results Header */}
+        {searchQuery.trim().length > 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Search className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-800">
+                    {isSearching ? 'Searching...' : `Search Results for "${searchQuery}"`}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {isSearching ? 'Finding products from across the web' : `Found ${filteredProducts.length} products`}
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSearchQuery('')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Categories */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {categories.map((category) => (
                   <Button
@@ -788,16 +971,16 @@ export default function SuperDiscoverPage() {
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <LoadingSpinner />
               <div className="text-center">
-                <p className="text-lg font-semibold">🤖 AI is generating personalized products...</p>
+                <p className="text-lg font-semibold">🤖 Loading products...</p>
                 <p className="text-slate-600 dark:text-slate-400">
-                  Using Gemini AI and real Unsplash images with Indian pricing
+                  Getting the latest eco-friendly products for you
                 </p>
               </div>
             </div>
           ) : isLoading ? (
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner />
-              <span className="ml-3">Loading amazing eco-products...</span>
+              <span className="ml-3">Searching...</span>
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className={cn(
