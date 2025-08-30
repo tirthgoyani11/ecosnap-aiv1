@@ -1275,33 +1275,35 @@ export default function SuperDiscoverPage() {
                         </div>
 
                         {/* Price and Actions */}
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-lg text-slate-900 dark:text-white">
-                                {product.price}
-                              </span>
-                              {product.originalPrice && (
-                                <span className="text-sm text-slate-500 line-through">
-                                  {product.originalPrice}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-lg text-slate-900 dark:text-white">
+                                  {product.price}
                                 </span>
+                                {product.originalPrice && (
+                                  <span className="text-sm text-slate-500 line-through">
+                                    {product.originalPrice}
+                                  </span>
+                                )}
+                              </div>
+                              {!product.inStock && (
+                                <p className="text-xs text-red-500 font-medium">Out of Stock</p>
                               )}
                             </div>
-                            {!product.inStock && (
-                              <p className="text-xs text-red-500 font-medium">Out of Stock</p>
-                            )}
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 w-full">
                             <Button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 addToCart(product);
                               }}
                               disabled={!product.inStock}
-                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex-1 h-10"
+                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex-1 h-10 text-sm"
                             >
-                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              <ShoppingCart className="h-4 w-4 mr-1" />
                               Add to Cart
                             </Button>
                             
@@ -1312,7 +1314,7 @@ export default function SuperDiscoverPage() {
                               }}
                               variant="outline"
                               size="default"
-                              className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 h-10 px-4 flex-shrink-0 min-w-[100px]"
+                              className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 h-10 px-3 flex-shrink-0 w-auto min-w-[80px]"
                             >
                               <TrendingUp className="h-4 w-4 mr-1" />
                               Compare

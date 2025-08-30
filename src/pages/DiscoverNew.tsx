@@ -747,9 +747,9 @@ const DiscoverPage: React.FC = () => {
                                   variant="outline"
                                   onClick={() => toggleCompare(selectedProduct)}
                                   disabled={compareList.length >= 3 && !compareList.some(item => item.id === selectedProduct.id)}
-                                  className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200"
+                                  className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200 flex-shrink-0"
                                 >
-                                  <Compare className="h-4 w-4 mr-2" />
+                                  <GitCompare className="h-4 w-4 mr-2" />
                                   Compare
                                 </Button>
                               </div>
