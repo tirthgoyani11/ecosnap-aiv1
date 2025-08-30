@@ -554,3 +554,65 @@ export const useUserLevel = () => {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
+
+// Hook to get leaderboard data
+export const useLeaderboard = (limit = 10) => {
+  return useQuery({
+    queryKey: ['leaderboard', limit],
+    queryFn: async () => {
+      console.log('🏆 Fetching leaderboard data...');
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          user_id,
+          full_name,
+          username,
+          avatar_url,
+          points,
+          total_scans,
+          total_co2_saved,
+          eco_score_avg,
+          created_at,
+          updated_at
+        `)
+        .order('points', { ascending: false })
+        .limit(limit);
+      
+      if (error) {
+        console.error('❌ Failed to fetch leaderboard:', error);
+        throw error;
+      }
+      
+      console.log('✅ Fetched leaderboard:', data?.length || 0, 'users');
+      
+      // Add rank to each user and determine badge
+      const leaderboardWithRanks = data?.map((profile, index) => {
+        const rank = index + 1;
+        let badge = 'Beginner';
+        
+        if (profile.points >= 10000) badge = 'Legend';
+        else if (profile.points >= 5000) badge = 'Expert';
+        else if (profile.points >= 2000) badge = 'Advanced';
+        else if (profile.points >= 1000) badge = 'Intermediate';
+        
+        return {
+          ...profile,
+          rank,
+          badge,
+          name: profile.full_name || profile.username || 'Anonymous User',
+          username: profile.username || `user_${profile.id.slice(0, 6)}`,
+          avatar: profile.avatar_url,
+          scans: profile.total_scans || 0,
+          ecoScore: profile.eco_score_avg || 0
+        };
+      }) || [];
+      
+      return leaderboardWithRanks;
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes cache
+    refetchOnWindowFocus: true,
+  });
+};
