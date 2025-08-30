@@ -764,7 +764,7 @@ export default function SuperDiscoverPage() {
         ))}
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Header with Search and Live Status */}
         <motion.div
           className="mb-8"
@@ -772,11 +772,11 @@ export default function SuperDiscoverPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 rounded-3xl p-6 shadow-2xl border border-white/20">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 rounded-3xl p-6 lg:p-8 shadow-2xl border border-white/20">
             {/* Title and Description */}
-            <div>
+            <div className="flex-shrink-0">
               <motion.h1 
-                className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2"
+                className="text-3xl lg:text-4xl xl:text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -784,7 +784,7 @@ export default function SuperDiscoverPage() {
                 🛒 Super Shopping
               </motion.h1>
               <motion.p 
-                className="text-slate-600 dark:text-slate-400 text-lg"
+                className="text-slate-600 dark:text-slate-400 text-sm lg:text-base"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -807,7 +807,7 @@ export default function SuperDiscoverPage() {
             </div>
 
             {/* Cart Button */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12 px-6 rounded-2xl">

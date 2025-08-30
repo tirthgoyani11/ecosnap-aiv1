@@ -570,7 +570,7 @@ export default function Leaderboard() {
       
       {showConfetti && <ConfettiBurst isVisible={true} />}
       
-      <div className="max-w-7xl mx-auto p-6 space-y-10 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-12 relative z-10">
         {/* Header with enhanced styling */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -716,15 +716,15 @@ export default function Leaderboard() {
             </motion.h2>
             
             {/* Podium with proper height alignment */}
-            <div className="relative">
+            <div className="relative px-4">
               {/* Background glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/30 via-transparent to-yellow-200/30 rounded-3xl blur-3xl"></div>
               
               {/* Podium Layout - Responsive design */}
-              <div className="flex flex-col md:flex-row md:items-end md:justify-center gap-4 md:gap-6 relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-end lg:justify-center gap-6 relative z-10 max-w-6xl mx-auto">
                 
-                {/* Mobile: Show in order 1, 2, 3 */}
-                <div className="md:hidden space-y-6">
+                {/* Mobile & Tablet: Show in order 1, 2, 3 */}
+                <div className="lg:hidden space-y-6">
                   {topThree[0] && (
                     <div className="relative">
                       <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
@@ -736,18 +736,18 @@ export default function Leaderboard() {
                 </div>
 
                 {/* Desktop: Show in podium order 2, 1, 3 */}
-                <div className="hidden md:flex md:items-end md:justify-center gap-6 w-full">
+                <div className="hidden lg:flex lg:items-end lg:justify-center gap-8 w-full">
                   {/* 2nd Place - Medium height */}
                   {topThree[1] && (
-                    <div className="flex-1 max-w-xs">
-                      <div className="h-16"></div> {/* Spacer for height difference */}
+                    <div className="flex-1 max-w-sm">
+                      <div className="h-8 mb-4"></div> {/* Reduced spacer for better alignment */}
                       <PodiumCard user={topThree[1]} position={2} />
                     </div>
                   )}
                   
                   {/* 1st Place - Tallest, center position */}
                   {topThree[0] && (
-                    <div className="flex-1 max-w-xs relative">
+                    <div className="flex-1 max-w-sm relative">
                       {/* Winner glow effect */}
                       <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-20 rounded-3xl blur-2xl animate-pulse"></div>
                       <PodiumCard user={topThree[0]} position={1} />
@@ -756,8 +756,8 @@ export default function Leaderboard() {
                   
                   {/* 3rd Place - Shortest */}
                   {topThree[2] && (
-                    <div className="flex-1 max-w-xs">
-                      <div className="h-16"></div> {/* Spacer for height difference */}
+                    <div className="flex-1 max-w-sm">
+                      <div className="h-8 mb-4"></div> {/* Reduced spacer for better alignment */}
                       <PodiumCard user={topThree[2]} position={3} />
                     </div>
                   )}
